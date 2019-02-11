@@ -20,7 +20,7 @@ public class Main {
         props.put("ssl.keystore.location", "client.keystore.p12");
         props.put("ssl.keystore.password", "aadd77a7-ec6c-427d-8d72-2aa4046fee62");
         props.put("ssl.key.password", "aadd77a7-ec6c-427d-8d72-2aa4046fee62");
-        props.put("group.id", "demo-group-4");
+        props.put("group.id", "demo-group-5");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("enable.auto.commit", "false");

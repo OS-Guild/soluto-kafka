@@ -1,6 +1,5 @@
+import com.mashape.unirest.http.Unirest;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-
-import java.util.concurrent.TimeUnit;
 
 public class ConsumerThreadHandler implements Runnable {
 
@@ -13,8 +12,12 @@ public class ConsumerThreadHandler implements Runnable {
     public void run() {
         System.out.printf("offset = %d, partition = %d \n", consumerRecord.offset(), consumerRecord.partition());
         try {
-            TimeUnit.MILLISECONDS.sleep(150);
-        } catch (InterruptedException e) {
+            Unirest.post("http://localhost:4000/post")
+                    .header("Content-Type", "application/json")
+                    .body(consumerRecord.value().toString())
+                    .asString();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

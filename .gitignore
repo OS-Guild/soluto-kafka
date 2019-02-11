@@ -39,3 +39,7 @@ gradle-app.setting
 .idea
 client.keystore.p12
 client.truststore.jks
+.vscode
+.project
+.classpath
+.settings

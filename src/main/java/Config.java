@@ -23,6 +23,8 @@ class Config {
     public final int TARGET_RETRY_COUNT;
     public final String DEAD_LETTER_TOPIC;
     public final int CONCURRENCY;
+    public final int POLL_INTERVAL;
+    public final int POLL_RECORDS;
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
 
@@ -43,6 +45,8 @@ class Config {
         String dead_letter_topic = dotenv.get("DEAD_LETTER_TOPIC");
         DEAD_LETTER_TOPIC = dead_letter_topic == null ? TOPIC + "-dead-letter" : dead_letter_topic;
         CONCURRENCY = parseInt(dotenv.get("CONCURRENCY"), 1);
+        POLL_INTERVAL = parseInt(dotenv.get("POLL_INTERVAL"), 300000);
+        POLL_RECORDS = parseInt(dotenv.get("POLL_RECORDS"), 500);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 

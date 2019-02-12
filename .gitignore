@@ -43,3 +43,4 @@ client.truststore.jks
 .project
 .classpath
 .settings
+.env

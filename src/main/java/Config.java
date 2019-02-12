@@ -28,7 +28,7 @@ class Config {
 
 
     Config() throws Exception {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
         SHOULD_SKIP_AUTHENTICATION = Boolean.parseBoolean(dotenv.get("SHOULD_SKIP_AUTHENTICATION"));

@@ -4,7 +4,7 @@ import java.util.Properties;
 
 class ConsumerCreator {
     private ConsumerCreator() {
-        //no instance
+        // no instance
     }
 
     static KafkaConsumer<String, String> create(Config config) {
@@ -22,7 +22,7 @@ class ConsumerCreator {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("enable.auto.commit", "false");
         props.put("max.poll.interval.ms", config.POLL_INTERVAL);
-        props.put("max.poll.records", config.POLL_RECORDS);
+        props.put("max.poll.records", config.BATCH_SIZE);
 
         return new KafkaConsumer<>(props);
     }

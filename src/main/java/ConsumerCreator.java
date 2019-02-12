@@ -21,7 +21,7 @@ class ConsumerCreator {
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("enable.auto.commit", "false");
-        props.put("max.poll.interval.ms", String.valueOf(config.POLL_INTERVAL));
+        props.put("max.poll.interval.ms", String.valueOf(Integer.MAX_VALUE));
         props.put("max.poll.records", String.valueOf(config.POLL_RECORDS));
         props.put("session.timeout.ms", "250000");
 

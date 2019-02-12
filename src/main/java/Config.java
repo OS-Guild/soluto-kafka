@@ -1,4 +1,5 @@
 import io.github.cdimascio.dotenv.Dotenv;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,7 +29,6 @@ class Config {
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
 
-
     Config() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
@@ -45,7 +45,7 @@ class Config {
         String dead_letter_topic = dotenv.get("DEAD_LETTER_TOPIC");
         DEAD_LETTER_TOPIC = dead_letter_topic == null ? TOPIC + "-dead-letter" : dead_letter_topic;
         CONCURRENCY = parseInt(dotenv.get("CONCURRENCY"), 1);
-        POLL_INTERVAL = parseInt(dotenv.get("POLL_INTERVAL"), 300000);
+        POLL_INTERVAL = parseInt(dotenv.get("POLL_INTERVAL"), Integer.MAX_VALUE);
         POLL_RECORDS = parseInt(dotenv.get("POLL_RECORDS"), 500);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
@@ -66,7 +66,6 @@ class Config {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
-
     private JSONObject readSecrets(String secretsFileLocation) {
         try {
             return new JSONObject(new String(Files.readAllBytes(Paths.get(secretsFileLocation))));
@@ -86,7 +85,8 @@ class Config {
 
         try {
             secret = secrets.getString(name);
-        } catch (JSONException ignored) {}
+        } catch (JSONException ignored) {
+        }
 
         if (secret == null) {
             throw new Exception("missing secret: " + name);

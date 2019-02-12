@@ -53,7 +53,7 @@ public class Main {
                     break;
             }
 
-            consumer.commitSync();
+            // consumer.commitAsync();
         }
     }
 }

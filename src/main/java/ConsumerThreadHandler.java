@@ -5,7 +5,7 @@ public class ConsumerThreadHandler implements Runnable {
 
     private ConsumerRecord consumerRecord;
 
-    public ConsumerThreadHandler(ConsumerRecord consumerRecord) {
+    ConsumerThreadHandler(ConsumerRecord consumerRecord) {
         this.consumerRecord = consumerRecord;
     }
 

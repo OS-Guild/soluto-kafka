@@ -23,7 +23,6 @@ class ConsumerCreator {
         props.put("enable.auto.commit", "false");
         props.put("max.poll.interval.ms", String.valueOf(Integer.MAX_VALUE));
         props.put("max.poll.records", String.valueOf(config.POLL_RECORDS));
-        props.put("session.timeout.ms", "250000");
 
         return new KafkaConsumer<>(props);
     }

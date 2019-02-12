@@ -25,7 +25,7 @@ class Config {
     public final String DEAD_LETTER_TOPIC;
     public final int CONCURRENCY;
     public final int POLL_INTERVAL;
-    public final int BATCH_SIZE;
+    public final int POLL_RECORDS;
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
 
@@ -33,20 +33,19 @@ class Config {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
-        SHOULD_SKIP_AUTHENTICATION = Boolean.parseBoolean(dotenv.get("SHOULD_SKIP_AUTHENTICATION"));
-        SHOULD_DEDUP_BY_KEY = Boolean.parseBoolean(dotenv.get("SHOULD_DEDUP_BY_KEY"));
+        SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
+        SHOULD_DEDUP_BY_KEY = getOptionalBoolean(dotenv, "SHOULD_DEDUP_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
         STATSD_HOST = getString(dotenv, "STATSD_HOST");
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
         TOPIC = getString(dotenv, "TOPIC");
         GROUP_ID = getString(dotenv, "GROUP_ID");
         TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
-        TARGET_RETRY_COUNT = parseInt(dotenv.get("TARGET_RETRY_COUNT"), 1);
-        String dead_letter_topic = dotenv.get("DEAD_LETTER_TOPIC");
-        DEAD_LETTER_TOPIC = dead_letter_topic == null ? TOPIC + "-dead-letter" : dead_letter_topic;
-        CONCURRENCY = parseInt(dotenv.get("CONCURRENCY"), 1);
-        POLL_INTERVAL = parseInt(dotenv.get("POLL_INTERVAL"), Integer.MAX_VALUE);
-        BATCH_SIZE = parseInt(dotenv.get("BATCH_SIZE"), 500);
+        TARGET_RETRY_COUNT = getOptionalInt(dotenv, "TARGET_RETRY_COUNT", 1);
+        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
+        CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
+        POLL_INTERVAL = getOptionalInt(dotenv, "POLL_INTERVAL", Integer.MAX_VALUE);
+        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 
@@ -105,9 +104,30 @@ class Config {
         return value;
     }
 
-    private static int parseInt(String text, int fallback) {
+    private static String getOptionalString(Dotenv dotenv, String name, String fallback) throws Exception {
         try {
-            return Integer.parseInt(text);
+            return getString(dotenv, name);
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private static boolean getBoolean(Dotenv dotenv, String name) throws Exception {
+        return Boolean.parseBoolean(getString(dotenv, name));
+    }
+
+    private static boolean getOptionalBoolean(Dotenv dotenv, String name, boolean fallback) throws Exception {
+        try {
+            return Boolean.parseBoolean(getString(dotenv, name));
+
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private static int getOptionalInt(Dotenv dotenv, String name, int fallback) {
+        try {
+            return Integer.parseInt(dotenv.get(name));
         } catch (NumberFormatException e) {
             return fallback;
         }

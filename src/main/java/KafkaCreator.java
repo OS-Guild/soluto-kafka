@@ -1,13 +1,16 @@
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 import java.util.Properties;
 
-class ConsumerCreator {
-    private ConsumerCreator() {
-        // no instance
+class KafkaCreator {
+    private Config config;
+
+    public KafkaCreator(Config config) {
+        this.config = config;
     }
 
-    static KafkaConsumer<String, String> create(Config config) {
+    private Properties getAuthProperties() {
         Properties props = new Properties();
         props.put("bootstrap.servers", config.KAFKA_BROKER);
         props.put("security.protocol", "SSL");
@@ -17,6 +20,12 @@ class ConsumerCreator {
         props.put("ssl.keystore.location", config.KEYSTORE_LOCATION);
         props.put("ssl.keystore.password", config.KAFKA_PASSWORD);
         props.put("ssl.key.password", config.KAFKA_PASSWORD);
+
+        return props;
+    }
+
+    public KafkaConsumer<String, String> createConsumer() {
+        Properties props = getAuthProperties();
         props.put("group.id", config.GROUP_ID);
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -25,5 +34,14 @@ class ConsumerCreator {
         props.put("max.poll.records", String.valueOf(config.POLL_RECORDS));
 
         return new KafkaConsumer<>(props);
+    }
+
+    public KafkaProducer<String, String> createProducer() {
+        Properties props = getAuthProperties();
+
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        return new KafkaProducer<>(props);
     }
 }

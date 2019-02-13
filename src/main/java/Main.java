@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,8 +19,11 @@ public class Main {
             e.printStackTrace();
             return;
         }
+        KafkaCreator kafkaCreator = new KafkaCreator(config);
 
-        KafkaConsumer<String, String> consumer = ConsumerCreator.create(config);
+        KafkaConsumer<String, String> consumer = kafkaCreator.createConsumer();
+        KafkaProducer<String, String> producer = kafkaCreator.createProducer();
+
         consumer.subscribe(Collections.singletonList(config.TOPIC));
 
         final boolean[] isRunning = {true};
@@ -44,7 +48,7 @@ public class Main {
                     : records;
 
             for (ConsumerRecord<String, String> record : consumerRecords) {
-                executor.submit(new ConsumerRecordRunnable(record, config));
+                executor.submit(new ConsumerRecordRunnable(record, config, producer));
             }
 
             executor.shutdown();

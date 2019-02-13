@@ -12,7 +12,6 @@ public class ConsumerRecordRunnable implements Runnable {
     }
 
     public void run() {
-        System.out.printf("offset = %d, partition = %d \n", consumerRecord.offset(), consumerRecord.partition());
         try {
             Unirest.post(config.TARGET_ENDPOINT)
                     .header("Content-Type", "application/json")

@@ -22,12 +22,16 @@ public class Main {
         KafkaConsumer<String, String> consumer = ConsumerCreator.create(config);
         consumer.subscribe(Collections.singletonList(config.TOPIC));
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            consumer.unsubscribe();
-            consumer.close();
-        }));
+        final boolean[] isRunning = {true};
 
-        while (true) {
+        Runtime.getRuntime()
+                .addShutdownHook(new Thread(() -> {
+                    System.out.println("Shutting down");
+
+                    isRunning[0] = false;
+                }));
+
+        while (isRunning[0]) {
             ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
@@ -35,8 +39,8 @@ public class Main {
 
             Iterable<ConsumerRecord<String, String>> consumerRecords = config.SHOULD_DEDUP_BY_KEY
                     ? StreamSupport.stream(records.spliterator(), false)
-                            .collect(Collectors.groupingBy(ConsumerRecord::key)).entrySet().stream()
-                            .map(x -> x.getValue().get(0)).collect(Collectors.toList())
+                    .collect(Collectors.groupingBy(ConsumerRecord::key)).entrySet().stream()
+                    .map(x -> x.getValue().get(0)).collect(Collectors.toList())
                     : records;
 
             for (ConsumerRecord<String, String> record : consumerRecords) {
@@ -51,9 +55,12 @@ public class Main {
             }
             try {
                 consumer.commitSync();
-            } catch (CommitFailedException e) {
-
+            } catch (CommitFailedException ignored) {
+                System.out.println("Commit failed");
             }
         }
+
+        consumer.unsubscribe();
+        consumer.close();
     }
 }

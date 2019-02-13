@@ -61,7 +61,6 @@ class Config {
     }
 
     private void writeToFile(String path, String value) throws IOException {
-
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -104,7 +103,7 @@ class Config {
         return value;
     }
 
-    private static String getOptionalString(Dotenv dotenv, String name, String fallback) throws Exception {
+    private static String getOptionalString(Dotenv dotenv, String name, String fallback) {
         try {
             return getString(dotenv, name);
         } catch (Exception e) {
@@ -112,14 +111,9 @@ class Config {
         }
     }
 
-    private static boolean getBoolean(Dotenv dotenv, String name) throws Exception {
-        return Boolean.parseBoolean(getString(dotenv, name));
-    }
-
-    private static boolean getOptionalBoolean(Dotenv dotenv, String name, boolean fallback) throws Exception {
+    private static boolean getOptionalBoolean(Dotenv dotenv, String name, boolean fallback) {
         try {
             return Boolean.parseBoolean(getString(dotenv, name));
-
         } catch (Exception e) {
             return fallback;
         }

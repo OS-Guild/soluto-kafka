@@ -26,45 +26,48 @@ public class Main {
 
         consumer.subscribe(Collections.singletonList(config.TOPIC));
 
-        final boolean[] isRunning = {true};
+        final boolean[] isRunning = { true };
 
-        Runtime.getRuntime()
-                .addShutdownHook(new Thread(() -> {
-                    System.out.println("Shutting down");
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("info: shutting down");
+            isRunning[0] = false;
+        }));
 
-                    isRunning[0] = false;
-                }));
+        try {
+            while (isRunning[0]) {
+                ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
-        while (isRunning[0]) {
-            ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+                System.out.println("debug: consumed " + records.count() + " messages");
 
-            System.out.println(records.count());
+                Iterable<ConsumerRecord<String, String>> consumerRecords = config.SHOULD_DEDUP_BY_KEY
+                        ? StreamSupport.stream(records.spliterator(), false)
+                                .collect(Collectors.groupingBy(ConsumerRecord::key)).entrySet().stream()
+                                .map(x -> x.getValue().get(0)).collect(Collectors.toList())
+                        : records;
 
-            Iterable<ConsumerRecord<String, String>> consumerRecords = config.SHOULD_DEDUP_BY_KEY
-                    ? StreamSupport.stream(records.spliterator(), false)
-                    .collect(Collectors.groupingBy(ConsumerRecord::key)).entrySet().stream()
-                    .map(x -> x.getValue().get(0)).collect(Collectors.toList())
-                    : records;
+                for (ConsumerRecord<String, String> record : consumerRecords) {
+                    executor.submit(new ConsumerRecordRunnable(record, config, producer));
+                }
 
-            for (ConsumerRecord<String, String> record : consumerRecords) {
-                executor.submit(new ConsumerRecordRunnable(record, config, producer));
+                executor.shutdown();
+
+                while (true) {
+                    if (executor.isTerminated())
+                        break;
+                }
+                try {
+                    consumer.commitSync();
+                } catch (CommitFailedException ignored) {
+                    System.out.println("info: commit failed");
+                }
             }
+        } catch (Exception e) {
+            System.out.println("error: unexpected error occured: " + e.getMessage());
 
-            executor.shutdown();
-
-            while (true) {
-                if (executor.isTerminated())
-                    break;
-            }
-            try {
-                consumer.commitSync();
-            } catch (CommitFailedException ignored) {
-                System.out.println("Commit failed");
-            }
+        } finally {
+            consumer.unsubscribe();
+            consumer.close();
         }
-
-        consumer.unsubscribe();
-        consumer.close();
     }
 }

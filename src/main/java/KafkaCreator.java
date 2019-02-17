@@ -13,6 +13,11 @@ class KafkaCreator {
     private Properties getAuthProperties() {
         Properties props = new Properties();
         props.put("bootstrap.servers", config.KAFKA_BROKER);
+
+        if(config.SHOULD_SKIP_AUTHENTICATION) {
+            return props;
+        }
+
         props.put("security.protocol", "SSL");
         props.put("ssl.truststore.location", config.TRUSTSTORE_LOCATION);
         props.put("ssl.truststore.password", config.KAFKA_PASSWORD);

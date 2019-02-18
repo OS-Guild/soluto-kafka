@@ -28,6 +28,7 @@ class Config {
     public final int POLL_RECORDS;
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
+    public final int CONSUMER_POLL_TIMEOUT;
 
     Config() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -46,6 +47,7 @@ class Config {
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         POLL_INTERVAL = getOptionalInt(dotenv, "POLL_INTERVAL", Integer.MAX_VALUE);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
+        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 

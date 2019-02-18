@@ -32,7 +32,7 @@ public class Main {
         try {
             while (isRunning[0]) {
                 ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
-                ConsumerRecords<String, String> consumed = consumer.poll(Duration.ofMillis(1000));
+                ConsumerRecords<String, String> consumed = consumer.poll(Duration.ofMillis(config.CONSUMER_POLL_TIMEOUT));
 
                 System.out.println("debug: consumed " + consumed.count() + " messages");
                 

@@ -1,25 +1,43 @@
+import java.util.Date;
+
 import com.mashape.unirest.http.Unirest;
+import com.timgroup.statsd.StatsDClient;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 public class ConsumerRecordRunnable implements Runnable {
 
-    private final ConsumerRecord<String, String> consumerRecord;
     private final Config config;
+    private final Monitor monitor;
     private KafkaProducer<String, String> producer;
 
-    ConsumerRecordRunnable(ConsumerRecord<String, String> consumerRecord, Config config,
-            KafkaProducer<String, String> producer) {
-        this.consumerRecord = consumerRecord;
-        this.config = config;
-        this.producer = producer;
+    private final ConsumerRecord<String, String> consumerRecord;
+
+    ConsumerRecordRunnable(
+        Config config,
+        Monitor monitor,
+        KafkaProducer<String, String> producer,
+        ConsumerRecord<String, String> consumerRecord){
+            this.config = config;
+            this.monitor = monitor;
+            this.producer = producer;
+            this.consumerRecord = consumerRecord;
     }
 
     public void run() {
         try {
-            Unirest.post(config.TARGET_ENDPOINT).header("Content-Type", "application/json")
-                    .body(consumerRecord.value().toString()).asString();
+            long executionStart = new Date().getTime();
+            
+            Unirest
+                .post(config.TARGET_ENDPOINT)
+                .header("Content-Type", "application/json")
+                .body(consumerRecord.value().toString())
+                .asString();
+
+            monitor.process(executionStart);
+            
         } catch (Exception e) {
             e.printStackTrace();
             producer.send(new ProducerRecord<>(config.DEAD_LETTER_TOPIC, consumerRecord.key().toString(),

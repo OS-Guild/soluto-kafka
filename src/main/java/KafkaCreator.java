@@ -34,9 +34,9 @@ class KafkaCreator {
         props.put("group.id", config.GROUP_ID);
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("enable.auto.commit", "false");
-        props.put("max.poll.interval.ms", String.valueOf(config.POLL_INTERVAL));
-        props.put("max.poll.records", String.valueOf(config.POLL_RECORDS));
+        // props.put("enable.auto.commit", "false");
+        // props.put("max.poll.interval.ms", String.valueOf(config.POLL_INTERVAL));
+        // props.put("max.poll.records", String.valueOf(config.POLL_RECORDS));
 
         return new KafkaConsumer<>(props);
     }

@@ -51,11 +51,11 @@ public class Main {
                     if (executor.isTerminated())
                         break;
                 }
-                try {
-                    consumer.commitSync();
-                } catch (CommitFailedException ignored) {
-                    System.out.println("info: commit failed");
-                }
+                // try {
+                //     consumer.commitSync();
+                // } catch (CommitFailedException ignored) {
+                //     System.out.println("info: commit failed");
+                // }
             }
         } catch (Exception e) {
             System.out.println("error: unexpected error occured: " + e.getMessage());

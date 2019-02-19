@@ -28,8 +28,10 @@ public class Monitor {
 	}
 
 	public void messageLatency(ConsumerRecord<String, String> record) {
+        long latency = (new Date()).getTime() - record.timestamp();
+        System.out.println("latency:" + latency);
         if (statsdClient == null) return;        
-        statsdClient.recordExecutionTime("message."+record.partition()+".latency", (new Date()).getTime() - record.timestamp());
+        statsdClient.recordExecutionTime("message."+record.partition()+".latency", latency);
 	}
 
 	public void process(long executionStart) {

@@ -5,6 +5,9 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.mashape.unirest.http.Unirest;
+
+import org.apache.http.impl.client.HttpClients;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -15,8 +18,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Config config = new Config();
         Monitor monitor = new Monitor(config);
+        Unirest.setHttpClient(HttpClients.createDefault());
+        Unirest.setDefaultHeader("Connection", "keep-alive");
+        
         KafkaCreator kafkaCreator = new KafkaCreator(config);
-
         KafkaConsumer<String, String> consumer = kafkaCreator.createConsumer();
         KafkaProducer<String, String> producer = kafkaCreator.createProducer();
 

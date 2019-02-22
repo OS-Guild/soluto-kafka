@@ -1,9 +1,9 @@
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.json.JSONObject;
 
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -14,7 +14,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 public class Main {
     public static void main(String[] args) throws Exception {
         Config config = new Config();
-        Monitor monitor = new Monitor(config);
+        WriteLog writeLog = new WriteLog();
+        WriteMetric writeMetric = new WriteMetric(config);
         KafkaCreator kafkaCreator = new KafkaCreator(config);
 
         KafkaConsumer<String, String> consumer = kafkaCreator.createConsumer();
@@ -33,16 +34,16 @@ public class Main {
             while (isRunning[0]) {
                 ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
                 ConsumerRecords<String, String> consumed = consumer.poll(Duration.ofMillis(config.CONSUMER_POLL_TIMEOUT));
-
-                System.out.println("debug: consumed " + consumed.count() + " messages");
                 
-                monitor.consumed(consumed);
+
+                writeLog.consumed(consumed);
+                writeMetric.consumed(consumed);
                 Iterable<ConsumerRecord<String, String>> records = preprocess(config, consumed);
-                monitor.consumedDedup(records);
+                writeMetric.consumedDedup(records);
                 
                 for (ConsumerRecord<String, String> record : records) {
-                    monitor.messageLatency(record);
-                    executor.submit(new ConsumerRecordRunnable(config, monitor, producer, record));
+                    writeMetric.messageLatency(record);
+                    //executor.submit(new ConsumerRecordRunnable(config, monitor, producer, record));
                 }
 
                 executor.shutdown();

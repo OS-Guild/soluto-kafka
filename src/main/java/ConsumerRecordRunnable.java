@@ -1,7 +1,6 @@
 import java.util.Date;
 
 import com.mashape.unirest.http.Unirest;
-import com.timgroup.statsd.StatsDClient;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -10,18 +9,18 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 public class ConsumerRecordRunnable implements Runnable {
 
     private final Config config;
-    private final Monitor monitor;
+    private final WriteMetric writeMetric;
     private KafkaProducer<String, String> producer;
 
     private final ConsumerRecord<String, String> consumerRecord;
 
     ConsumerRecordRunnable(
         Config config,
-        Monitor monitor,
+        WriteMetric writeMetric,
         KafkaProducer<String, String> producer,
         ConsumerRecord<String, String> consumerRecord){
             this.config = config;
-            this.monitor = monitor;
+            this.writeMetric = writeMetric;
             this.producer = producer;
             this.consumerRecord = consumerRecord;
     }
@@ -36,7 +35,7 @@ public class ConsumerRecordRunnable implements Runnable {
                 .body(consumerRecord.value().toString())
                 .asString();
 
-            monitor.process(executionStart);
+            writeMetric.process(executionStart);
             
         } catch (Exception e) {
             e.printStackTrace();

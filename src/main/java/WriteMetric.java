@@ -6,17 +6,28 @@ import com.timgroup.statsd.StatsDClient;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.json.JSONObject;
 
-public class Monitor {
+public class WriteMetric {
     StatsDClient statsdClient;
 
-    public Monitor(Config config) {
+    public WriteMetric(Config config) {
         if (config.JAVA_ENV.equals("production")) {
             statsdClient = new NonBlockingStatsDClient(config.STATSD_API_KEY + "." + config.STATSD_ROOT + ".kafka-consumer-"+ config.TOPIC + "-" + config.GROUP_ID, config.STATSD_HOST, 8125);
         }
     }
 
     public void consumed(ConsumerRecords<String, String> consumed) {
+        if (consumed.count() > 0) {
+            JSONObject log = new JSONObject()
+            .put("level", "debug")
+            .put("message", "consumed messages")
+            .put("extra", new JSONObject()
+                .put("count", consumed.count()));
+    
+            System.out.println(log.toString());
+        }
+
         if (statsdClient == null) return;
         statsdClient.recordGaugeValue("consumed", consumed.count());
     }

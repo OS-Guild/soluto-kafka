@@ -33,6 +33,7 @@ public class ConsumerRecordRunnable implements Runnable {
             Unirest
                 .post(config.TARGET_ENDPOINT)
                 .header("Content-Type", "application/json")
+                .header("Connection", "keep-alive")
                 .body(consumerRecord.value().toString())
                 .asString();
 

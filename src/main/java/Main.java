@@ -63,7 +63,7 @@ public class Main {
                 }
             }
         } catch (Exception e) {
-            writeLog.unexpectedErorr(e);
+            writeLog.unexpectedError(e);
         } finally {
             consumer.unsubscribe();
             consumer.close();

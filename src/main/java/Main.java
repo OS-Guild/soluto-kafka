@@ -1,6 +1,5 @@
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -17,7 +16,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 public class Main {
     public static void main(String[] args) throws Exception {
         Config config = new Config();
-        Monitor monitor = new Monitor(config);
+        WriteLog writeLog = new WriteLog();
+        WriteMetric writeMetric = new WriteMetric(config);
         Unirest.setHttpClient(HttpClients.createDefault());
         Unirest.setDefaultHeader("Connection", "keep-alive");
         
@@ -26,11 +26,11 @@ public class Main {
         KafkaProducer<String, String> producer = kafkaCreator.createProducer();
 
         consumer.subscribe(Collections.singletonList(config.TOPIC));
+        writeLog.serviceStarted(config);
 
         final boolean[] isRunning = { true };
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("info: shutting down");
             isRunning[0] = false;
         }));
 
@@ -38,16 +38,16 @@ public class Main {
             while (isRunning[0]) {
                 ExecutorService executor = Executors.newFixedThreadPool(config.CONCURRENCY);
                 ConsumerRecords<String, String> consumed = consumer.poll(Duration.ofMillis(config.CONSUMER_POLL_TIMEOUT));
-
-                System.out.println("debug: consumed " + consumed.count() + " messages");
                 
-                monitor.consumed(consumed);
+
+                writeLog.consumed(consumed);
+                writeMetric.consumed(consumed);
                 Iterable<ConsumerRecord<String, String>> records = preprocess(config, consumed);
-                monitor.consumedDedup(records);
+                writeMetric.consumedDedup(records);
                 
                 for (ConsumerRecord<String, String> record : records) {
-                    monitor.messageLatency(record);
-                    executor.submit(new ConsumerRecordRunnable(config, monitor, producer, record));
+                    writeMetric.messageLatency(record);
+                    executor.submit(new ConsumerRecordRunnable(config, writeMetric, writeLog, producer, record));
                 }
 
                 executor.shutdown();
@@ -59,14 +59,15 @@ public class Main {
                 try {
                     consumer.commitSync();
                 } catch (CommitFailedException ignored) {
-                    System.out.println("info: commit failed");
+                    writeLog.commitFailed();
                 }
             }
         } catch (Exception e) {
-            System.out.println("error: unexpected error occured: " + e.getMessage());
+            writeLog.unexpectedError(e);
         } finally {
             consumer.unsubscribe();
             consumer.close();
+            writeLog.serviceShutdown(config);
         }
     }
 

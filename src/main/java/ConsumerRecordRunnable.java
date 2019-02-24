@@ -10,6 +10,7 @@ public class ConsumerRecordRunnable implements Runnable {
 
     private final Config config;
     private final WriteMetric writeMetric;
+    private final WriteLog writeLog;
     private KafkaProducer<String, String> producer;
 
     private final ConsumerRecord<String, String> consumerRecord;
@@ -17,10 +18,12 @@ public class ConsumerRecordRunnable implements Runnable {
     ConsumerRecordRunnable(
         Config config,
         WriteMetric writeMetric,
+        WriteLog writeLog,
         KafkaProducer<String, String> producer,
         ConsumerRecord<String, String> consumerRecord){
             this.config = config;
             this.writeMetric = writeMetric;
+            this.writeLog = writeLog;
             this.producer = producer;
             this.consumerRecord = consumerRecord;
     }
@@ -40,12 +43,12 @@ public class ConsumerRecordRunnable implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             producer.send(new ProducerRecord<>(config.DEAD_LETTER_TOPIC, consumerRecord.key().toString(),
-                    consumerRecord.value().toString()), (metadata, e1) -> {
-                        if (e1 != null) {
-                            e1.printStackTrace();
+                    consumerRecord.value().toString()), (metadata, err) -> {
+                        if (err != null) {
+                            writeLog.deadLetterProducerError(consumerRecord,err);
                             return;
                         }
-                        System.out.println("debug: sent message with key: " + consumerRecord.key() + "to dead letter");
+                        writeLog.deadLetterProduce(consumerRecord);
                     });
         }
     }

@@ -3,8 +3,10 @@ import java.util.Collections;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.json.JSONObject;
 
+import com.mashape.unirest.http.Unirest;
+
+import org.apache.http.impl.client.HttpClients;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,17 +18,19 @@ public class Main {
         Config config = new Config();
         WriteLog writeLog = new WriteLog();
         WriteMetric writeMetric = new WriteMetric(config);
+        Unirest.setHttpClient(HttpClients.createDefault());
+        Unirest.setDefaultHeader("Connection", "keep-alive");
+        
         KafkaCreator kafkaCreator = new KafkaCreator(config);
-
         KafkaConsumer<String, String> consumer = kafkaCreator.createConsumer();
         KafkaProducer<String, String> producer = kafkaCreator.createProducer();
 
         consumer.subscribe(Collections.singletonList(config.TOPIC));
+        writeLog.serviceStarted(config);
 
         final boolean[] isRunning = { true };
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("info: shutting down");
             isRunning[0] = false;
         }));
 
@@ -43,7 +47,7 @@ public class Main {
                 
                 for (ConsumerRecord<String, String> record : records) {
                     writeMetric.messageLatency(record);
-                    //executor.submit(new ConsumerRecordRunnable(config, monitor, producer, record));
+                    executor.submit(new ConsumerRecordRunnable(config, writeMetric, writeLog, producer, record));
                 }
 
                 executor.shutdown();
@@ -55,14 +59,15 @@ public class Main {
                 try {
                     consumer.commitSync();
                 } catch (CommitFailedException ignored) {
-                    System.out.println("info: commit failed");
+                    writeLog.commitFailed();
                 }
             }
         } catch (Exception e) {
-            System.out.println("error: unexpected error occured: " + e.getMessage());
+            writeLog.unexpectedErorr(e);
         } finally {
             consumer.unsubscribe();
             consumer.close();
+            writeLog.serviceShutdown(config);
         }
     }
 

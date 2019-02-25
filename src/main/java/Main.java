@@ -90,9 +90,15 @@ public class Main {
     }
 
     private static void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException, ExecutionException {
+        CompletableFuture<Void> future = null;        
         for (var record : records) {
             monitor.messageLatency(record);
-            sendHttpReqeust(record).get();
+            if (future == null) {
+                future = sendHttpReqeust(record);
+            }
+            else {
+                future.thenApplyAsync(__ -> sendHttpReqeust(record));
+            }
         }
     }
 

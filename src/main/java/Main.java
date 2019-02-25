@@ -45,14 +45,12 @@ public class Main {
                 var consumedDedup = dedup(consumed);
                 monitor.consumedDedup(consumed);
                 
-                var executionStart = new Date().getTime();
                 if (config.CONCURRENCY > 1) {
                     processParallel(consumedDedup);
                 }
                 else {
                     processSequence(consumedDedup);
                 }
-                monitor.processCompleted(executionStart);
 
                 try {
                     consumer.commitSync();
@@ -115,11 +113,15 @@ public class Main {
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 
+        var executionStart = new Date().getTime();
         return client
             .sendAsync(request, HttpResponse.BodyHandlers.ofString())
             .thenApplyAsync(response -> {
                 if (response.statusCode() == 500) {
                     produceDeadLetter(record);
+                }
+                else {
+                    monitor.processCompleted(executionStart);                    
                 }
                 return null;                            
             });

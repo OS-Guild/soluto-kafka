@@ -1,11 +1,25 @@
+import java.util.Date;
+
+import com.google.common.collect.Iterators;
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
 
-public class WriteLog {
+public class Monitor {
+    StatsDClient statsdClient;
+    Config config;
+
+    public Monitor(Config config) {
+        this.config = config;
+        if (config.JAVA_ENV.equals("production")) {
+            statsdClient = new NonBlockingStatsDClient(config.STATSD_API_KEY + "." + config.STATSD_ROOT + ".kafka-consumer-"+ config.TOPIC + "-" + config.GROUP_ID, config.STATSD_HOST, 8125);
+        }
+    }
 
     public void consumed(ConsumerRecords<String, String> consumed) {
-        if (consumed.count() == 0) return;
         JSONObject log = new JSONObject()
         .put("level", "debug")
         .put("message", "consumed messages")
@@ -13,7 +27,34 @@ public class WriteLog {
             .put("count", consumed.count()));
 
         output(log);
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("consumed", consumed.count());
     }
+
+    public void consumedDedup(Iterable<ConsumerRecord<String, String>> records) {
+        if (statsdClient == null) return;        
+        statsdClient.recordGaugeValue("consumed-dedup", Iterators.size(records.iterator()));
+    }
+    
+    public void messageLatency(ConsumerRecord<String, String> record) {
+        if (statsdClient == null) return; 
+        statsdClient.recordExecutionTime("message."+record.partition()+".latency", (new Date()).getTime() - record.timestamp());
+    }
+
+	public void processCompleted(long executionStart) {
+        JSONObject log = new JSONObject()
+        .put("level", "debug")
+        .put("message", "finished processing consumed messages");
+
+        output(log);
+        if (statsdClient == null) return;        
+        statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
+	}
+
+    public void deadLetterProduce() {
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("deadLetterProduce", 1);
+	}
 
     public void unexpectedError(Exception exception) {
         JSONObject log = new JSONObject()
@@ -25,7 +66,7 @@ public class WriteLog {
         output(log);
     }
 
-	public void serviceStarted(Config config) {
+	public void serviceStarted() {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+config.TOPIC+"-"+config.GROUP_ID + "started");
@@ -33,14 +74,14 @@ public class WriteLog {
         output(log);
 	}
 
-	public void serviceShutdown(Config config) {
+	public void serviceShutdown() {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+config.TOPIC+"-"+config.GROUP_ID + "shutdown");
 
         output(log);
     }
-    
+
     public void commitFailed() {
         JSONObject log = new JSONObject()
         .put("level", "info")
@@ -48,8 +89,8 @@ public class WriteLog {
 
         output(log);
     }
-    
-    public void deadLetterProducerError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
+
+    public void deadLetterProduceError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
         .put("message", "failed producing message to dead letter")
@@ -61,6 +102,8 @@ public class WriteLog {
             .put("message", exception.getMessage()));
 
         output(log);
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("deadLetterProduce.error", 1);
     }
 
 	public void deadLetterProduce(ConsumerRecord<String, String> consumerRecord) {
@@ -71,10 +114,10 @@ public class WriteLog {
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key()))
                 .put("value", consumerRecord.value()));
-            
+
         output(log);
     }
-    
+
     private void output(JSONObject log) {
         System.out.println(log.toString());
     }

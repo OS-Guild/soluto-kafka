@@ -52,6 +52,8 @@ public class Monitor {
 	}
 
     public void deadLetterProduce() {
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("deadLetterProduce", 1);
 	}
 
     public void unexpectedError(Exception exception) {
@@ -100,6 +102,8 @@ public class Monitor {
             .put("message", exception.getMessage()));
 
         output(log);
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("deadLetterProduce.error", 1);
     }
 
 	public void deadLetterProduce(ConsumerRecord<String, String> consumerRecord) {

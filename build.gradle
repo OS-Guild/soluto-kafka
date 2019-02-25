@@ -2,6 +2,9 @@ plugins {
     id 'application'
 }
 
+apply plugin: 'java'
+
+
 repositories {
     mavenCentral()
 }
@@ -10,11 +13,14 @@ application {
     mainClassName = 'Main'
 }
 
+sourceCompatibility = 11
+targetCompatibility = 11
+
+
 dependencies {
     compile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.1.0'
-    compile group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9'
     compile group: 'io.github.cdimascio', name: 'java-dotenv', version: '3.1.7'
     compile group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.7'
     compile group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.7'
+    compile group: 'org.json', name: 'json', version: '20180130'
 }

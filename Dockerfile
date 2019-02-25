@@ -1,4 +1,4 @@
-FROM openjdk:13 as base
+FROM openjdk:11 as base
 WORKDIR /service
 
 COPY . ./

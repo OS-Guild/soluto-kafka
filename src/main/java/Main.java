@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -51,6 +52,12 @@ public class Main {
                     processSequence(consumedDedup);
                 }
                 monitor.processCompleted(executionStart);
+
+                try {
+                    consumer.commitSync();
+                } catch (CommitFailedException ignored) {
+                    monitor.commitFailed();
+                }
             }
         } catch (Exception e) {
             monitor.unexpectedError(e);

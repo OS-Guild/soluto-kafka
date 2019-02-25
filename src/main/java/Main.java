@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -90,19 +91,10 @@ public class Main {
             : records;
     }
 
-    private static void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
-        CompletableFuture<Void> future = null;
-        for (var record : records)
-        {
+    private static void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException, ExecutionException {
+        for (var record : records) {
             monitor.messageLatency(record);
-            if (future == null)
-            {
-                future = sendHttpReqeust(record);
-            }
-            else
-            {
-                future.thenApplyAsync(__ -> sendHttpReqeust(record));
-            }
+            sendHttpReqeust(record).get();
         }
     }
 

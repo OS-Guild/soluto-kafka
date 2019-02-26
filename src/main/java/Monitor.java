@@ -38,7 +38,9 @@ public class Monitor {
     
     public void messageLatency(ConsumerRecord<String, String> record) {
         if (statsdClient == null) return; 
-        statsdClient.recordExecutionTime("message."+record.partition()+".latency", (new Date()).getTime() - record.timestamp());
+        var latency = (new Date()).getTime() - record.timestamp();
+        statsdClient.recordExecutionTime("message.latency", latency);
+        statsdClient.recordExecutionTime("message."+record.partition()+".latency", latency);
     }
 
 	public void processCompleted(long executionStart) {

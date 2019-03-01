@@ -9,17 +9,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
 
 public class Monitor {
-    StatsDClient statsdClient;
-    Config config;
+    static StatsDClient statsdClient;
 
-    public Monitor(Config config) {
-        this.config = config;
-        if (config.JAVA_ENV.equals("production")) {
-            statsdClient = new NonBlockingStatsDClient(config.STATSD_API_KEY + "." + config.STATSD_ROOT + ".kafka-consumer-"+ config.TOPIC + "-" + config.GROUP_ID, config.STATSD_HOST, 8125);
+    public static void init() {
+        if (Config.JAVA_ENV.equals("production")) {
+            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + ".kafka-consumer-"+ Config.TOPIC + "-" + Config.GROUP_ID, Config.STATSD_HOST, 8125);
         }
     }
 
-    public void consumed(ConsumerRecords<String, String> consumed) {
+    public static void consumed(ConsumerRecords<String, String> consumed) {
         JSONObject log = new JSONObject()
         .put("level", "debug")
         .put("message", "consumed messages")
@@ -31,34 +29,29 @@ public class Monitor {
         statsdClient.recordGaugeValue("consumed", consumed.count());
     }
 
-    public void consumedDedup(Iterable<ConsumerRecord<String, String>> records) {
+    public static void consumedDedup(Iterable<ConsumerRecord<String, String>> records) {
         if (statsdClient == null) return;        
         statsdClient.recordGaugeValue("consumed-dedup", Iterators.size(records.iterator()));
     }
     
-    public void messageLatency(ConsumerRecord<String, String> record) {
+    public static void messageLatency(ConsumerRecord<String, String> record) {
         if (statsdClient == null) return; 
         var latency = (new Date()).getTime() - record.timestamp();
         statsdClient.recordExecutionTime("message.latency", latency);
         statsdClient.recordExecutionTime("message."+record.partition()+".latency", latency);
     }
 
-	public void processCompleted(long executionStart) {
-        JSONObject log = new JSONObject()
-        .put("level", "debug")
-        .put("message", "finished processing consumed messages");
-
-        output(log);
+	public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;        
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
 	}
 
-    public void deadLetterProduce() {
+    public static void deadLetterProduce() {
         if (statsdClient == null) return;
         statsdClient.recordGaugeValue("deadLetterProduce", 1);
 	}
 
-    public void unexpectedError(Exception exception) {
+    public static void unexpectedError(Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
         .put("message", "unexpected error")
@@ -68,23 +61,31 @@ public class Monitor {
         output(log);
     }
 
-	public void serviceStarted() {
+	public static void serviceStarted() {
         JSONObject log = new JSONObject()
         .put("level", "info")
-        .put("message", "kafka-consumer-"+config.TOPIC+"-"+config.GROUP_ID + "started");
+        .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + " started");
+
+        output(log);
+    }
+    
+    public static void consumerReady(int id) {
+        JSONObject log = new JSONObject()
+        .put("level", "info")
+        .put("message", "kafka-consumer-"+id+"-"+Config.TOPIC+"-"+Config.GROUP_ID + " ready");
 
         output(log);
 	}
 
-	public void serviceShutdown() {
+	public static void serviceShutdown() {
         JSONObject log = new JSONObject()
         .put("level", "info")
-        .put("message", "kafka-consumer-"+config.TOPIC+"-"+config.GROUP_ID + "shutdown");
+        .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + "shutdown");
 
         output(log);
     }
 
-    public void commitFailed() {
+    public static void commitFailed() {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "commit failed, this usually indicates on consumer rebalancing");
@@ -92,7 +93,7 @@ public class Monitor {
         output(log);
     }
 
-    public void deadLetterProduceError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
+    public static void deadLetterProduceError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
         .put("message", "failed producing message to dead letter")
@@ -108,7 +109,7 @@ public class Monitor {
         statsdClient.recordGaugeValue("deadLetterProduce.error", 1);
     }
 
-	public void deadLetterProduce(ConsumerRecord<String, String> consumerRecord) {
+	public static void deadLetterProduce(ConsumerRecord<String, String> consumerRecord) {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "produced message to dead letter")
@@ -120,7 +121,7 @@ public class Monitor {
         output(log);
     }
 
-    private void output(JSONObject log) {
+    private static void output(JSONObject log) {
         System.out.println(log.toString());
     }
 }

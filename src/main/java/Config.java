@@ -24,8 +24,6 @@ class Config {
     public final int TARGET_RETRY_COUNT;
     public final String DEAD_LETTER_TOPIC;
     public final int CONCURRENCY;
-    public final int POLL_INTERVAL;
-    public final int POLL_RECORDS;
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
     public final int CONSUMER_POLL_TIMEOUT;
@@ -45,8 +43,6 @@ class Config {
         TARGET_RETRY_COUNT = getOptionalInt(dotenv, "TARGET_RETRY_COUNT", 1);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
-        POLL_INTERVAL = getOptionalInt(dotenv, "POLL_INTERVAL", Integer.MAX_VALUE);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));

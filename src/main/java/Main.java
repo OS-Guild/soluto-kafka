@@ -19,7 +19,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 public class Main {
-    static HttpClient client = HttpClient.newHttpClient();
     static Config config;
     static Monitor monitor;
     static KafkaCreator kafkaCreator;
@@ -120,7 +119,7 @@ public class Main {
             .build();
 
         var executionStart = new Date().getTime();
-        return client
+        return HttpClient.newHttpClient()
             .sendAsync(request, HttpResponse.BodyHandlers.ofString())
             .thenApplyAsync(response -> {
                 if (response.statusCode() == 500) {

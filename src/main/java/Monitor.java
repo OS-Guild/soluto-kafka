@@ -44,11 +44,6 @@ public class Monitor {
     }
 
 	public void processCompleted(long executionStart) {
-        JSONObject log = new JSONObject()
-        .put("level", "debug")
-        .put("message", "finished processing consumed messages");
-
-        output(log);
         if (statsdClient == null) return;        
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
 	}

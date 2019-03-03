@@ -121,6 +121,23 @@ public class Monitor {
         output(log);
     }
 
+    public static void sendHttpReqeustError(ConsumerRecord<String, String> consumerRecord, Throwable exception) {
+        JSONObject log = new JSONObject()
+        .put("level", "error")
+        .put("message", "failed sending http request")
+        .put("extra", new JSONObject()
+            .put("message", new JSONObject()
+                .put("key",consumerRecord.key()))
+                .put("value", consumerRecord.value()))
+        .put("err", new JSONObject()
+            .put("message", exception.getMessage()));
+
+        output(log);
+
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("sendHttpReqeust.error", 1);
+    }
+
     private static void output(JSONObject log) {
         System.out.println(log.toString());
     }

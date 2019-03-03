@@ -48,12 +48,7 @@ public class ConsumerLoop implements Runnable {
                 var consumedDedup = dedup(consumed);
                 Monitor.consumedDedup(consumed);
                 
-                if (Config.CONCURRENCY > 1) {
-                    processParallel(consumedDedup);
-                }
-                else {
-                    processSequence(consumedDedup);
-                }
+                process(consumedDedup);
 
                 try {
                     consumer.commitSync();
@@ -84,15 +79,7 @@ public class ConsumerLoop implements Runnable {
             : records;
     }
 
-    private void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException, ExecutionException {
-        Flowable.fromIterable(records)
-            .doOnNext(record -> Monitor.messageLatency(record))
-            .concatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
-            .subscribeOn(Schedulers.io())
-            .blockingSubscribe();
-    }
-
-    private void processParallel(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
+    private void process(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
             .doOnNext(record -> Monitor.messageLatency(record))
             .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)

@@ -10,28 +10,33 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 class Config {
-    public final String JAVA_ENV;
-    public final String KAFKA_PASSWORD;
-    public final boolean SHOULD_SKIP_AUTHENTICATION;
-    public final boolean SHOULD_DEDUP_BY_KEY;
-    public final String STATSD_API_KEY;
-    public final String STATSD_ROOT;
-    public final String STATSD_HOST;
-    public final String KAFKA_BROKER;
-    public final String TOPIC;
-    public final String GROUP_ID;
-    public final String TARGET_ENDPOINT;
-    public final int TARGET_RETRY_COUNT;
-    public final String DEAD_LETTER_TOPIC;
-    public final int CONCURRENCY;
-    public final String TRUSTSTORE_LOCATION;
-    public final String KEYSTORE_LOCATION;
-    public final int CONSUMER_POLL_TIMEOUT;
+    public static String JAVA_ENV;
+    public static int PORT;
+    public static String KAFKA_PASSWORD;
+    public static boolean SHOULD_SKIP_AUTHENTICATION;
+    public static boolean SHOULD_DEDUP_BY_KEY;
+    public static String STATSD_API_KEY;
+    public static String STATSD_ROOT;
+    public static String STATSD_HOST;
+    public static String KAFKA_BROKER;
+    public static String TOPIC;
+    public static String GROUP_ID;
+    public static String TARGET_ENDPOINT;
+    public static int TARGET_RETRY_COUNT;
+    public static String DEAD_LETTER_TOPIC;
+    public static int CONCURRENCY;
+    public static int POLL_INTERVAL;
+    public static int POLL_RECORDS;
+    public static String TRUSTSTORE_LOCATION;
+    public static String KEYSTORE_LOCATION;
+    public static int CONSUMER_POLL_TIMEOUT;
+	public static int CONSUMER_THREADS;
 
-    Config() throws Exception {
+    public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
+        PORT = getInt(dotenv, "PORT");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
         SHOULD_DEDUP_BY_KEY = getOptionalBoolean(dotenv, "SHOULD_DEDUP_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
@@ -44,6 +49,8 @@ class Config {
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
+        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
+        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 
@@ -56,13 +63,14 @@ class Config {
 
         writeToFile(TRUSTSTORE_LOCATION, truststore);
         writeToFile(KEYSTORE_LOCATION, keystore);
+
     }
 
-    private void writeToFile(String path, String value) throws IOException {
+    private static void writeToFile(String path, String value) throws IOException {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private JSONObject readSecrets(String secretsFileLocation) {
+    private static JSONObject readSecrets(String secretsFileLocation) {
         try {
             return new JSONObject(new String(Files.readAllBytes(Paths.get(secretsFileLocation))));
         } catch (IOException e) {
@@ -99,6 +107,10 @@ class Config {
         }
 
         return value;
+    }
+
+    private static int getInt(Dotenv dotenv, String name) {
+        return Integer.parseInt(dotenv.get(name));
     }
 
     private static String getOptionalString(Dotenv dotenv, String name, String fallback) {

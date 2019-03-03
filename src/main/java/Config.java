@@ -50,6 +50,7 @@ class Config {
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
+        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 

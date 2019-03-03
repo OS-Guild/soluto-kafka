@@ -108,7 +108,7 @@ public class ConsumerLoop implements Runnable {
             .blockingSubscribe();        
     }
 
-    private CompletableFuture<Void> sendHttpReqeust(ConsumerRecord<String, String> record) {
+    private CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {
         var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.TARGET_ENDPOINT))
@@ -126,7 +126,7 @@ public class ConsumerLoop implements Runnable {
                 else {
                     Monitor.processCompleted(executionStart);                    
                 }
-                return null;                            
+                return true;                            
             });
     }
 

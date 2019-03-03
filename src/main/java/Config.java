@@ -11,7 +11,6 @@ import java.util.Base64;
 
 class Config {
     public static String JAVA_ENV;
-    public static int PORT;
     public static String KAFKA_PASSWORD;
     public static boolean SHOULD_SKIP_AUTHENTICATION;
     public static boolean SHOULD_DEDUP_BY_KEY;
@@ -36,7 +35,6 @@ class Config {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
-        PORT = getInt(dotenv, "PORT");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
         SHOULD_DEDUP_BY_KEY = getOptionalBoolean(dotenv, "SHOULD_DEDUP_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
@@ -49,7 +47,7 @@ class Config {
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
+        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));

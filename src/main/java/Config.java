@@ -30,6 +30,7 @@ class Config {
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static int CONSUMER_POLL_TIMEOUT;
+	public static int CONSUMER_THREADS;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -47,9 +48,8 @@ class Config {
         TARGET_RETRY_COUNT = getOptionalInt(dotenv, "TARGET_RETRY_COUNT", 1);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
-        POLL_INTERVAL = getOptionalInt(dotenv, "POLL_INTERVAL", Integer.MAX_VALUE);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
+        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
 

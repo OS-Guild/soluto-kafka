@@ -18,6 +18,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
+
 public class ConsumerLoop implements Runnable {
     private HttpClient client = HttpClient.newHttpClient();
     private KafkaConsumer<String, String> consumer;
@@ -90,25 +93,19 @@ public class ConsumerLoop implements Runnable {
     }
 
     private void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException, ExecutionException {
-        CompletableFuture<Void> future = null;        
-        for (var record : records) {
-            Monitor.messageLatency(record);
-            if (future == null) {
-                future = sendHttpReqeust(record);
-            }
-            else {
-                future.thenApplyAsync(__ -> sendHttpReqeust(record));
-            }
-        }
+        Flowable.fromIterable(records)
+            .doOnNext(record -> Monitor.messageLatency(record))
+            .concatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();
     }
 
     private void processParallel(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
-        StreamSupport
-            .stream(records.spliterator(), true)
-            .peek(record -> Monitor.messageLatency(record))
-            .map(record ->  sendHttpReqeust(record))
-            .map(CompletableFuture::join)
-            .collect(Collectors.toList());
+        Flowable.fromIterable(records)
+            .doOnNext(record -> Monitor.messageLatency(record))
+            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();        
     }
 
     private CompletableFuture<Void> sendHttpReqeust(ConsumerRecord<String, String> record) {

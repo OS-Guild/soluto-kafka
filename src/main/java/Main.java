@@ -8,16 +8,15 @@ public class Main {
         Monitor.init();
         var deadLetterProducer = new KafkaCreator().createProducer();
 
-        var consumer = new KafkaCreator().createConsumer();
-        var consumerLoop1 = new ConsumerLoop(1, consumer, deadLetterProducer);
-        new Thread(consumerLoop1).start();
-        consumerLoops.add(consumerLoop1);
-
-        var server = new IsAliveServer(consumerLoops).start();
+        for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
+            var consumer = new KafkaCreator().createConsumer();
+            var consumerLoop1 = new ConsumerLoop(i, consumer, deadLetterProducer);
+            new Thread(consumerLoop1).start();
+            consumerLoops.add(consumerLoop1);
+        }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
-            server.close();
         }));
 
         Monitor.serviceStarted();

@@ -23,4 +23,5 @@ dependencies {
     compile group: 'com.datadoghq', name: 'java-dogstatsd-client', version: '2.7'
     compile group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
     compile group: 'org.json', name: 'json', version: '20180130'
+    implementation "io.reactivex.rxjava2:rxjava:2.2.7"
 }

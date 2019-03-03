@@ -95,7 +95,7 @@ public class ConsumerLoop implements Runnable {
     private void processParallel(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
             .doOnNext(record -> Monitor.messageLatency(record))
-            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
+            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)
             .subscribeOn(Schedulers.io())
             .blockingSubscribe();        
     }

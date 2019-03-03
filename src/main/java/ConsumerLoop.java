@@ -119,6 +119,11 @@ public class ConsumerLoop implements Runnable {
                     Monitor.processCompleted(executionStart);                    
                 }
                 return true;                            
+            })
+            .exceptionally(exception -> {
+                Monitor.sendHttpReqeustError(record, exception);
+                produceDeadLetter(record);
+                return true;
             });
     }
 

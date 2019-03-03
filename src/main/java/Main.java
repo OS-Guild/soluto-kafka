@@ -18,6 +18,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
+
 public class Main {
     static Config config;
     static Monitor monitor;
@@ -89,28 +92,22 @@ public class Main {
     }
 
     private static void processSequence(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException, ExecutionException {
-        CompletableFuture<Void> future = null;        
-        for (var record : records) {
-            monitor.messageLatency(record);
-            if (future == null) {
-                future = sendHttpReqeust(record);
-            }
-            else {
-                future.thenApplyAsync(__ -> sendHttpReqeust(record));
-            }
-        }
+        Flowable.fromIterable(records)
+            .doOnNext(record -> monitor.messageLatency(record))
+            .concatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();
     }
 
     private static void processParallel(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
-        StreamSupport
-            .stream(records.spliterator(), true)
-            .peek(record -> monitor.messageLatency(record))
-            .map(record ->  sendHttpReqeust(record))
-            .map(CompletableFuture::join)
-            .collect(Collectors.toList());
+        Flowable.fromIterable(records)
+            .doOnNext(record -> monitor.messageLatency(record))
+            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)))
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();        
     }
 
-    private static CompletableFuture<Void> sendHttpReqeust(ConsumerRecord<String, String> record) {
+    private static CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {
         var request = HttpRequest
             .newBuilder()
             .uri(URI.create(config.TARGET_ENDPOINT))
@@ -128,7 +125,7 @@ public class Main {
                 else {
                     monitor.processCompleted(executionStart);                    
                 }
-                return null;                            
+                return true;                            
             });
     }
 

@@ -127,6 +127,11 @@ public class Main {
                     monitor.processCompleted(executionStart);                    
                 }
                 return true;                            
+            })
+            .exceptionally(exception -> {
+                monitor.sendHttpReqeustError(record, exception);
+                produceDeadLetter(record);
+                return true;
             });
     }
 

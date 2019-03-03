@@ -27,6 +27,7 @@ public class Main {
     static KafkaCreator kafkaCreator;
     static KafkaConsumer<String, String> consumer;
     static KafkaProducer<String, String> producer;
+    static HttpClient client = HttpClient.newHttpClient();
     static boolean running = true;
 
     public static void main(String[] args) throws Exception {
@@ -116,7 +117,7 @@ public class Main {
             .build();
 
         var executionStart = new Date().getTime();
-        return HttpClient.newHttpClient()
+        return client
             .sendAsync(request, HttpResponse.BodyHandlers.ofString())
             .thenApplyAsync(response -> {
                 if (response.statusCode() == 500) {

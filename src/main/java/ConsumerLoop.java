@@ -42,6 +42,10 @@ public class ConsumerLoop implements Runnable {
         try {
             while (running) {
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
+                if (ready == false && consumer.assignment().size() > 0) {
+                    ready = true;
+                    Monitor.consumerReady(id);
+                }                
                 if (consumed.count() == 0) continue;
                 Monitor.consumed(consumed);
                 
@@ -67,6 +71,10 @@ public class ConsumerLoop implements Runnable {
     public void stop() {
         running = false;
     }
+
+    public Boolean ready() {
+		return ready;
+	}
 
     private Iterable<ConsumerRecord<String, String>> dedup(ConsumerRecords<String, String> records) {
         return Config.SHOULD_DEDUP_BY_KEY

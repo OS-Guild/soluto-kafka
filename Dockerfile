@@ -1,4 +1,4 @@
-FROM openjdk:12
+FROM openjdk:11.0.2-slim
 WORKDIR /service
 
 COPY . ./

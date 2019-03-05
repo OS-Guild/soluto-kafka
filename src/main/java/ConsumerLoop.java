@@ -21,7 +21,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import io.reactivex.Flowable;
 import io.reactivex.schedulers.Schedulers;
 
-public class ConsumerLoop implements Runnable {
+public class ConsumerLoop implements Runnable, IReady {
     private HttpClient client = HttpClient.newHttpClient();
     private KafkaConsumer<String, String> consumer;
     private KafkaProducer<String, String> producer;
@@ -72,7 +72,8 @@ public class ConsumerLoop implements Runnable {
         running = false;
     }
 
-    public Boolean ready() {
+    @Override
+    public boolean ready() {
 		return ready;
 	}
 

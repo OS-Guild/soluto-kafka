@@ -7,10 +7,10 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 public class IsAliveServer {
-    List<ConsumerLoop> consumerLoops;
+    List<? extends IReady> consumerLoops;
     HttpServer server;
 
-    IsAliveServer(List<ConsumerLoop> consumerLoops) {
+    public IsAliveServer(List<? extends IReady> consumerLoops) {
         this.consumerLoops = consumerLoops;
     }
 

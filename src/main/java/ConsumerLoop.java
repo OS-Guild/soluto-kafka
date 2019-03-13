@@ -4,10 +4,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -20,6 +20,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import io.reactivex.Flowable;
 import io.reactivex.schedulers.Schedulers;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 public class ConsumerLoop implements Runnable, IReady {
     private HttpClient client = HttpClient.newHttpClient();
@@ -91,7 +93,7 @@ public class ConsumerLoop implements Runnable, IReady {
     private void process(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
             .doOnNext(record -> Monitor.messageLatency(record))
-            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)
+            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
             .subscribeOn(Schedulers.io())
             .blockingSubscribe();        
     }
@@ -105,22 +107,19 @@ public class ConsumerLoop implements Runnable, IReady {
             .build();
 
         var executionStart = new Date().getTime();
-        return client
-            .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-            .thenApplyAsync(response -> {
-                if (response.statusCode() == 500) {
-                    produceDeadLetter(record);
-                }
-                else {
-                    Monitor.processCompleted(executionStart);                    
-                }
-                return true;                            
-            })
-            .exceptionally(exception -> {
-                Monitor.sendHttpReqeustError(record, exception);
-                produceDeadLetter(record);
-                return true;
-            });
+
+         var retryPolicy = new RetryPolicy<HttpResponse<String>>()
+            .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
+            .handleResultIf(r -> r.statusCode() >= 500 && r.statusCode() < 600)
+            .onSuccess(x -> Monitor.processCompleted(executionStart))
+            .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastFailure(), x.getAttemptCount()))            
+            .onRetriesExceeded(__ -> produceDeadLetter(record));
+
+        return Failsafe
+            .with(retryPolicy)
+            .getStageAsync(() -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString()))
+            .thenApplyAsync(__ -> true)
+            .exceptionally(__ -> false);
     }
 
     private void produceDeadLetter(ConsumerRecord<String, String> record) {
@@ -129,7 +128,7 @@ public class ConsumerLoop implements Runnable, IReady {
                 Monitor.deadLetterProduceError(record ,err);
                 return;
             }
-            Monitor.deadLetterProduce();
+            Monitor.deadLetterProduced(record);
         });
     }
 }

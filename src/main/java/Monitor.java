@@ -24,7 +24,7 @@ public class Monitor {
         .put("extra", new JSONObject()
             .put("count", consumed.count()));
 
-        output(log);
+        write(log);
         if (statsdClient == null) return;
         statsdClient.recordGaugeValue("consumed", consumed.count());
     }
@@ -46,9 +46,19 @@ public class Monitor {
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
 	}
 
-    public static void deadLetterProduce() {
+    public static void deadLetterProduced(ConsumerRecord<String, String> consumerRecord) {
+        JSONObject log = new JSONObject()
+        .put("level", "error")
+        .put("message", "target execution failed - dead letter produced")
+        .put("extra", new JSONObject()
+            .put("message", new JSONObject()
+                .put("key",consumerRecord.key()))
+                .put("value", consumerRecord.value()));
+
+        write(log);
+
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("deadLetterProduce", 1);
+        statsdClient.recordGaugeValue("deadLetterProduced", 1);
 	}
 
     public static void unexpectedError(Exception exception) {
@@ -58,7 +68,7 @@ public class Monitor {
         .put("err", new JSONObject()
             .put("message", exception.getMessage()));
 
-        output(log);
+        write(log);
     }
 
 	public static void serviceStarted() {
@@ -66,7 +76,7 @@ public class Monitor {
         .put("level", "info")
         .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + " started");
 
-        output(log);
+        write(log);
     }
     
     public static void consumerReady(int id) {
@@ -74,7 +84,7 @@ public class Monitor {
         .put("level", "info")
         .put("message", "kafka-consumer-"+id+"-"+Config.TOPIC+"-"+Config.GROUP_ID + " ready");
 
-        output(log);
+        write(log);
 	}
 
 	public static void serviceShutdown() {
@@ -82,7 +92,7 @@ public class Monitor {
         .put("level", "info")
         .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + "shutdown");
 
-        output(log);
+        write(log);
     }
 
     public static void commitFailed() {
@@ -90,13 +100,13 @@ public class Monitor {
         .put("level", "info")
         .put("message", "commit failed, this usually indicates on consumer rebalancing");
 
-        output(log);
+        write(log);
     }
 
     public static void deadLetterProduceError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
-        .put("message", "failed producing message to dead letter")
+        .put("message", "target execution failed - failed producing message to dead letter")
         .put("extra", new JSONObject()
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key()))
@@ -104,41 +114,36 @@ public class Monitor {
         .put("err", new JSONObject()
             .put("message", exception.getMessage()));
 
-        output(log);
+        write(log);
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("deadLetterProduce.error", 1);
+        statsdClient.recordGaugeValue("deadLetterProduceError", 1);
     }
 
-	public static void deadLetterProduce(ConsumerRecord<String, String> consumerRecord) {
+	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, Throwable exception, int attempt) {
         JSONObject log = new JSONObject()
-        .put("level", "info")
-        .put("message", "produced message to dead letter")
+        .put("level", "warning")
+        .put("message", "target execution failed - retrying")
         .put("extra", new JSONObject()
             .put("message", new JSONObject()
-                .put("key",consumerRecord.key()))
-                .put("value", consumerRecord.value()));
+                .put("key",consumerRecord.key())
+                .put("value", consumerRecord.value())
+            )
+            .put("attempt", attempt)
+        );
 
-        output(log);
-    }
+        if (exception != null) {
+            log
+                .put("err", new JSONObject()
+                .put("message", exception.getMessage()));
+        }
 
-    public static void sendHttpReqeustError(ConsumerRecord<String, String> consumerRecord, Throwable exception) {
-        JSONObject log = new JSONObject()
-        .put("level", "error")
-        .put("message", "failed sending http request")
-        .put("extra", new JSONObject()
-            .put("message", new JSONObject()
-                .put("key",consumerRecord.key()))
-                .put("value", consumerRecord.value()))
-        .put("err", new JSONObject()
-            .put("message", exception.getMessage()));
-
-        output(log);
+        write(log);
 
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("sendHttpReqeust.error", 1);
-    }
+        statsdClient.recordGaugeValue("targetExecutionRetry." + attempt, 1);        
+	}    
 
-    private static void output(JSONObject log) {
+    private static void write(JSONObject log) {
         System.out.println(log.toString());
     }
 }

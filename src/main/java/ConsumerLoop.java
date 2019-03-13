@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -63,7 +64,12 @@ public class ConsumerLoop implements Runnable, IReady {
                 }
             }
         } catch (Exception e) {
-            Monitor.unexpectedError(e);
+            if (isTargetUnavailableException(e)) {
+                Monitor.targetUnavailable();
+            }
+            else {
+                Monitor.unexpectedError(e);
+            }
         } finally {
             consumer.unsubscribe();
             consumer.close();
@@ -92,10 +98,10 @@ public class ConsumerLoop implements Runnable, IReady {
 
     private void process(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
-            .doOnNext(record -> Monitor.messageLatency(record))
-            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
-            .subscribeOn(Schedulers.io())
-            .blockingSubscribe();        
+        .doOnNext(record -> Monitor.messageLatency(record))
+        .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
+        .subscribeOn(Schedulers.io())
+        .blockingSubscribe();    
     }
 
     private CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {
@@ -110,7 +116,8 @@ public class ConsumerLoop implements Runnable, IReady {
 
          var retryPolicy = new RetryPolicy<HttpResponse<String>>()
             .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-            .handleResultIf(r -> r.statusCode() >= 500 && r.statusCode() < 600)
+            .abortOn(ConnectException.class)
+            .handleResultIf(r -> r.statusCode() >= 500)
             .onSuccess(x -> Monitor.processCompleted(executionStart))
             .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastFailure(), x.getAttemptCount()))            
             .onRetriesExceeded(__ -> produceDeadLetter(record));
@@ -119,7 +126,12 @@ public class ConsumerLoop implements Runnable, IReady {
             .with(retryPolicy)
             .getStageAsync(() -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString()))
             .thenApplyAsync(__ -> true)
-            .exceptionally(__ -> false);
+            .exceptionally(throwable -> {
+                if (throwable.getCause() instanceof ConnectException) {
+                    throw new RuntimeException(throwable);
+                }
+                return true;
+            });
     }
 
     private void produceDeadLetter(ConsumerRecord<String, String> record) {
@@ -130,5 +142,12 @@ public class ConsumerLoop implements Runnable, IReady {
             }
             Monitor.deadLetterProduced(record);
         });
+    }
+
+    private boolean isTargetUnavailableException(Exception exception) {
+        if (exception.getCause().getCause().getCause().getCause() instanceof ConnectException) {
+            return true;
+        }
+        return false;
     }
 }

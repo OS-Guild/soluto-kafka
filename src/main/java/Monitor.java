@@ -1,3 +1,4 @@
+import java.net.http.HttpResponse;
 import java.util.Date;
 
 import com.google.common.collect.Iterators;
@@ -119,23 +120,30 @@ public class Monitor {
         statsdClient.recordGaugeValue("deadLetterProduceError", 1);
     }
 
-	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, Throwable exception, int attempt) {
+	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {
         JSONObject log = new JSONObject()
         .put("level", "warning")
-        .put("message", "target execution failed - retrying")
-        .put("extra", new JSONObject()
+        .put("message", "target execution failed - retrying");
+
+        var extra = new JSONObject()
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key())
                 .put("value", consumerRecord.value())
             )
-            .put("attempt", attempt)
-        );
-
-        if (exception != null) {
-            log
-                .put("err", new JSONObject()
-                .put("message", exception.getMessage()));
+            .put("attempt", attempt);
+        
+        if (response != null) {
+            extra.put("response", response.body());
         }
+
+        var error = new JSONObject();
+        if (exception != null) {
+            error.put("message", exception.getMessage());
+            error.put("type", exception.getClass());
+        }
+
+        log.put("extra", extra);
+        log.put("err", error);
 
         write(log);
 

@@ -119,7 +119,7 @@ public class ConsumerLoop implements Runnable, IReady {
             .abortOn(ConnectException.class)
             .handleResultIf(r -> r.statusCode() >= 500)
             .onSuccess(x -> Monitor.processCompleted(executionStart))
-            .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastFailure(), x.getAttemptCount()))            
+            .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))            
             .onRetriesExceeded(__ -> produceDeadLetter(record));
 
         return Failsafe

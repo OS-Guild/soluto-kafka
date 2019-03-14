@@ -148,8 +148,8 @@ public class Monitor {
         .put("level", "info")
         .put("message", "target unavailable due to connection error");
 
-        write(log);        
-	}
+        write(log);
+    }
 
     private static void write(JSONObject log) {
         System.out.println(log.toString());

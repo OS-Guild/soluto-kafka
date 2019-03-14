@@ -101,7 +101,7 @@ public class ConsumerLoop implements Runnable, IReady {
             .doOnNext(record -> Monitor.messageLatency(record))
             .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
             .subscribeOn(Schedulers.io())
-            .blockingSubscribe();    
+            .blockingSubscribe();
     }
 
     private CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {

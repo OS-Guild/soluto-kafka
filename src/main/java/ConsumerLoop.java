@@ -98,10 +98,10 @@ public class ConsumerLoop implements Runnable, IReady {
 
     private void process(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
-        .doOnNext(record -> Monitor.messageLatency(record))
-        .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
-        .subscribeOn(Schedulers.io())
-        .blockingSubscribe();    
+            .doOnNext(record -> Monitor.messageLatency(record))
+            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();    
     }
 
     private CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {

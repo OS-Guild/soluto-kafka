@@ -123,7 +123,7 @@ public class Monitor {
 	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {
         JSONObject log = new JSONObject()
         .put("level", "warning")
-        .put("message", "target execution failed - retrying");
+        .put("message", "retry occurred on kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID);
 
         var extra = new JSONObject()
             .put("message", new JSONObject()

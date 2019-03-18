@@ -64,8 +64,8 @@ public class ConsumerLoop implements Runnable, IReady {
                 }
             }
         } catch (Exception e) {
-            if (isTargetUnavailableException(e)) {
-                Monitor.targetUnavailable();
+            if (e.getCause() instanceof ConnectException) {
+                Monitor.targetConnectionUnavailable();
             }
             else {
                 Monitor.unexpectedError(e);
@@ -99,12 +99,19 @@ public class ConsumerLoop implements Runnable, IReady {
     private void process(Iterable<ConsumerRecord<String, String>> records) throws IOException, InterruptedException {
         Flowable.fromIterable(records)
             .doOnNext(record -> Monitor.messageLatency(record))
-            .flatMap(record -> Flowable.fromFuture(sendHttpReqeust(record)), Config.CONCURRENCY)                  
+            .flatMap(record -> 
+                Flowable.fromFuture(callTarget(record)), Config.CONCURRENCY)
+                    .flatMap(x -> {
+                        if (x.type == TargetResponseType.Error) {
+                            return Flowable.error(x.exception.getCause());
+                        }
+                        return Flowable.empty();
+                    })
             .subscribeOn(Schedulers.io())
             .blockingSubscribe();
     }
 
-    private CompletableFuture<Boolean> sendHttpReqeust(ConsumerRecord<String, String> record) {
+    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
         var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.TARGET_ENDPOINT))
@@ -115,23 +122,18 @@ public class ConsumerLoop implements Runnable, IReady {
         var executionStart = new Date().getTime();
 
          var retryPolicy = new RetryPolicy<HttpResponse<String>>()
-            .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
+            .withBackoff(10, 250, ChronoUnit.MILLIS, 5)            
             .abortOn(ConnectException.class)
             .handleResultIf(r -> r.statusCode() >= 500)
-            .onSuccess(x -> Monitor.processCompleted(executionStart))
-            .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))            
+            .onSuccess(x -> Monitor.processCompleted(executionStart))            
+            .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))
             .onRetriesExceeded(__ -> produceDeadLetter(record));
 
         return Failsafe
             .with(retryPolicy)
             .getStageAsync(() -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString()))
-            .thenApplyAsync(__ -> true)
-            .exceptionally(throwable -> {
-                if (throwable.getCause() instanceof ConnectException) {
-                    throw new RuntimeException(throwable);
-                }
-                return true;
-            });
+            .thenApplyAsync(__ ->  TargetResponse.Success)
+            .exceptionally(throwable -> TargetResponse.Error(throwable));
     }
 
     private void produceDeadLetter(ConsumerRecord<String, String> record) {
@@ -142,12 +144,5 @@ public class ConsumerLoop implements Runnable, IReady {
             }
             Monitor.deadLetterProduced(record);
         });
-    }
-
-    private boolean isTargetUnavailableException(Exception exception) {
-        if (exception.getCause().getCause().getCause().getCause() instanceof ConnectException) {
-            return true;
-        }
-        return false;
     }
 }

@@ -151,10 +151,10 @@ public class Monitor {
         statsdClient.recordGaugeValue("targetExecutionRetry." + attempt, 1);        
     }   
     
-    public static void targetUnavailable() {
+    public static void targetConnectionUnavailable() {
         JSONObject log = new JSONObject()
         .put("level", "info")
-        .put("message", "target unavailable due to connection error");
+        .put("message", "target connection unavailable, terminating consumer");
 
         write(log);
     }

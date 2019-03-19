@@ -14,7 +14,7 @@ public class Monitor {
 
     public static void init() {
         if (Config.JAVA_ENV.equals("production")) {
-            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + ".kafka-consumer-"+ Config.TOPIC + "-" + Config.GROUP_ID, Config.STATSD_HOST, 8125);
+            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + ".kafka-consumer-"+ Config.TOPIC + "-" + Config.GROUP_ID + "." + Config.CLUSTER, Config.STATSD_HOST, 8125);
         }
     }
 

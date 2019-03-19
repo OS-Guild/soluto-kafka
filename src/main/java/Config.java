@@ -22,15 +22,14 @@ class Config {
     public static String TOPIC;
     public static String GROUP_ID;
     public static String TARGET_ENDPOINT;
-    public static int TARGET_RETRY_COUNT;
     public static String DEAD_LETTER_TOPIC;
     public static int CONCURRENCY;
-    public static int POLL_INTERVAL;
     public static int POLL_RECORDS;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static int CONSUMER_POLL_TIMEOUT;
 	public static int CONSUMER_THREADS;
+	public static String CLUSTER;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -45,25 +44,23 @@ class Config {
         TOPIC = getString(dotenv, "TOPIC");
         GROUP_ID = getString(dotenv, "GROUP_ID");
         TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
-        TARGET_RETRY_COUNT = getOptionalInt(dotenv, "TARGET_RETRY_COUNT", 1);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
+        CLUSTER = getOptionalString(dotenv, "CLUSTER", "local");
 
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
-
         KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
         STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
-        String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
-        String keystore = getSecret(secrets, dotenv, "KEYSTORE");
         TRUSTSTORE_LOCATION = "client.truststore.jks";
         KEYSTORE_LOCATION = "client.keystore.p12";
 
+        String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
+        String keystore = getSecret(secrets, dotenv, "KEYSTORE");
         writeToFile(TRUSTSTORE_LOCATION, truststore);
         writeToFile(KEYSTORE_LOCATION, keystore);
-
     }
 
     private static void writeToFile(String path, String value) throws IOException {

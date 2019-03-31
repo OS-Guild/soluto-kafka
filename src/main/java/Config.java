@@ -44,7 +44,7 @@ class Config {
         TOPIC = getString(dotenv, "TOPIC");
         GROUP_ID = getString(dotenv, "GROUP_ID");
         TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
-        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-dead-letter");
+        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-" + getString(dotenv, "GROUP_ID") + "-dead-letter");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);

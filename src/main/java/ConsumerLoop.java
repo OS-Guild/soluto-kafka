@@ -127,7 +127,7 @@ public class ConsumerLoop implements Runnable, IReady {
             .handleResultIf(r -> r.statusCode() >= 500)
             .onSuccess(x -> Monitor.processCompleted(executionStart))            
             .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))
-            .onRetriesExceeded(__ -> produceDeadLetter(record));
+            .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
 
         return Failsafe
             .with(retryPolicy)
@@ -136,13 +136,13 @@ public class ConsumerLoop implements Runnable, IReady {
             .exceptionally(throwable -> TargetResponse.Error(throwable));
     }
 
-    private void produceDeadLetter(ConsumerRecord<String, String> record) {
-        producer.send(new ProducerRecord<>(Config.DEAD_LETTER_TOPIC, record.key().toString(), record.value().toString()), (metadata, err) -> {
+    private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
+        producer.send(new ProducerRecord<>(topic, record.key().toString(), record.value().toString()), (metadata, err) -> {
             if (err != null) {
-                Monitor.deadLetterProduceError(record ,err);
+                Monitor.produceError(topicPrefix, record ,err);
                 return;
             }
-            Monitor.deadLetterProduced(record);
+            Monitor.topicProduced(topicPrefix, record);
         });
     }
 }

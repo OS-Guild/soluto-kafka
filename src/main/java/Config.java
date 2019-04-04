@@ -20,9 +20,10 @@ class Config {
     public static String STATSD_HOST;
     public static String KAFKA_BROKER;
     public static String TOPIC;
+    public static String RETRY_TOPIC;
+    public static String POISON_MESSAGE_TOPIC;
     public static String GROUP_ID;
     public static String TARGET_ENDPOINT;
-    public static String DEAD_LETTER_TOPIC;
     public static int CONCURRENCY;
     public static int POLL_RECORDS;
     public static String TRUSTSTORE_LOCATION;
@@ -44,7 +45,8 @@ class Config {
         TOPIC = getString(dotenv, "TOPIC");
         GROUP_ID = getString(dotenv, "GROUP_ID");
         TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
-        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", getString(dotenv, "TOPIC") + "-" + getString(dotenv, "GROUP_ID") + "-dead-letter");
+        RETRY_TOPIC = getString(dotenv, "RETRY_TOPIC");
+        POISON_MESSAGE_TOPIC = getString(dotenv, "POISON_MESSAGE_TOPIC");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);

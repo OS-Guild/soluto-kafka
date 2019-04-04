@@ -104,10 +104,10 @@ public class Monitor {
         write(log);
     }
 
-    public static void produceError(String topic, ConsumerRecord<String, String> consumerRecord, Exception exception) {
+    public static void produceError(String topicPrefix, ConsumerRecord<String, String> consumerRecord, Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
-        .put("message", String.format("failed producing message to %s topic", topic))
+        .put("message", String.format("failed producing message to %s topic", topicPrefix))
         .put("extra", new JSONObject()
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key()))
@@ -117,7 +117,7 @@ public class Monitor {
 
         write(log);
         if (statsdClient == null) return;
-        statsdClient.increment(String.format("%sProduceError", topic));
+        statsdClient.increment(String.format("%sProduceError", topicPrefix));
     }
 
 	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {

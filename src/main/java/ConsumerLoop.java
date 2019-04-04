@@ -44,6 +44,7 @@ public class ConsumerLoop implements Runnable, IReady {
         consumer.subscribe(Collections.singletonList(Config.TOPIC));
         try {
             while (running) {
+                Thread.sleep(Config.PROCESSING_DELAY);
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
                 if (ready == false && consumer.assignment().size() > 0) {
                     ready = true;

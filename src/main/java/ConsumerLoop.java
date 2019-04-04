@@ -125,7 +125,14 @@ public class ConsumerLoop implements Runnable, IReady {
             .withBackoff(10, 250, ChronoUnit.MILLIS, 5)            
             .abortOn(ConnectException.class)
             .handleResultIf(r -> r.statusCode() >= 500)
-            .onSuccess(x -> Monitor.processCompleted(executionStart))            
+            .onSuccess(x -> {
+                var statusCode = x.getResult().statusCode();
+                if (400 <= statusCode && statusCode < 500) {
+                    produce("poison", Config.POISON_MESSAGE_TOPIC, record);
+                } else {
+                    Monitor.processCompleted(executionStart);
+                }
+            })            
             .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))
             .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
 

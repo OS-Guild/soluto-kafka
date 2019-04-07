@@ -47,10 +47,10 @@ public class Monitor {
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
 	}
 
-    public static void deadLetterProduced(ConsumerRecord<String, String> consumerRecord) {
+    public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {
         JSONObject log = new JSONObject()
         .put("level", "error")
-        .put("message", "target execution failed - dead letter produced")
+        .put("message", String.format("%s produced", topicPrefix))
         .put("extra", new JSONObject()
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key()))
@@ -59,8 +59,8 @@ public class Monitor {
         write(log);
 
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("deadLetterProduced", 1);
-	}
+        statsdClient.increment(String.format("%sProduced", topicPrefix));
+    }
 
     public static void unexpectedError(Exception exception) {
         JSONObject log = new JSONObject()
@@ -104,10 +104,10 @@ public class Monitor {
         write(log);
     }
 
-    public static void deadLetterProduceError(ConsumerRecord<String, String> consumerRecord, Exception exception) {
+    public static void produceError(String topicPrefix, ConsumerRecord<String, String> consumerRecord, Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
-        .put("message", "target execution failed - failed producing message to dead letter")
+        .put("message", String.format("failed producing message to %s topic", topicPrefix))
         .put("extra", new JSONObject()
             .put("message", new JSONObject()
                 .put("key",consumerRecord.key()))
@@ -117,7 +117,7 @@ public class Monitor {
 
         write(log);
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("deadLetterProduceError", 1);
+        statsdClient.increment(String.format("%sProduceError", topicPrefix));
     }
 
 	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {

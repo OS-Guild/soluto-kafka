@@ -44,6 +44,7 @@ public class ConsumerLoop implements Runnable, IReady {
         consumer.subscribe(Collections.singletonList(Config.TOPIC));
         try {
             while (running) {
+                Thread.sleep(Config.PROCESSING_DELAY);
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
                 if (ready == false && consumer.assignment().size() > 0) {
                     ready = true;
@@ -125,9 +126,16 @@ public class ConsumerLoop implements Runnable, IReady {
             .withBackoff(10, 250, ChronoUnit.MILLIS, 5)            
             .abortOn(ConnectException.class)
             .handleResultIf(r -> r.statusCode() >= 500)
-            .onSuccess(x -> Monitor.processCompleted(executionStart))            
+            .onSuccess(x -> {
+                var statusCode = x.getResult().statusCode();
+                if (400 <= statusCode && statusCode < 500) {
+                    produce("poison", Config.POISON_MESSAGE_TOPIC, record);
+                } else {
+                    Monitor.processCompleted(executionStart);
+                }
+            })            
             .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(),  x.getLastFailure(), x.getAttemptCount()))
-            .onRetriesExceeded(__ -> produceDeadLetter(record));
+            .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
 
         return Failsafe
             .with(retryPolicy)
@@ -136,13 +144,13 @@ public class ConsumerLoop implements Runnable, IReady {
             .exceptionally(throwable -> TargetResponse.Error(throwable));
     }
 
-    private void produceDeadLetter(ConsumerRecord<String, String> record) {
-        producer.send(new ProducerRecord<>(Config.DEAD_LETTER_TOPIC, record.key().toString(), record.value().toString()), (metadata, err) -> {
+    private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
+        producer.send(new ProducerRecord<>(topic, record.key().toString(), record.value().toString()), (metadata, err) -> {
             if (err != null) {
-                Monitor.deadLetterProduceError(record ,err);
+                Monitor.produceError(topicPrefix, record ,err);
                 return;
             }
-            Monitor.deadLetterProduced(record);
+            Monitor.topicProduced(topicPrefix, record);
         });
     }
 }

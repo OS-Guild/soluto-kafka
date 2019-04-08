@@ -59,7 +59,7 @@ public class Monitor {
         write(log);
 
         if (statsdClient == null) return;
-        statsdClient.increment(String.format("%sProduced", topicPrefix));
+        statsdClient.incrementCounter(String.format("%sProduced", topicPrefix));
     }
 
     public static void unexpectedError(Exception exception) {
@@ -117,7 +117,7 @@ public class Monitor {
 
         write(log);
         if (statsdClient == null) return;
-        statsdClient.increment(String.format("%sProduceError", topicPrefix));
+        statsdClient.incrementCounter(String.format("%sProduceError", topicPrefix));
     }
 
 	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {

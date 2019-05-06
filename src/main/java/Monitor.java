@@ -30,9 +30,9 @@ public class Monitor {
         statsdClient.recordGaugeValue("consumed", consumed.count());
     }
 
-    public static void consumedDedup(Iterable<ConsumerRecord<String, String>> records) {
-        if (statsdClient == null) return;        
-        statsdClient.recordGaugeValue("consumed-dedup", Iterators.size(records.iterator()));
+    public static void consumedPartitioned(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) {
+        if (statsdClient == null) return;
+        statsdClient.recordGaugeValue("consumed-partitions", Iterators.size(partitions.iterator()));
     }
     
     public static void messageLatency(ConsumerRecord<String, String> record) {

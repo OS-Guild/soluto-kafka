@@ -92,15 +92,17 @@ public class ConsumerLoop implements Runnable, IReady {
                 .collect(Collectors.groupingBy(ConsumerRecord::key))
                 .values()
                 .stream()
-                .map(consumerRecords -> {
-                    List<ConsumerRecord<String, String>> sorted = consumerRecords
-                            .stream()
-                            .sorted(Comparator.comparingLong(ConsumerRecord::offset))
-                            .collect(Collectors.toList());
-
-                    return Config.SHOULD_DEDUP_BY_KEY ? Collections.singletonList(sorted.get(0)) :  sorted;
-                })
+                .map(this::createPartition)
                 .collect(Collectors.toList());
+    }
+
+    private List<ConsumerRecord<String, String>> createPartition(List<ConsumerRecord<String, String>> consumerRecords) {
+            List<ConsumerRecord<String, String>> sorted = consumerRecords
+                    .stream()
+                    .sorted(Comparator.comparingLong(ConsumerRecord::offset))
+                    .collect(Collectors.toList());
+
+            return Config.SHOULD_DEDUP_BY_KEY ? Collections.singletonList(sorted.get(0)) : sorted;
     }
 
     private void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {
@@ -113,7 +115,7 @@ public class ConsumerLoop implements Runnable, IReady {
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
-                .flatMap(record -> Flowable.fromFuture(callTarget(record)))
+                .flatMap(record -> Flowable.fromFuture(callTarget(record)), Config.CONCURRENCY_PER_PARTITION)
                 .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }
 

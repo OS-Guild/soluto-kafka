@@ -25,6 +25,7 @@ class Config {
     public static String GROUP_ID;
     public static String TARGET_ENDPOINT;
     public static int CONCURRENCY;
+    public static int CONCURRENCY_PER_PARTITION;
     public static int PROCESSING_DELAY;
     public static int POLL_RECORDS;
     public static String TRUSTSTORE_LOCATION;
@@ -49,6 +50,7 @@ class Config {
         RETRY_TOPIC = getString(dotenv, "RETRY_TOPIC");
         POISON_MESSAGE_TOPIC = getString(dotenv, "POISON_MESSAGE_TOPIC");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
+        CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);

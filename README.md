@@ -1,1 +1,1 @@
-# kafka-consumer-java
+# kafka-services

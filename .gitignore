@@ -37,6 +37,7 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 
 .idea
+.DS_Store
 client.keystore.p12
 client.truststore.jks
 .vscode

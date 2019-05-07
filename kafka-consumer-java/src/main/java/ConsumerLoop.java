@@ -73,6 +73,7 @@ public class ConsumerLoop implements Runnable, IReady {
                 Monitor.unexpectedError(e);
             }
         } finally {
+            ready = false;
             consumer.unsubscribe();
             consumer.close();
         }

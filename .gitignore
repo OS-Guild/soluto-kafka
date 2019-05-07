@@ -46,3 +46,4 @@ client.truststore.jks
 .settings
 .env
 out
+node_modules

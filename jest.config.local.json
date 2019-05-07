@@ -1,0 +1,10 @@
+{
+    "moduleFileExtensions": ["ts", "tsx", "js", "json"],
+    "transform": {
+        "^.+\\.(ts|tsx)$": "<rootDir>/preprocessor.js"
+    },
+    "testMatch": ["**/__tests__/**/*.spec.(ts|tsx|js)"],
+    "verbose": true,
+    "testURL": "http://localhost/",
+    "testEnvironment": "node"
+}

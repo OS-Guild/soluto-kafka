@@ -16,10 +16,10 @@ services:
             - STATSD_HOST=stam
             - KAFKA_BROKER=kafka:9092
             - TOPIC=test
-            - RETRY_TOPIC=test
-            - POISON_MESSAGE_TOPIC=test
+            - RETRY_TOPIC=test-retry
+            - POISON_MESSAGE_TOPIC=test-poison
             - GROUP_ID=test
-            - TARGET_ENDPOINT=http://fake-server:2000/
+            - TARGET_ENDPOINT=http://fake-server:2000/target
             - CONCURRENCY=10
             - CONCURRENCY_PER_PARTITION=1
             - PROCESSING_DELAY=0

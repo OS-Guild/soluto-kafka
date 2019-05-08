@@ -38,7 +38,7 @@ public class IsAliveServer {
                 var response = consumerLoops
                     .stream()
                     .map(x -> x.ready())
-                    .noneMatch(y -> y.equals(false));
+                    .allMatch(y -> y.equals(true));
 
                 var responseText = Boolean.toString(response);
                 if (!response) {

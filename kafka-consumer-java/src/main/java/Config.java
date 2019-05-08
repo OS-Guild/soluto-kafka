@@ -14,7 +14,7 @@ class Config {
     public static int PORT;    
     public static String KAFKA_PASSWORD;
     public static boolean SHOULD_SKIP_AUTHENTICATION;
-    public static boolean SHOULD_DEDUP_BY_KEY;
+    public static boolean DEDUP_PARTITION_BY_KEY;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
@@ -40,7 +40,7 @@ class Config {
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
         PORT = getInt(dotenv, "PORT");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
-        SHOULD_DEDUP_BY_KEY = getOptionalBoolean(dotenv, "SHOULD_DEDUP_BY_KEY", false);
+        DEDUP_PARTITION_BY_KEY = getOptionalBoolean(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
         STATSD_HOST = getString(dotenv, "STATSD_HOST");
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");

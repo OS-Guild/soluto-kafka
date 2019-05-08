@@ -10,7 +10,7 @@ services:
             - PORT=3000
             - KAFKA_PASSWORD=
             - SHOULD_SKIP_AUTHENTICATION=true
-            - SHOULD_DEDUP_BY_KEY=false
+            - DEDUP_PARTITION_BY_KEY=false
             - STATSD_API_KEY=stam
             - STATSD_ROOT=stam
             - STATSD_HOST=stam
@@ -44,7 +44,7 @@ services:
             - PORT=3000
             - KAFKA_PASSWORD=
             - SHOULD_SKIP_AUTHENTICATION=true
-            - SHOULD_DEDUP_BY_KEY=false
+            - DEDUP_PARTITION_BY_KEY=false
             - STATSD_API_KEY=stam
             - STATSD_ROOT=stam
             - STATSD_HOST=stam

@@ -103,7 +103,7 @@ public class ConsumerLoop implements Runnable, IReady {
                     .sorted(Comparator.comparingLong(ConsumerRecord::offset))
                     .collect(Collectors.toList());
 
-            return Config.SHOULD_DEDUP_BY_KEY ? Collections.singletonList(sorted.get(0)) : sorted;
+            return Config.DEDUP_PARTITION_BY_KEY ? Collections.singletonList(sorted.get(0)) : sorted;
     }
 
     private void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {

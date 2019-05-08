@@ -35,14 +35,20 @@ public class IsAliveServer {
                     return;
                 }
 
-                var response = Boolean.toString(consumerLoops
+                var response = consumerLoops
                     .stream()
                     .map(x -> x.ready())
-                    .noneMatch(y -> y.equals(false)));
+                    .noneMatch(y -> y.equals(false));
 
-                exchange.sendResponseHeaders(200, response.getBytes().length);
+                var responseText = Boolean.toString(response);
+                if (!response) {
+                    exchange.sendResponseHeaders(500, responseText.getBytes().length);
+                }
+                else {
+                    exchange.sendResponseHeaders(200, responseText.getBytes().length);
+                }
                 var os = exchange.getResponseBody();
-                os.write(response.getBytes());
+                os.write(responseText.getBytes());
                 os.close();
             }
         });        

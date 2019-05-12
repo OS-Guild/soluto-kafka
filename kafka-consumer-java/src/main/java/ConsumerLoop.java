@@ -120,7 +120,7 @@ public class ConsumerLoop implements Runnable, IReady {
                 .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }
 
-    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {        
+    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
         var request = HttpRequest
                 .newBuilder()
                 .uri(URI.create(Config.TARGET_ENDPOINT))

@@ -120,11 +120,13 @@ public class ConsumerLoop implements Runnable, IReady {
                 .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }
 
-    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
+    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {        
         var request = HttpRequest
                 .newBuilder()
                 .uri(URI.create(Config.TARGET_ENDPOINT))
-                .header("Content-Type", "application/json")
+                .header("content-type", "application/json")
+                .header("x-api-client", "kafka-consumer-"+id+"-"+Config.TOPIC+"-"+Config.GROUP_ID)
+                .header("x-timestamp", Long.toString(record.timestamp()))
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 

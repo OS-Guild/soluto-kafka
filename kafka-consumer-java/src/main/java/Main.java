@@ -4,13 +4,14 @@ import java.util.concurrent.CountDownLatch;
 
 public class Main {
     static List<ConsumerLoopWrapper> consumerLoops = new ArrayList<>();
-    static CountDownLatch countDownLatch = new CountDownLatch(Config.CONSUMER_THREADS);
+    static CountDownLatch countDownLatch;
 
     public static void main(String[] args) {
         try {
             Config.init();
             Monitor.init();
             var kafkaCreator = new KafkaCreator();
+            countDownLatch = new CountDownLatch(Config.CONSUMER_THREADS);
     
             var deadLetterProducer = kafkaCreator.createProducer();
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {

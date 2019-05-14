@@ -6,6 +6,7 @@ public class ConsumerLoopWrapper implements Runnable, IConsumerLoopLifecycle {
     
     public ConsumerLoopWrapper(ConsumerLoop consumerLoop, CountDownLatch countDownLatch) {
         this.consumerLoop = consumerLoop;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override

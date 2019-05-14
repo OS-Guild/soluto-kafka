@@ -22,7 +22,7 @@ public class IsAliveServer {
     }
 
     public void close() {
-        server.stop(1000);
+        server.stop(1);
     }
 
     private void isAliveGetRoute(HttpServer server) {

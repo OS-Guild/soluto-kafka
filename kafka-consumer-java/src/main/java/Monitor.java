@@ -99,7 +99,7 @@ public class Monitor {
 	public static void serviceTerminated() {
         JSONObject log = new JSONObject()
         .put("level", "info")
-        .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + "termindated");
+        .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + " termindated");
 
         write(log);
     }

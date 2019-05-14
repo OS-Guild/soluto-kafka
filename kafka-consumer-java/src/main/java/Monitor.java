@@ -96,6 +96,15 @@ public class Monitor {
         write(log);
     }
 
+	public static void serviceTerminated() {
+        JSONObject log = new JSONObject()
+        .put("level", "info")
+        .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + "termindated");
+
+        write(log);
+    }
+
+
     public static void commitFailed() {
         JSONObject log = new JSONObject()
         .put("level", "info")

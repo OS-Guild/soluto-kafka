@@ -1,7 +1,7 @@
 {
   "scripts": {
     "teardown": "docker-compose down --remove-orphans",
-    "setup": "docker-compose pull && docker-compose up -d",
+    "setup": "docker-compose pull && docker-compose build && docker-compose up -d",
     "test": "npm run teardown && npm run setup && npm run jest && npm run teardown",
     "format": "prettier --write '**/*.{ts,js,json}'",
     "jest": "jest --runInBand --config jest.config.local.json --testResultsProcessor jest-teamcity-reporter"

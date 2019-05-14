@@ -7,10 +7,10 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 public class IsAliveServer {
-    List<? extends IReady> consumerLoops;
+    List<? extends IConsumerLoopLifecycle> consumerLoops;
     HttpServer server;
 
-    public IsAliveServer(List<? extends IReady> consumerLoops) {
+    public IsAliveServer(List<? extends IConsumerLoopLifecycle> consumerLoops) {
         this.consumerLoops = consumerLoops;
     }
 
@@ -22,7 +22,7 @@ public class IsAliveServer {
     }
 
     public void close() {
-        server.stop(1000);
+        server.stop(1);
     }
 
     private void isAliveGetRoute(HttpServer server) {

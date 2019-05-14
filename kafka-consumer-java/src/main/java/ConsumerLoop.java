@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
-public class ConsumerLoop implements Runnable, IReady {
+public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     private final Processor processor;
     private final Partitioner partitioner;
     private KafkaConsumer<String, String> consumer;
@@ -59,7 +59,7 @@ public class ConsumerLoop implements Runnable, IReady {
         }
     }
 
-    void stop() {
+    public void stop() {
         running = false;
     }
 

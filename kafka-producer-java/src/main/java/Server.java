@@ -34,7 +34,7 @@ public class Server {
     }
 
     public void close() {
-        server.stop(1000);
+        server.stop(5);
     }
 
     private void isAliveGetRoute(HttpServer server) {

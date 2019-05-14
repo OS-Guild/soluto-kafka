@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         init();
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->  close()));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> close()));
         monitor.serviceStarted();
     }
 
@@ -18,8 +18,8 @@ public class Main {
     }
 
     private static void close() {
-        server.close();
         producer.close();
+        server.close();
         monitor.serviceShutdown();
     }
 }

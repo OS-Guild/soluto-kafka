@@ -37,6 +37,8 @@ class Processor {
                 .newBuilder()
                 .uri(URI.create(Config.TARGET_ENDPOINT))
                 .header("Content-Type", "application/json")
+                .header("x-record-offset", String.valueOf(record.offset()))
+                .header("x-record-timestamp", String.valueOf(record.timestamp()))
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 

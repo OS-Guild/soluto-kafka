@@ -9,6 +9,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> close()));
         monitor.serviceStarted();
 
+        Runtime runtime = Runtime.getRuntime();
         int processors = runtime.availableProcessors();
         long maxMemory = runtime.maxMemory();
 

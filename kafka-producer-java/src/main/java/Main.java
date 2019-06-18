@@ -8,6 +8,13 @@ public class Main {
         init();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> close()));
         monitor.serviceStarted();
+
+        Runtime runtime = Runtime.getRuntime();
+        int processors = runtime.availableProcessors();
+        long maxMemory = runtime.maxMemory();
+
+        System.out.format("Number of processors: %d\n", processors);
+        System.out.format("Max memory: %d bytes\n", maxMemory);
     }
 
     private static void init() throws Exception {

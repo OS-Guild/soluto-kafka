@@ -38,6 +38,7 @@ public class Producer {
     }
 
     public void close() {
+        kafkaProducer.flush();
         kafkaProducer.close();
     }
 }

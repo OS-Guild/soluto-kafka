@@ -11,7 +11,6 @@ repositories {
 
 application {
     mainClassName = 'Main'
-    applicationDefaultJvmArgs = System.getenv("JAVA_ARGS") != null ? System.getenv("JAVA_ARGS").tokenize(" ") : []
 }
 
 sourceCompatibility = 11

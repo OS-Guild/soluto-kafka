@@ -1,6 +1,7 @@
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Date;
 
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -38,7 +39,9 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 var consumedPartitioned = partitioner.partition(consumed);
                 Monitor.consumedPartitioned(consumedPartitioned);
 
+                var executionStart = new Date().getTime();
                 processor.process(consumedPartitioned);
+                Monitor.processCompleted(executionStart);
 
                 try {
                     consumer.commitSync();

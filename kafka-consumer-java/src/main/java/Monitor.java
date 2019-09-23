@@ -45,7 +45,12 @@ public class Monitor {
 	public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;        
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
-	}
+    }
+    
+	public static void processMessageCompleted(long executionStart) {
+        if (statsdClient == null) return;        
+        statsdClient.recordExecutionTime("processMessage.ExecutionTime", new Date().getTime() - executionStart);
+	}    
 
     public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {
         JSONObject log = new JSONObject()

@@ -56,7 +56,7 @@ class Processor {
                         return;
                     }
 
-                    Monitor.processCompleted(executionStart);
+                    Monitor.processMessageCompleted(executionStart);
                 })
                 .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, x.getLastResult(), x.getLastFailure(), x.getAttemptCount()))
                 .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));

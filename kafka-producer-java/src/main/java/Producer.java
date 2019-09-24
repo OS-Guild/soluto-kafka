@@ -7,7 +7,6 @@ public class Producer {
     Config config;
     Monitor monitor;
     KafkaProducer<String, String> kafkaProducer;
-    boolean didLastProduceFailed = false;
     boolean ready = false;
 
     Producer(Config config, Monitor monitor) {
@@ -19,10 +18,6 @@ public class Producer {
         kafkaProducer = new KafkaCreator(config).createProducer();
 
         return this;
-    }
-
-    public boolean didLastProduceFailed() {
-        return didLastProduceFailed;
     }
 
     public boolean ready() {
@@ -45,11 +40,11 @@ public class Producer {
         var executionStart = (new Date()).getTime();
         kafkaProducer.send(new ProducerRecord<>(config.TOPIC, null, executionStart, message.key, message.value), (metadata, err) -> {
             if (err != null) {
-                didLastProduceFailed = true;
+                ready = false;
                 monitor.produceFail(err);
                 return;
             }
-            didLastProduceFailed = false;
+            ready = true;
             monitor.produceLatency(executionStart);
         });
         return true;

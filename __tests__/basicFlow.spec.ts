@@ -1,7 +1,7 @@
 import delay from 'delay';
 import * as got from 'got';
 
-jest.setTimeout(40000);
+jest.setTimeout(60000);
 
 describe('basic flow', () => {
     it('services are alive', async () => {

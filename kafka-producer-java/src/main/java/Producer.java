@@ -29,11 +29,11 @@ public class Producer {
         if (config.READINESS_TOPIC != null) {
             kafkaProducer.send(new ProducerRecord<>(config.READINESS_TOPIC, "ready"), (metadata, err) -> {
                 if (err != null) {
-                    ready = true;
-                    System.out.println("producer is ready");
+                    ready = false;
                     return;
                 }
-                ready = false;
+                System.out.println("producer is ready");
+                ready = true;
             });
         } else {
             ready = true;

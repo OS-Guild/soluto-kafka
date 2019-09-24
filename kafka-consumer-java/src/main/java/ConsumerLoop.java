@@ -31,7 +31,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
                 if (!ready && consumer.assignment().size() > 0) {
                     ready = true;
-                    Monitor.consumerReady(id);
+                    Monitor.ready(id);
                 }
                 if (consumed.count() == 0) continue;
                 Monitor.consumed(consumed);

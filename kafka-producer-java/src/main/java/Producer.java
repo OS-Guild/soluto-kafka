@@ -15,40 +15,26 @@ public class Producer {
     }
 
     public Producer start() {
-        kafkaProducer = new KafkaCreator(config).createProducer();
-
+        kafkaProducer = new KafkaCreator().createProducer();
+        checkReadiness();
         return this;
     }
 
     public boolean ready() {
-        System.out.println("config.READINESS_TOPIC is " + config.READINESS_TOPIC);
-
-        if (config.READINESS_TOPIC != null) {
-            kafkaProducer.send(new ProducerRecord<>(config.READINESS_TOPIC, "ready"), (metadata, err) -> {
-                if (err != null) {
-                    ready = false;
-                    return;
-                }
-                System.out.println("producer is ready");
-                ready = true;
-            });
-        } else {
-            System.out.println("producer is ready");
-            ready = true;
-        }
+        checkReadiness();
         return ready;
     }
 
     public boolean produce(ProducerMessage message) {
         var executionStart = (new Date()).getTime();
-        kafkaProducer.send(new ProducerRecord<>(config.TOPIC, null, executionStart, message.key, message.value), (metadata, err) -> {
+        kafkaProducer.send(new ProducerRecord<>(Config.TOPIC, null, executionStart, message.key, message.value), (metadata, err) -> {
             if (err != null) {
                 ready = false;
-                monitor.produceFail(err);
+                Monitor.produceFail(err);
                 return;
             }
             ready = true;
-            monitor.produceLatency(executionStart);
+            Monitor.produceLatency(executionStart);
         });
         return true;
     }
@@ -56,5 +42,16 @@ public class Producer {
     public void close() {
         kafkaProducer.flush();
         kafkaProducer.close();
+    }
+
+    private void checkReadiness() {
+        kafkaProducer.send(new ProducerRecord<>(Config.READINESS_TOPIC, "ready"), (metadata, err) -> {
+            if (err != null) {
+                ready = false;
+                return;
+            }
+            ready = true;
+            Monitor.ready();
+        });
     }
 }

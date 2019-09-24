@@ -1,21 +1,23 @@
 import delay from 'delay';
 import * as got from 'got';
+import fetch from 'node-fetch';
 
 jest.setTimeout(60000);
 
 describe('basic flow', () => {
     it('services are alive', async () => {
         console.log('waiting for kafka to be ready..');
-        await delay(30000);
         let attempts = 3;
         while (attempts > 0) {
             try {
                 await delay(5000);
-                await got('http://localhost:2000/isAlive'); // consumer
-                await got('http://localhost:2500/isAlive'); // producer
-                expect(true);
-            } catch (e) {
-                console.log(e);
+                const responseConsumer = await fetch('http://localhost:2000/isAlive');
+                const responseProducer = await fetch('http://localhost:2500/isAlive');
+                if (responseConsumer.ok && responseProducer.ok) {
+                    return;
+                }
+                attempts--;
+            } catch {
                 attempts--;
             }
         }
@@ -36,9 +38,13 @@ describe('basic flow', () => {
                     statusCode: 200,
                 },
             });
-            await got.post('http://localhost:2500/produce', {json: true, body: [{key: 'key', message: {data: 1}}]});
+            await fetch('http://localhost:2500/produce', {
+                method: 'post',
+                body: JSON.stringify([{key: 'key', message: {data: 1}}]),
+                headers: {'Content-Type': 'application/json'},
+            });
 
-            await delay(500);
+            await delay(5000);
 
             const {
                 body: {hasBeenMade},

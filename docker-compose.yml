@@ -49,6 +49,7 @@ services:
             - STATSD_HOST=stam
             - KAFKA_BROKER=kafka:9092
             - TOPIC=test
+            - READINESS_TOPIC=readiness
             - TRUSTSTORE_LOCATION=stam
             - KEYSTORE_LOCATION=stam
             - CLUSTER=test

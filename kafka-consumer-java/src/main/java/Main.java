@@ -30,7 +30,7 @@ public class Main {
                 Monitor.serviceShutdown();
             }));
     
-            Monitor.serviceStarted();
+            Monitor.started();
             countDownLatch.await();
             isAliveServer.close();
             Monitor.serviceTerminated();

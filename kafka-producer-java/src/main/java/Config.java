@@ -10,24 +10,24 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 class Config {
-    public final String PRODUCER_NAME;
-    public final String JAVA_ENV;
-    public final int PORT;
-    public final String KAFKA_PASSWORD;
-    public final boolean SHOULD_SKIP_AUTHENTICATION;
-    public final String STATSD_API_KEY;
-    public final String STATSD_ROOT;
-    public final String STATSD_HOST;
-    public final String KAFKA_BROKER;
-    public final String TOPIC;
-    public final String READINESS_TOPIC;
-    public final String TRUSTSTORE_LOCATION;
-    public final String KEYSTORE_LOCATION;
-    public final int LINGER_TIME_MS;
-    public final String COMPRESSION_TYPE;
-    public final String CLUSTER;
+    public static String PRODUCER_NAME;
+    public static String JAVA_ENV;
+    public static int PORT;
+    public static String KAFKA_PASSWORD;
+    public static boolean SHOULD_SKIP_AUTHENTICATION;
+    public static String STATSD_API_KEY;
+    public static String STATSD_ROOT;
+    public static String STATSD_HOST;
+    public static String KAFKA_BROKER;
+    public static String TOPIC;
+    public static String READINESS_TOPIC;
+    public static String TRUSTSTORE_LOCATION;
+    public static String KEYSTORE_LOCATION;
+    public static int LINGER_TIME_MS;
+    public static String COMPRESSION_TYPE;
+    public static String CLUSTER;
 
-    Config() throws Exception {
+    public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
@@ -56,11 +56,11 @@ class Config {
         writeToFile(KEYSTORE_LOCATION, keystore);
     }
 
-    private void writeToFile(String path, String value) throws IOException {
+    private static void writeToFile(String path, String value) throws IOException {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private JSONObject readSecrets(String secretsFileLocation) {
+    private static JSONObject readSecrets(String secretsFileLocation) {
         try {
             return new JSONObject(new String(Files.readAllBytes(Paths.get(secretsFileLocation))));
         } catch (IOException e) {

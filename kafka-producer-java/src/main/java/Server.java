@@ -26,7 +26,7 @@ public class Server {
     }
 
     public Server start() throws IOException {
-        server = HttpServer.create(new InetSocketAddress(config.PORT), 0);
+        server = HttpServer.create(new InetSocketAddress(Config.PORT), 0);
         isAliveGetRoute(server);
         producePostRoute(server);
         server.start();

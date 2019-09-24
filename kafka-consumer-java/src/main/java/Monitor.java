@@ -77,7 +77,7 @@ public class Monitor {
         write(log);
     }
 
-	public static void serviceStarted() {
+	public static void started() {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + " started");
@@ -85,7 +85,7 @@ public class Monitor {
         write(log);
     }
     
-    public static void consumerReady(int id) {
+    public static void ready(int id) {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+id+"-"+Config.TOPIC+"-"+Config.GROUP_ID + " ready");

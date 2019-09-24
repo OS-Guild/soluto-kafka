@@ -5,6 +5,7 @@ jest.setTimeout(40000);
 
 describe('basic flow', () => {
     it('services are alive', async () => {
+        await delay(30000);
         let attempts = 3;
         while (attempts > 0) {
             try {

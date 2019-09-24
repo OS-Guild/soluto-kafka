@@ -5,14 +5,19 @@ jest.setTimeout(40000);
 
 describe('basic flow', () => {
     it('services are alive', async () => {
-        try {
-            await delay(30000);
-            await got('http://localhost:2000/isAlive'); // consumer
-            await got('http://localhost:2500/isAlive'); // producer
-        } catch (e) {
-            console.log(e.text ? await e.text() : e);
-            throw e;
+        let attempts = 3;
+        while (attempts === 0) {
+            try {
+                await got('http://localhost:2000/isAlive'); // consumer
+                await got('http://localhost:2500/isAlive'); // producer
+                await delay(5000);
+                return;
+            } catch (e) {
+                console.log(e);
+                attempts--;
+            }
         }
+        fail();
     });
 
     describe('logic', () => {

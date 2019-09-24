@@ -6,6 +6,7 @@ jest.setTimeout(40000);
 describe('basic flow', () => {
     it('services are alive', async () => {
         console.log('waiting for kafka to be ready..');
+        await delay(30000);
         let attempts = 3;
         while (attempts > 0) {
             try {

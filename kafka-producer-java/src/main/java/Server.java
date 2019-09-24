@@ -46,47 +46,45 @@ public class Server {
                     exchange.sendResponseHeaders(404, -1);
                     return;
                 }
+                if (!producer.ready()) {
+                    exchange.sendResponseHeaders(500, -1);
+                    return;
+                }
                 if (producer.didLastProduceFailed()) {
                     exchange.sendResponseHeaders(500, -1);
-                    return;                      
+                    return;
                 }
                 exchange.sendResponseHeaders(204, -1);
             }
-        });        
+        });
     }
 
     private void producePostRoute(HttpServer server) {
         var httpContext = server.createContext("/produce");
-        httpContext.setHandler(new HttpHandler(){
+        httpContext.setHandler(new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 if (!exchange.getRequestMethod().equals("POST")) {
                     exchange.sendResponseHeaders(404, -1);
-                    return;                
+                    return;
                 }
                 try {
                     var body = CharStreams.toString(new InputStreamReader(exchange.getRequestBody(), Charsets.UTF_8));
-                    StreamSupport
-                        .stream(new JSONArray(body).spliterator(), false)
-                        .map(jsonItem -> {
-                            var item = new JSONObject(jsonItem.toString());
-                            return new ProducerMessage(item.get("key").toString(), item.get("message").toString());
-                        })
-                        .map(message -> producer.produce(message))
-                        .collect(Collectors.toList());
-                        
+                    StreamSupport.stream(new JSONArray(body).spliterator(), false).map(jsonItem -> {
+                        var item = new JSONObject(jsonItem.toString());
+                        return new ProducerMessage(item.get("key").toString(), item.get("message").toString());
+                    }).map(message -> producer.produce(message)).collect(Collectors.toList());
+
                     exchange.sendResponseHeaders(204, -1);
-                }   
-                catch (Exception e) {
+                } catch (Exception e) {
                     var response = e.getMessage();
                     exchange.sendResponseHeaders(500, response.getBytes().length);
                     var os = exchange.getResponseBody();
                     os.write(response.getBytes());
                     os.close();
-                } 
-                    
+                }
+
             }
-        });      
+        });
     }
 }
-

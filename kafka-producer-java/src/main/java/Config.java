@@ -11,7 +11,7 @@ import java.util.Base64;
 
 class Config {
     public final String PRODUCER_NAME;
-	public final String JAVA_ENV;
+    public final String JAVA_ENV;
     public final int PORT;
     public final String KAFKA_PASSWORD;
     public final boolean SHOULD_SKIP_AUTHENTICATION;
@@ -20,11 +20,12 @@ class Config {
     public final String STATSD_HOST;
     public final String KAFKA_BROKER;
     public final String TOPIC;
+    public final String READINESS_TOPIC;
     public final String TRUSTSTORE_LOCATION;
     public final String KEYSTORE_LOCATION;
     public final int LINGER_TIME_MS;
     public final String COMPRESSION_TYPE;
-	public final String CLUSTER;
+    public final String CLUSTER;
 
     Config() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -36,6 +37,7 @@ class Config {
         STATSD_HOST = getString(dotenv, "STATSD_HOST");
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
         TOPIC = getString(dotenv, "TOPIC");
+        READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
         PRODUCER_NAME = getString(dotenv, "PRODUCER_NAME");
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);
         COMPRESSION_TYPE = getOptionalString(dotenv, "COMPRESSION_TYPE", "none");

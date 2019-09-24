@@ -24,11 +24,8 @@ describe('basic flow', () => {
 
     describe('logic', () => {
         beforeAll(() => got.post('http://localhost:3000/fake_server_admin/clear'));
-        it('should produce', async () => {
-            await got.post('http://localhost:2500/produce', {json: true, body: [{key: 'key', message: {data: 1}}]});
-        });
 
-        it('should consume', async () => {
+        it('should produce and consume', async () => {
             const {
                 body: {callId},
             } = await got.post('http://localhost:3000/fake_server_admin/calls', {

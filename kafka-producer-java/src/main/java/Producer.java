@@ -43,16 +43,15 @@ public class Producer {
 
     public boolean produce(ProducerMessage message) {
         var executionStart = (new Date()).getTime();
-        kafkaProducer.send(new ProducerRecord<>(config.TOPIC, null, executionStart, message.key, message.value),
-                (metadata, err) -> {
-                    if (err != null) {
-                        didLastProduceFailed = true;
-                        monitor.produceFail(err);
-                        return;
-                    }
-                    didLastProduceFailed = false;
-                    monitor.produceLatency(executionStart);
-                });
+        kafkaProducer.send(new ProducerRecord<>(config.TOPIC, null, executionStart, message.key, message.value), (metadata, err) -> {
+            if (err != null) {
+                didLastProduceFailed = true;
+                monitor.produceFail(err);
+                return;
+            }
+            didLastProduceFailed = false;
+            monitor.produceLatency(executionStart);
+        });
         return true;
     }
 

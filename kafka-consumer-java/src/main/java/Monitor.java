@@ -46,7 +46,12 @@ public class Monitor {
 	public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;        
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
-	}
+    }
+    
+	public static void processMessageCompleted(long executionStart) {
+        if (statsdClient == null) return;        
+        statsdClient.recordExecutionTime("processMessage.ExecutionTime", new Date().getTime() - executionStart);
+	}    
 
     public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {
         JSONObject log = new JSONObject()
@@ -73,7 +78,7 @@ public class Monitor {
         write(log);
     }
 
-	public static void serviceStarted() {
+	public static void started() {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID + " started");
@@ -81,7 +86,7 @@ public class Monitor {
         write(log);
     }
     
-    public static void consumerReady(int id) {
+    public static void ready(int id) {
         JSONObject log = new JSONObject()
         .put("level", "info")
         .put("message", "kafka-consumer-"+id+"-"+Config.TOPIC+"-"+Config.GROUP_ID + " ready");

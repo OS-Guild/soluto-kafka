@@ -7,24 +7,22 @@ import com.timgroup.statsd.StatsDClient;
 import org.json.JSONObject;
 
 public class Monitor {
-    StatsDClient statsdClient;
-    Config config;
+    static StatsDClient statsdClient;
 
-    public Monitor(Config config) {
-        this.config = config;
-        if (config.JAVA_ENV.equals("production")) {
-            statsdClient = new NonBlockingStatsDClient(config.STATSD_API_KEY + "." + config.STATSD_ROOT + ".kafka-producer-"+ config.TOPIC + "." + config.PRODUCER_NAME + "." + config.CLUSTER, config.STATSD_HOST, 8125);
+    public static void init() {
+        if (Config.JAVA_ENV.equals("production")) {
+            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + ".kafka-producer-"+ Config.TOPIC + "." + Config.PRODUCER_NAME + "." + Config.CLUSTER, Config.STATSD_HOST, 8125);
         }
     }
 
-    public void produceLatency(long executionStart) {
+    public static void produceLatency(long executionStart) {
         if (statsdClient == null) return; 
         var latency = (new Date()).getTime() - executionStart;
         System.out.println("produce.latency: " +  latency);
         statsdClient.recordExecutionTime("produce.latency", latency);
 	}
 
-    public void produceFail(Exception exception) {
+    public static void produceFail(Exception exception) {
         JSONObject log = new JSONObject()
         .put("level", "error")
         .put("message", "produce failed")
@@ -37,23 +35,31 @@ public class Monitor {
         statsdClient.recordGaugeValue("produce.error", 1);
 	}
 
-	public void serviceStarted() {
+	public static void started() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-producer-"+config.TOPIC+" started");
+            .put("message", "kafka-producer-"+Config.TOPIC+" started");
+
+        output(log);
+    }
+    
+    public static void ready() {
+        JSONObject log = new JSONObject()
+        .put("level", "info")
+        .put("message", "kafka-producer-"+Config.TOPIC+" ready");
 
         output(log);
 	}
 
-	public void serviceShutdown() {
+	public static void serviceShutdown() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-producer-"+config.TOPIC+" shutdown");
+            .put("message", "kafka-producer-"+Config.TOPIC+" shutdown");
 
         output(log);
     }
 
-    private void output(JSONObject log) {
+    private static void output(JSONObject log) {
         System.out.println(log.toString());
     }
 }

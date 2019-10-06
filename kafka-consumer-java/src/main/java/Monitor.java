@@ -1,5 +1,6 @@
 import java.net.http.HttpResponse;
 import java.util.Date;
+import java.util.Optional;
 
 import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
@@ -129,7 +130,7 @@ public class Monitor {
         statsdClient.incrementCounter(String.format("%sProduceError", topicPrefix));
     }
 
-	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, HttpResponse<String> response, Throwable exception, int attempt) {
+	public static void targetExecutionRetry(ConsumerRecord<String, String> consumerRecord, Optional<String> responseBody, Throwable exception, int attempt) {
         JSONObject log = new JSONObject()
         .put("level", "warning")
         .put("message", "retry occurred on kafka-consumer-"+Config.TOPIC+"-"+Config.GROUP_ID);
@@ -141,8 +142,8 @@ public class Monitor {
             )
             .put("attempt", attempt);
         
-        if (response != null) {
-            extra.put("response", response.body());
+        if (responseBody.isPresent()) {
+            extra.put("response", responseBody.get());
         }
 
         var error = new JSONObject();

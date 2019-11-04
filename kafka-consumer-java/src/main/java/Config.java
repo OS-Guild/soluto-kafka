@@ -14,7 +14,7 @@ class Config {
     public static int PORT;    
     public static String GRPC_HOST;
     public static int GRPC_PORT;
-    public static boolean USE_GRPC;
+    public static String SENDING_PROTOCOL;
     public static String KAFKA_PASSWORD;
     public static boolean SHOULD_SKIP_AUTHENTICATION;
     public static boolean DEDUP_PARTITION_BY_KEY;
@@ -44,7 +44,7 @@ class Config {
         PORT = getInt(dotenv, "PORT");
         GRPC_HOST = getOptionalString(dotenv, "GRPC_HOST","localhost");
         GRPC_PORT = getOptionalInt(dotenv, "GRPC_PORT",9000);
-        USE_GRPC = getOptionalBoolean(dotenv, "USE_GRPC", false);
+        SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
         DEDUP_PARTITION_BY_KEY = getOptionalBoolean(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");

@@ -1,6 +1,6 @@
-import com.google.gson.Gson;
 import com.spotify.futures.ListenableFuturesExtra;
-import io.grpc.*;
+import io.grpc.Channel;
+import io.grpc.ManagedChannelBuilder;
 import io.reactivex.Flowable;
 import io.reactivex.schedulers.Schedulers;
 import net.jodah.failsafe.Failsafe;
@@ -9,16 +9,12 @@ import net.jodah.failsafe.function.CheckedSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
@@ -79,38 +75,6 @@ class Processor {
                 .exceptionally(TargetResponse::Error);
     }
 
-    static final class CreateRequest {
-        byte[] key;
-        byte[] value;
-    }
-
-    static final class CreateResponse {
-        int statusCode;
-    }
-
-    static <T> MethodDescriptor.Marshaller<T> marshallerFor(Class<T> clz) {
-        Gson gson = new Gson();
-        return new MethodDescriptor.Marshaller<T>() {
-            @Override
-            public InputStream stream(T value) {
-                return new ByteArrayInputStream(gson.toJson(value, clz).getBytes(StandardCharsets.UTF_8));
-            }
-
-            @Override
-            public T parse(InputStream stream) {
-                return gson.fromJson(new InputStreamReader(stream, StandardCharsets.UTF_8), clz);
-            }
-        };
-    }
-
-    static final MethodDescriptor<CreateRequest, CreateResponse> CREATE_METHOD =
-            MethodDescriptor.newBuilder(
-                    marshallerFor(CreateRequest.class),
-                    marshallerFor(CreateResponse.class))
-                    .setFullMethodName("NoteService/List")
-                    .setType(MethodDescriptor.MethodType.UNARY)
-                    .build();
-
     private CompletableFuture<TargetResponse> callGrpcTarget(ConsumerRecord<String, String> record) {
         final var json = record.value();
         final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
@@ -144,10 +108,17 @@ class Processor {
     }
 
 
+    private CompletableFuture callTarget(ConsumerRecord<String, String> record) {
+        if (Config.SENDING_PROTOCOL == "grpc") return callGrpcTarget(record);
+        else if (Config.SENDING_PROTOCOL == "http") return callHttpTarget(record);
+        else return null;
+    }
+
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
-                .flatMap(record -> Flowable.fromFuture(Config.USE_GRPC ? callGrpcTarget(record) : callHttpTarget(record)), Config.CONCURRENCY_PER_PARTITION)
+                .flatMap(record -> Flowable.fromFuture(callTarget(record))
+                , Config.CONCURRENCY_PER_PARTITION)
                 .flatMap(x -> Flowable.empty());
     }
 

@@ -2,6 +2,7 @@ import com.google.gson.Gson;
 import com.spotify.futures.ListenableFuturesExtra;
 import io.grpc.*;
 import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.function.CheckedSupplier;
@@ -35,10 +36,10 @@ class Processor {
     void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {
         Thread.sleep(Config.PROCESSING_DELAY);
         processPartition(partitions.iterator().next()).subscribe();
-//        Flowable.fromIterable(partitions)
-//                .flatMap(this::processPartition, Config.CONCURRENCY)
-//                .subscribeOn(Schedulers.io())
-//                .blockingSubscribe();
+        Flowable.fromIterable(partitions)
+                .flatMap(this::processPartition, Config.CONCURRENCY)
+                .subscribeOn(Schedulers.io())
+                .blockingSubscribe();
     }
 
     private CompletableFuture<TargetResponse> callHttpTarget(ConsumerRecord<String, String> record) {

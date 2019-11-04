@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service CallTarget {
+    rpc callTarget (CallTargetPayload) returns (CallTargetResponse) {}
+}
+
+message CallTargetPayload {
+    string msgJson = 1;
+}
+
+message CallTargetResponse {
+    int32 statusCode = 1;
+}

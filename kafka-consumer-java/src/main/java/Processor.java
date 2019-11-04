@@ -1,9 +1,7 @@
 import com.google.gson.Gson;
 import com.spotify.futures.ListenableFuturesExtra;
 import io.grpc.*;
-import io.grpc.stub.ClientCalls;
 import io.reactivex.Flowable;
-import io.reactivex.schedulers.Schedulers;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import net.jodah.failsafe.function.CheckedSupplier;
@@ -29,17 +27,18 @@ import java.util.concurrent.CompletionStage;
 class Processor {
     private HttpClient client = HttpClient.newHttpClient();
     private KafkaProducer<String, String> producer;
-
+    Channel channel = ManagedChannelBuilder.forAddress(Config.GRPC_HOST, Config.GRPC_PORT).usePlaintext().build();
     Processor(KafkaProducer<String, String> producer) {
         this.producer = producer;
     }
 
     void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {
         Thread.sleep(Config.PROCESSING_DELAY);
-        Flowable.fromIterable(partitions)
-                .flatMap(this::processPartition, Config.CONCURRENCY)
-                .subscribeOn(Schedulers.io())
-                .blockingSubscribe();
+        processPartition(partitions.iterator().next()).subscribe();
+//        Flowable.fromIterable(partitions)
+//                .flatMap(this::processPartition, Config.CONCURRENCY)
+//                .subscribeOn(Schedulers.io())
+//                .blockingSubscribe();
     }
 
     private CompletableFuture<TargetResponse> callHttpTarget(ConsumerRecord<String, String> record) {
@@ -107,42 +106,38 @@ class Processor {
             MethodDescriptor.newBuilder(
                     marshallerFor(CreateRequest.class),
                     marshallerFor(CreateResponse.class))
-                    .setFullMethodName(
-                            MethodDescriptor.generateFullMethodName("kafka-consumer", "Create"))
+                    .setFullMethodName("NoteService/List")
                     .setType(MethodDescriptor.MethodType.UNARY)
                     .build();
 
     private CompletableFuture<TargetResponse> callGrpcTarget(ConsumerRecord<String, String> record) {
-        Channel chan = ManagedChannelBuilder.forAddress(Config.GRPC_HOST, Config.GRPC_PORT).build();
-        ClientCall<CreateRequest, CreateResponse> call =
-                chan.newCall(CREATE_METHOD, CallOptions.DEFAULT);
-        CreateRequest req = new CreateRequest();
-        req.key = record.key().getBytes();
-        req.value = record.value().getBytes();
+        final var json = record.value();
+        final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
+        callTargetPayloadBuilder.setMsgJson(json);
+        final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
 
         var executionStart = new Date().getTime();
 
-        var retryPolicy = new RetryPolicy<CreateResponse>()
+        var retryPolicy = new RetryPolicy<KafkaMessage.CallTargetResponse>()
                 .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-                .abortOn(ConnectException.class)
-                .handleResultIf(r -> r.statusCode != 0)
+                .handleResultIf(r -> r.getStatusCode() >= 500)
                 .onSuccess(x -> {
-                    var statusCode = x.getResult().statusCode;
+                    var statusCode = x.getResult().getStatusCode();
 
-                    if (statusCode != 0) {
+                    if (400 <= statusCode && statusCode < 500) {
                         produce("poison", Config.POISON_MESSAGE_TOPIC, record);
                         return;
                     }
 
-                    Monitor.processCompleted(executionStart);
+                    Monitor.processMessageCompleted(executionStart);
                 })
-                .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable("grpc response code: " + x.getLastResult().statusCode) , x.getLastFailure(), x.getAttemptCount()))
+                .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(x.getLastResult().getStatusCode())), x.getLastFailure(), x.getAttemptCount()))
                 .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
+        CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
-        CheckedSupplier<CompletableFuture<CreateResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.<CreateResponse>toCompletableFuture(ClientCalls.<CreateRequest, CreateResponse>futureUnaryCall(call, req));
         return Failsafe
                 .with(retryPolicy)
-                .<CreateResponse>getStageAsync(completionStageCheckedSupplier)
+                .getStageAsync(completionStageCheckedSupplier)
                 .thenApplyAsync(__ -> TargetResponse.Success)
                 .exceptionally(TargetResponse::Error);
     }
@@ -151,11 +146,8 @@ class Processor {
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
-                .flatMap(record -> {
-                    final CompletableFuture<TargetResponse> future = Config.USE_GRPC ? callGrpcTarget(record) : callHttpTarget(record);
-                    return Flowable.fromFuture(future);
-                }, Config.CONCURRENCY_PER_PARTITION)
-                .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
+                .flatMap(record -> Flowable.fromFuture(Config.USE_GRPC ? callGrpcTarget(record) : callHttpTarget(record)), Config.CONCURRENCY_PER_PARTITION)
+                .flatMap(x -> Flowable.empty());
     }
 
 

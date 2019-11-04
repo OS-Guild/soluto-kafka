@@ -20,6 +20,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 class Processor {
     private HttpClient client = HttpClient.newHttpClient();
@@ -38,6 +40,25 @@ class Processor {
                 .blockingSubscribe();
     }
 
+    private <T> RetryPolicy<T> getRetryPolicy(ConsumerRecord<String, String> record, final ToIntFunction<T> getStatusCode) {
+        var executionStart = new Date().getTime();
+
+        return new RetryPolicy<T>()
+                .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
+                .handleResultIf(r -> getStatusCode.applyAsInt(r) >= 500)
+                .onSuccess(x -> {
+                    var statusCode = getStatusCode.applyAsInt(x.getResult());
+
+                    if (400 <= statusCode && statusCode < 500) {
+                        produce("poison", Config.POISON_MESSAGE_TOPIC, record);
+                        return;
+                    }
+                    Monitor.processMessageCompleted(executionStart);
+                })
+                .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(getStatusCode.applyAsInt(x.getLastResult()))), x.getLastFailure(), x.getAttemptCount()))
+                .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
+    }
+
     private CompletableFuture<TargetResponse> callHttpTarget(ConsumerRecord<String, String> record) {
         var request = HttpRequest
                 .newBuilder()
@@ -48,24 +69,7 @@ class Processor {
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 
-        var executionStart = new Date().getTime();
-
-        var retryPolicy = new RetryPolicy<HttpResponse<String>>()
-                .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-                .abortOn(ConnectException.class)
-                .handleResultIf(r -> r.statusCode() >= 500)
-                .onSuccess(x -> {
-                    var statusCode = x.getResult().statusCode();
-
-                    if (400 <= statusCode && statusCode < 500) {
-                        produce("poison", Config.POISON_MESSAGE_TOPIC, record);
-                        return;
-                    }
-
-                    Monitor.processMessageCompleted(executionStart);
-                })
-                .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(x.getLastResult().body()), x.getLastFailure(), x.getAttemptCount()))
-                .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
+        var retryPolicy = this.<HttpResponse<String>>getRetryPolicy(record, r -> r.statusCode());
 
         CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier = () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
         
@@ -82,24 +86,7 @@ class Processor {
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
 
-        var executionStart = new Date().getTime();
-
-        var retryPolicy = new RetryPolicy<KafkaMessage.CallTargetResponse>()
-                .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-                .handleResultIf(r -> r.getStatusCode() >= 500)
-                .onSuccess(x -> {
-                    var statusCode = x.getResult().getStatusCode();
-
-                    if (400 <= statusCode && statusCode < 500) {
-                        produce("poison", Config.POISON_MESSAGE_TOPIC, record);
-                        return;
-                    }
-
-                    Monitor.processMessageCompleted(executionStart);
-                })
-                .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(x.getLastResult().getStatusCode())), x.getLastFailure(), x.getAttemptCount()))
-                .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
-        
+        final var retryPolicy = this.<KafkaMessage.CallTargetResponse>getRetryPolicy(record, r->r.getStatusCode());
         CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
         return Failsafe

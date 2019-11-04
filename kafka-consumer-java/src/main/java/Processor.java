@@ -68,6 +68,7 @@ class Processor {
                 .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
 
         CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier = () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+        
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
@@ -98,6 +99,7 @@ class Processor {
                 })
                 .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(x.getLastResult().getStatusCode())), x.getLastFailure(), x.getAttemptCount()))
                 .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
+        
         CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
         return Failsafe
@@ -106,7 +108,6 @@ class Processor {
                 .thenApplyAsync(__ -> TargetResponse.Success)
                 .exceptionally(TargetResponse::Error);
     }
-
 
     private CompletableFuture callTarget(ConsumerRecord<String, String> record) {
         if (Config.SENDING_PROTOCOL == "grpc") return callGrpcTarget(record);
@@ -121,7 +122,6 @@ class Processor {
                 , Config.CONCURRENCY_PER_PARTITION)
                 .flatMap(x -> Flowable.empty());
     }
-
 
     private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
         producer.send(new ProducerRecord<>(topic, record.key(), record.value()), (metadata, err) -> {

@@ -50,7 +50,7 @@ class Processor {
                     var statusCode = getStatusCode.applyAsInt(x.getResult());
 
                     if (400 <= statusCode && statusCode < 500) {
-                        produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
+                        produce("poison", Config.POISON_MESSAGE_TOPIC, record);
                         return;
                     }
                     Monitor.processMessageCompleted(executionStart);

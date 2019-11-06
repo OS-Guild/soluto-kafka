@@ -24,7 +24,7 @@ class Config {
     public static String KAFKA_BROKER;
     public static String TOPIC;
     public static String RETRY_TOPIC;
-    public static String DEAD_LETTER_TOPIC;
+    public static String POISON_MESSAGE_TOPIC;
     public static String GROUP_ID;
     public static String TARGET_ENDPOINT;
     public static int CONCURRENCY;
@@ -54,7 +54,7 @@ class Config {
         GROUP_ID = getString(dotenv, "GROUP_ID");
         TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
         RETRY_TOPIC = getString(dotenv, "RETRY_TOPIC");
-        DEAD_LETTER_TOPIC = getString(dotenv, "DEAD_LETTER_TOPIC");
+        POISON_MESSAGE_TOPIC = getString(dotenv, "POISON_MESSAGE_TOPIC");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);

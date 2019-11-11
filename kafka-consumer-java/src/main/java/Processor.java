@@ -106,7 +106,7 @@ class Processor {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
                 .flatMap(record -> Flowable.fromFuture(callTarget(record)), Config.CONCURRENCY_PER_PARTITION)
-                .flatMap(x -> Flowable.empty());
+                .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }
 
     private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {

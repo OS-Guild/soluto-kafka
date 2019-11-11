@@ -31,7 +31,6 @@ class Processor {
 
     void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {
         Thread.sleep(Config.PROCESSING_DELAY);
-        processPartition(partitions.iterator().next()).subscribe();
         Flowable.fromIterable(partitions)
                 .flatMap(this::processPartition, Config.CONCURRENCY)
                 .subscribeOn(Schedulers.io())
@@ -106,9 +105,8 @@ class Processor {
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
-                .flatMap(record -> Flowable.fromFuture(callTarget(record))
-                , Config.CONCURRENCY_PER_PARTITION)
-                .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
+                .flatMap(record -> Flowable.fromFuture(callTarget(record)), Config.CONCURRENCY_PER_PARTITION)
+                .flatMap(x -> Flowable.empty());
     }
 
     private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {

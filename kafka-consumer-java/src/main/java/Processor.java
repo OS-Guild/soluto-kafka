@@ -10,7 +10,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -20,7 +19,6 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 class Processor {
@@ -96,10 +94,13 @@ class Processor {
                 .exceptionally(TargetResponse::Error);
     }
 
-    private CompletableFuture callTarget(ConsumerRecord<String, String> record) {
-        if (Config.SENDING_PROTOCOL == "grpc") return callGrpcTarget(record);
-        else if (Config.SENDING_PROTOCOL == "http") return callHttpTarget(record);
-        else return null;
+    private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
+        if (Config.SENDING_PROTOCOL.equals("grpc")) return callGrpcTarget(record);
+        else if (Config.SENDING_PROTOCOL.equals("http")) return callHttpTarget(record);
+        CompletableFuture<TargetResponse> notSupportedFuture = new CompletableFuture<>();
+        final TargetResponse notSupportedResponse = TargetResponse.Error(new UnsupportedOperationException());
+        notSupportedFuture.complete(notSupportedResponse);
+        return notSupportedFuture;
     }
 
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
@@ -107,7 +108,7 @@ class Processor {
                 .doOnNext(Monitor::messageLatency)
                 .flatMap(record -> Flowable.fromFuture(callTarget(record))
                 , Config.CONCURRENCY_PER_PARTITION)
-                .flatMap(x -> Flowable.empty());
+                .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }
 
     private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {

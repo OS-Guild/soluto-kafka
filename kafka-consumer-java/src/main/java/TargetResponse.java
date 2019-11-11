@@ -12,7 +12,7 @@ public class TargetResponse {
         this.exception = exception;
     }
 
-    private TargetResponse(TargetResponseType targetResponseType) {
+    TargetResponse(TargetResponseType targetResponseType) {
         this.type = targetResponseType;
     }
 

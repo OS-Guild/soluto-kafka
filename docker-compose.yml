@@ -32,9 +32,9 @@ services:
             - SECRETS_FILE_LOCATION=stam
             - TRUSTSTORE=stam
             - KEYSTORE=stam
-            - GRPC_HOST = localhost
-            - GRPC_PORT = 9000
-            - SENDING_PROTOCOL = SENDING_PROTOCOL
+            - GRPC_HOST=localhost
+            - GRPC_PORT=9000
+            - SENDING_PROTOCOL=http
         depends_on:
             - kafka
             - fake-server

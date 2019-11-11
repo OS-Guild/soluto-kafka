@@ -1,7 +1,7 @@
-FROM openjdk:11.0.2-slim as base
+FROM openjdk:13-alpine
 WORKDIR /service
 
 COPY . ./
 RUN ./gradlew build
 
-CMD [ "./gradlew", "run", "--no-daemon"]
+CMD [ "./gradlew", "run"]

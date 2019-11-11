@@ -12,6 +12,9 @@ import java.util.Base64;
 class Config {
     public static String JAVA_ENV;
     public static int PORT;    
+    public static String GRPC_HOST;
+    public static int GRPC_PORT;
+    public static String SENDING_PROTOCOL;
     public static String KAFKA_PASSWORD;
     public static boolean SHOULD_SKIP_AUTHENTICATION;
     public static boolean DEDUP_PARTITION_BY_KEY;
@@ -39,6 +42,9 @@ class Config {
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");
         PORT = getInt(dotenv, "PORT");
+        GRPC_HOST = getOptionalString(dotenv, "GRPC_HOST","localhost");
+        GRPC_PORT = getOptionalInt(dotenv, "GRPC_PORT",9000);
+        SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
         DEDUP_PARTITION_BY_KEY = getOptionalBoolean(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
@@ -56,7 +62,6 @@ class Config {
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         CLUSTER = getOptionalString(dotenv, "CLUSTER", "local");
-
         JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
         KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
         STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");

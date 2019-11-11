@@ -50,6 +50,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             if (e.getCause() instanceof ConnectException) {
                 Monitor.targetConnectionUnavailable();
             } else {

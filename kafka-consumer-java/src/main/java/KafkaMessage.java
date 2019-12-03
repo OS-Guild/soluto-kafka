@@ -17,12 +17,30 @@ public final class KafkaMessage {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>string msgJson = 1;</code>
+     * <code>int64 recordOffset = 1;</code>
+     * @return The recordOffset.
+     */
+    long getRecordOffset();
+
+    /**
+     * <code>int64 recordTimestamp = 2;</code>
+     * @return The recordTimestamp.
+     */
+    long getRecordTimestamp();
+
+    /**
+     * <code>int64 recordTargetSendTimestamp = 3;</code>
+     * @return The recordTargetSendTimestamp.
+     */
+    long getRecordTargetSendTimestamp();
+
+    /**
+     * <code>string msgJson = 4;</code>
      * @return The msgJson.
      */
     java.lang.String getMsgJson();
     /**
-     * <code>string msgJson = 1;</code>
+     * <code>string msgJson = 4;</code>
      * @return The bytes for msgJson.
      */
     com.google.protobuf.ByteString
@@ -74,7 +92,22 @@ public final class KafkaMessage {
             case 0:
               done = true;
               break;
-            case 10: {
+            case 8: {
+
+              recordOffset_ = input.readInt64();
+              break;
+            }
+            case 16: {
+
+              recordTimestamp_ = input.readInt64();
+              break;
+            }
+            case 24: {
+
+              recordTargetSendTimestamp_ = input.readInt64();
+              break;
+            }
+            case 34: {
               java.lang.String s = input.readStringRequireUtf8();
 
               msgJson_ = s;
@@ -112,10 +145,40 @@ public final class KafkaMessage {
               KafkaMessage.CallTargetPayload.class, KafkaMessage.CallTargetPayload.Builder.class);
     }
 
-    public static final int MSGJSON_FIELD_NUMBER = 1;
+    public static final int RECORDOFFSET_FIELD_NUMBER = 1;
+    private long recordOffset_;
+    /**
+     * <code>int64 recordOffset = 1;</code>
+     * @return The recordOffset.
+     */
+    public long getRecordOffset() {
+      return recordOffset_;
+    }
+
+    public static final int RECORDTIMESTAMP_FIELD_NUMBER = 2;
+    private long recordTimestamp_;
+    /**
+     * <code>int64 recordTimestamp = 2;</code>
+     * @return The recordTimestamp.
+     */
+    public long getRecordTimestamp() {
+      return recordTimestamp_;
+    }
+
+    public static final int RECORDTARGETSENDTIMESTAMP_FIELD_NUMBER = 3;
+    private long recordTargetSendTimestamp_;
+    /**
+     * <code>int64 recordTargetSendTimestamp = 3;</code>
+     * @return The recordTargetSendTimestamp.
+     */
+    public long getRecordTargetSendTimestamp() {
+      return recordTargetSendTimestamp_;
+    }
+
+    public static final int MSGJSON_FIELD_NUMBER = 4;
     private volatile java.lang.Object msgJson_;
     /**
-     * <code>string msgJson = 1;</code>
+     * <code>string msgJson = 4;</code>
      * @return The msgJson.
      */
     public java.lang.String getMsgJson() {
@@ -131,7 +194,7 @@ public final class KafkaMessage {
       }
     }
     /**
-     * <code>string msgJson = 1;</code>
+     * <code>string msgJson = 4;</code>
      * @return The bytes for msgJson.
      */
     public com.google.protobuf.ByteString
@@ -162,8 +225,17 @@ public final class KafkaMessage {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (recordOffset_ != 0L) {
+        output.writeInt64(1, recordOffset_);
+      }
+      if (recordTimestamp_ != 0L) {
+        output.writeInt64(2, recordTimestamp_);
+      }
+      if (recordTargetSendTimestamp_ != 0L) {
+        output.writeInt64(3, recordTargetSendTimestamp_);
+      }
       if (!getMsgJsonBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, msgJson_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, msgJson_);
       }
       unknownFields.writeTo(output);
     }
@@ -174,8 +246,20 @@ public final class KafkaMessage {
       if (size != -1) return size;
 
       size = 0;
+      if (recordOffset_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, recordOffset_);
+      }
+      if (recordTimestamp_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, recordTimestamp_);
+      }
+      if (recordTargetSendTimestamp_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(3, recordTargetSendTimestamp_);
+      }
       if (!getMsgJsonBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, msgJson_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, msgJson_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -192,6 +276,12 @@ public final class KafkaMessage {
       }
       KafkaMessage.CallTargetPayload other = (KafkaMessage.CallTargetPayload) obj;
 
+      if (getRecordOffset()
+          != other.getRecordOffset()) return false;
+      if (getRecordTimestamp()
+          != other.getRecordTimestamp()) return false;
+      if (getRecordTargetSendTimestamp()
+          != other.getRecordTargetSendTimestamp()) return false;
       if (!getMsgJson()
           .equals(other.getMsgJson())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -205,6 +295,15 @@ public final class KafkaMessage {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + RECORDOFFSET_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getRecordOffset());
+      hash = (37 * hash) + RECORDTIMESTAMP_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getRecordTimestamp());
+      hash = (37 * hash) + RECORDTARGETSENDTIMESTAMP_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getRecordTargetSendTimestamp());
       hash = (37 * hash) + MSGJSON_FIELD_NUMBER;
       hash = (53 * hash) + getMsgJson().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -340,6 +439,12 @@ public final class KafkaMessage {
       @java.lang.Override
       public Builder clear() {
         super.clear();
+        recordOffset_ = 0L;
+
+        recordTimestamp_ = 0L;
+
+        recordTargetSendTimestamp_ = 0L;
+
         msgJson_ = "";
 
         return this;
@@ -368,6 +473,9 @@ public final class KafkaMessage {
       @java.lang.Override
       public KafkaMessage.CallTargetPayload buildPartial() {
         KafkaMessage.CallTargetPayload result = new KafkaMessage.CallTargetPayload(this);
+        result.recordOffset_ = recordOffset_;
+        result.recordTimestamp_ = recordTimestamp_;
+        result.recordTargetSendTimestamp_ = recordTargetSendTimestamp_;
         result.msgJson_ = msgJson_;
         onBuilt();
         return result;
@@ -417,6 +525,15 @@ public final class KafkaMessage {
 
       public Builder mergeFrom(KafkaMessage.CallTargetPayload other) {
         if (other == KafkaMessage.CallTargetPayload.getDefaultInstance()) return this;
+        if (other.getRecordOffset() != 0L) {
+          setRecordOffset(other.getRecordOffset());
+        }
+        if (other.getRecordTimestamp() != 0L) {
+          setRecordTimestamp(other.getRecordTimestamp());
+        }
+        if (other.getRecordTargetSendTimestamp() != 0L) {
+          setRecordTargetSendTimestamp(other.getRecordTargetSendTimestamp());
+        }
         if (!other.getMsgJson().isEmpty()) {
           msgJson_ = other.msgJson_;
           onChanged();
@@ -450,9 +567,99 @@ public final class KafkaMessage {
         return this;
       }
 
+      private long recordOffset_ ;
+      /**
+       * <code>int64 recordOffset = 1;</code>
+       * @return The recordOffset.
+       */
+      public long getRecordOffset() {
+        return recordOffset_;
+      }
+      /**
+       * <code>int64 recordOffset = 1;</code>
+       * @param value The recordOffset to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRecordOffset(long value) {
+        
+        recordOffset_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 recordOffset = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRecordOffset() {
+        
+        recordOffset_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long recordTimestamp_ ;
+      /**
+       * <code>int64 recordTimestamp = 2;</code>
+       * @return The recordTimestamp.
+       */
+      public long getRecordTimestamp() {
+        return recordTimestamp_;
+      }
+      /**
+       * <code>int64 recordTimestamp = 2;</code>
+       * @param value The recordTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRecordTimestamp(long value) {
+        
+        recordTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 recordTimestamp = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRecordTimestamp() {
+        
+        recordTimestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long recordTargetSendTimestamp_ ;
+      /**
+       * <code>int64 recordTargetSendTimestamp = 3;</code>
+       * @return The recordTargetSendTimestamp.
+       */
+      public long getRecordTargetSendTimestamp() {
+        return recordTargetSendTimestamp_;
+      }
+      /**
+       * <code>int64 recordTargetSendTimestamp = 3;</code>
+       * @param value The recordTargetSendTimestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRecordTargetSendTimestamp(long value) {
+        
+        recordTargetSendTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 recordTargetSendTimestamp = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRecordTargetSendTimestamp() {
+        
+        recordTargetSendTimestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object msgJson_ = "";
       /**
-       * <code>string msgJson = 1;</code>
+       * <code>string msgJson = 4;</code>
        * @return The msgJson.
        */
       public java.lang.String getMsgJson() {
@@ -468,7 +675,7 @@ public final class KafkaMessage {
         }
       }
       /**
-       * <code>string msgJson = 1;</code>
+       * <code>string msgJson = 4;</code>
        * @return The bytes for msgJson.
        */
       public com.google.protobuf.ByteString
@@ -485,7 +692,7 @@ public final class KafkaMessage {
         }
       }
       /**
-       * <code>string msgJson = 1;</code>
+       * <code>string msgJson = 4;</code>
        * @param value The msgJson to set.
        * @return This builder for chaining.
        */
@@ -500,7 +707,7 @@ public final class KafkaMessage {
         return this;
       }
       /**
-       * <code>string msgJson = 1;</code>
+       * <code>string msgJson = 4;</code>
        * @return This builder for chaining.
        */
       public Builder clearMsgJson() {
@@ -510,7 +717,7 @@ public final class KafkaMessage {
         return this;
       }
       /**
-       * <code>string msgJson = 1;</code>
+       * <code>string msgJson = 4;</code>
        * @param value The bytes for msgJson to set.
        * @return This builder for chaining.
        */
@@ -1083,11 +1290,13 @@ public final class KafkaMessage {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022kafkaMessage.proto\"$\n\021CallTargetPayloa" +
-      "d\022\017\n\007msgJson\030\001 \001(\t\"(\n\022CallTargetResponse" +
-      "\022\022\n\nstatusCode\030\001 \001(\0052E\n\nCallTarget\0227\n\nca" +
-      "llTarget\022\022.CallTargetPayload\032\023.CallTarge" +
-      "tResponse\"\000b\006proto3"
+      "\n\022kafkaMessage.proto\"v\n\021CallTargetPayloa" +
+      "d\022\024\n\014recordOffset\030\001 \001(\003\022\027\n\017recordTimesta" +
+      "mp\030\002 \001(\003\022!\n\031recordTargetSendTimestamp\030\003 " +
+      "\001(\003\022\017\n\007msgJson\030\004 \001(\t\"(\n\022CallTargetRespon" +
+      "se\022\022\n\nstatusCode\030\001 \001(\0052E\n\nCallTarget\0227\n\n" +
+      "callTarget\022\022.CallTargetPayload\032\023.CallTar" +
+      "getResponse\"\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -1098,7 +1307,7 @@ public final class KafkaMessage {
     internal_static_CallTargetPayload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_CallTargetPayload_descriptor,
-        new java.lang.String[] { "MsgJson", });
+        new java.lang.String[] { "RecordOffset", "RecordTimestamp", "RecordTargetSendTimestamp", "MsgJson", });
     internal_static_CallTargetResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_CallTargetResponse_fieldAccessorTable = new

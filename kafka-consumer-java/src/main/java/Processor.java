@@ -17,6 +17,7 @@ import java.net.http.HttpResponse;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.ToIntFunction;
@@ -74,7 +75,7 @@ class Processor {
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(__ -> TargetResponse.Success)
+                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.headers().firstValueAsLong("x-call-target-latency")))
                 .exceptionally(TargetResponse::Error);
     }
 
@@ -93,7 +94,7 @@ class Processor {
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(__ -> TargetResponse.Success)
+                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getCallLatency() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getCallLatency())))
                 .exceptionally(TargetResponse::Error);
     }
 
@@ -110,7 +111,15 @@ class Processor {
         return Flowable.fromIterable(partition)
                 .doOnNext(Monitor::messageLatency)
                 .flatMap(record -> Flowable.fromFuture(callTarget(record)), Config.CONCURRENCY_PER_PARTITION)
-                .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
+                .flatMap(targetResponse -> {
+                    if (targetResponse.type == TargetResponseType.Error) {
+                        return Flowable.error(targetResponse.exception.getCause());
+                    }
+                    if (targetResponse.callLatency.isPresent()) {
+                        Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                    }
+                    return Flowable.empty();
+                });
     }
 
     private void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {

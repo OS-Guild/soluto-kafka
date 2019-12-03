@@ -794,6 +794,12 @@ public final class KafkaMessage {
      * @return The statusCode.
      */
     int getStatusCode();
+
+    /**
+     * <code>int64 callLatency = 2;</code>
+     * @return The callLatency.
+     */
+    long getCallLatency();
   }
   /**
    * Protobuf type {@code CallTargetResponse}
@@ -845,6 +851,11 @@ public final class KafkaMessage {
               statusCode_ = input.readInt32();
               break;
             }
+            case 16: {
+
+              callLatency_ = input.readInt64();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -887,6 +898,16 @@ public final class KafkaMessage {
       return statusCode_;
     }
 
+    public static final int CALLLATENCY_FIELD_NUMBER = 2;
+    private long callLatency_;
+    /**
+     * <code>int64 callLatency = 2;</code>
+     * @return The callLatency.
+     */
+    public long getCallLatency() {
+      return callLatency_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -904,6 +925,9 @@ public final class KafkaMessage {
       if (statusCode_ != 0) {
         output.writeInt32(1, statusCode_);
       }
+      if (callLatency_ != 0L) {
+        output.writeInt64(2, callLatency_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -916,6 +940,10 @@ public final class KafkaMessage {
       if (statusCode_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(1, statusCode_);
+      }
+      if (callLatency_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, callLatency_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -934,6 +962,8 @@ public final class KafkaMessage {
 
       if (getStatusCode()
           != other.getStatusCode()) return false;
+      if (getCallLatency()
+          != other.getCallLatency()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -947,6 +977,9 @@ public final class KafkaMessage {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + STATUSCODE_FIELD_NUMBER;
       hash = (53 * hash) + getStatusCode();
+      hash = (37 * hash) + CALLLATENCY_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getCallLatency());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1082,6 +1115,8 @@ public final class KafkaMessage {
         super.clear();
         statusCode_ = 0;
 
+        callLatency_ = 0L;
+
         return this;
       }
 
@@ -1109,6 +1144,7 @@ public final class KafkaMessage {
       public KafkaMessage.CallTargetResponse buildPartial() {
         KafkaMessage.CallTargetResponse result = new KafkaMessage.CallTargetResponse(this);
         result.statusCode_ = statusCode_;
+        result.callLatency_ = callLatency_;
         onBuilt();
         return result;
       }
@@ -1159,6 +1195,9 @@ public final class KafkaMessage {
         if (other == KafkaMessage.CallTargetResponse.getDefaultInstance()) return this;
         if (other.getStatusCode() != 0) {
           setStatusCode(other.getStatusCode());
+        }
+        if (other.getCallLatency() != 0L) {
+          setCallLatency(other.getCallLatency());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1215,6 +1254,36 @@ public final class KafkaMessage {
       public Builder clearStatusCode() {
         
         statusCode_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private long callLatency_ ;
+      /**
+       * <code>int64 callLatency = 2;</code>
+       * @return The callLatency.
+       */
+      public long getCallLatency() {
+        return callLatency_;
+      }
+      /**
+       * <code>int64 callLatency = 2;</code>
+       * @param value The callLatency to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCallLatency(long value) {
+        
+        callLatency_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 callLatency = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearCallLatency() {
+        
+        callLatency_ = 0L;
         onChanged();
         return this;
       }
@@ -1293,10 +1362,11 @@ public final class KafkaMessage {
       "\n\022kafkaMessage.proto\"v\n\021CallTargetPayloa" +
       "d\022\024\n\014recordOffset\030\001 \001(\003\022\027\n\017recordTimesta" +
       "mp\030\002 \001(\003\022!\n\031recordTargetSendTimestamp\030\003 " +
-      "\001(\003\022\017\n\007msgJson\030\004 \001(\t\"(\n\022CallTargetRespon" +
-      "se\022\022\n\nstatusCode\030\001 \001(\0052E\n\nCallTarget\0227\n\n" +
-      "callTarget\022\022.CallTargetPayload\032\023.CallTar" +
-      "getResponse\"\000b\006proto3"
+      "\001(\003\022\017\n\007msgJson\030\004 \001(\t\"=\n\022CallTargetRespon" +
+      "se\022\022\n\nstatusCode\030\001 \001(\005\022\023\n\013callLatency\030\002 " +
+      "\001(\0032E\n\nCallTarget\0227\n\ncallTarget\022\022.CallTa" +
+      "rgetPayload\032\023.CallTargetResponse\"\000b\006prot" +
+      "o3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -1313,7 +1383,7 @@ public final class KafkaMessage {
     internal_static_CallTargetResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_CallTargetResponse_descriptor,
-        new java.lang.String[] { "StatusCode", });
+        new java.lang.String[] { "StatusCode", "CallLatency", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

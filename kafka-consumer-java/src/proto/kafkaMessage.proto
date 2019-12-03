@@ -13,4 +13,5 @@ message CallTargetPayload {
 
 message CallTargetResponse {
     int32 statusCode = 1;
+    int64 callLatency = 2;
 }

@@ -43,6 +43,11 @@ public class Monitor {
         statsdClient.recordExecutionTime("message."+record.partition()+".latency", latency);
     }
 
+    public static void callTargetLatency(long latency) {
+        if (statsdClient == null) return; 
+        statsdClient.recordExecutionTime("callTarget.latency", latency);
+    }    
+
 	public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;        
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);

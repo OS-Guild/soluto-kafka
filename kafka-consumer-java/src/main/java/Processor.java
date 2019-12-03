@@ -63,6 +63,7 @@ class Processor {
                 .header("Content-Type", "application/json")
                 .header("x-record-offset", String.valueOf(record.offset()))
                 .header("x-record-timestamp", String.valueOf(record.timestamp()))
+                .header("x-record-target-send-timestamp", String.valueOf(System.currentTimeMillis()))
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 
@@ -80,6 +81,9 @@ class Processor {
     private CompletableFuture<TargetResponse> callGrpcTarget(ConsumerRecord<String, String> record) {
         final var json = record.value();
         final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
+        callTargetPayloadBuilder.setRecordOffset(record.offset());
+        callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
+        callTargetPayloadBuilder.setRecordTargetSendTimestamp(System.currentTimeMillis());
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
 

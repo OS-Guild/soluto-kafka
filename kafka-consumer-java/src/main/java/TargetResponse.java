@@ -1,3 +1,5 @@
+import java.util.OptionalLong;
+
 enum TargetResponseType {
     Success,
     Error
@@ -5,6 +7,7 @@ enum TargetResponseType {
 
 public class TargetResponse {
     public TargetResponseType type;
+    public OptionalLong callLatency;
     public Throwable exception;
 
     private TargetResponse(TargetResponseType targetResponseType, Throwable exception) {
@@ -15,6 +18,11 @@ public class TargetResponse {
     TargetResponse(TargetResponseType targetResponseType) {
         this.type = targetResponseType;
     }
+
+    TargetResponse(TargetResponseType targetResponseType, OptionalLong callLatency) {
+        this.type = targetResponseType;
+        this.callLatency = callLatency;
+    }    
 
     public static TargetResponse Success = new TargetResponse(TargetResponseType.Success);
 

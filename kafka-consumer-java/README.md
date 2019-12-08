@@ -2,5 +2,5 @@
 
 ## Generate new Proto
 ```
-./protoc -I=src/proto src/proto/kafkaMessage.proto 
+./protoc --proto_path=src --java_out=src/main/java src/proto/kafkaMessage.proto
 ```

@@ -95,7 +95,7 @@ class Processor {
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getCallLatency() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getCallLatency() - startTime)))
+                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getReceivedTimestamp() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getReceivedTimestamp() - startTime)))
                 .exceptionally(TargetResponse::Error);
     }
 

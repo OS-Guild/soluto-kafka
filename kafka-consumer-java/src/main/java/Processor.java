@@ -68,6 +68,7 @@ class Processor {
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 
+        final long startTime = (new Date()).getTime();
         var retryPolicy = this.<HttpResponse<String>>getRetryPolicy(record, r -> r.statusCode());
 
         CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier = () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
@@ -75,7 +76,12 @@ class Processor {
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.headers().firstValueAsLong("x-call-target-latency")))
+                .thenApplyAsync(response -> {
+                    var callLatency = !response.headers().firstValueAsLong("x-received-timestamp").isPresent() ? OptionalLong.empty() : OptionalLong.of(response.headers().firstValueAsLong("x-received-timestamp").getAsLong() - startTime) ;
+                    var resultLatency = !response.headers().firstValueAsLong("x-completed-timestamp").isPresent() ? OptionalLong.empty() : OptionalLong.of((new Date()).getTime() - response.headers().firstValueAsLong("x-completed-timestamp").getAsLong()) ;
+
+                    return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
+                })
                 .exceptionally(TargetResponse::Error);
     }
 
@@ -95,7 +101,11 @@ class Processor {
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getReceivedTimestamp() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getReceivedTimestamp() - startTime)))
+                .thenApplyAsync(response -> {
+                    var callLatency = response.getReceivedTimestamp() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getReceivedTimestamp() - startTime);
+                    var resultLatency = response.getCompletedTimestamp() == 0L ? OptionalLong.empty() : OptionalLong.of((new Date()).getTime() - response.getCompletedTimestamp());
+                    return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
+                })
                 .exceptionally(TargetResponse::Error);
     }
 
@@ -116,6 +126,9 @@ class Processor {
                     if (x.callLatency.isPresent()) {
                         Monitor.callTargetLatency(x.callLatency.getAsLong());
                     }
+                    if (x.resultLatency.isPresent()) {
+                        Monitor.resultTargetLatency(x.resultLatency.getAsLong());
+                    }                    
                 })
                 .flatMap(x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty());
     }

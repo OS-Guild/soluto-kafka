@@ -46,7 +46,12 @@ public class Monitor {
     public static void callTargetLatency(long latency) {
         if (statsdClient == null) return; 
         statsdClient.recordExecutionTime("callTarget.latency", latency);
-    }    
+    }
+
+    public static void resultTargetLatency(long latency) {
+        if (statsdClient == null) return; 
+        statsdClient.recordExecutionTime("resultTarget.latency", latency);
+    }  
 
 	public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;        

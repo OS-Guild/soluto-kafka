@@ -88,13 +88,14 @@ class Processor {
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
 
+        final long startTime = (new Date()).getTime();
         final var retryPolicy = this.<KafkaMessage.CallTargetResponse>getRetryPolicy(record, r->r.getStatusCode());
         CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
         return Failsafe
                 .with(retryPolicy)
                 .getStageAsync(completionStageCheckedSupplier)
-                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getCallLatency() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getCallLatency())))
+                .thenApplyAsync(response -> new TargetResponse(TargetResponseType.Success, response.getCallLatency() == 0L ? OptionalLong.empty() : OptionalLong.of(response.getCallLatency() - startTime)))
                 .exceptionally(TargetResponse::Error);
     }
 

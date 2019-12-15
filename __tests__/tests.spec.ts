@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 
 jest.setTimeout(60000);
 
-describe('basic flow', () => {
+describe('tests', () => {
     beforeAll(async () => {
         await delay(30000)
         beforeAll(() => got.post('http://localhost:3000/fake_server_admin/clear'));
@@ -14,16 +14,18 @@ describe('basic flow', () => {
         let attempts = 3;
         while (attempts > 0) {
             try {
-                await delay(5000);
-                const responseConsumer = await fetch('http://localhost:2000/isAlive');
-                const responseProducer = await fetch('http://localhost:2500/isAlive');
+                const responseConsumer = await fetch('http://localhost:4000/isAlive');
+                const responseProducer = await fetch('http://localhost:6000/isAlive');
                 if (responseConsumer.ok && responseProducer.ok) {
                     return;
                 }
                 attempts--;
-            } catch {
+
+            } catch (e) {
+                console.log("not alive", e.message)
                 attempts--;
             }
+            await delay(10000)
         }
         fail();
     });
@@ -35,11 +37,11 @@ describe('basic flow', () => {
             json: true,
             body: {
                 method: 'post',
-                url: '/target',
+                url: '/',
                 statusCode: 200,
             },
         });
-        await fetch('http://localhost:2500/produce', {
+        await fetch('http://localhost:6000/produce', {
             method: 'post',
             body: JSON.stringify([{key: 'key', message: {data: 1}}]),
             headers: {'Content-Type': 'application/json'},

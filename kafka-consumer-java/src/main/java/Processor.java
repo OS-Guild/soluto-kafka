@@ -23,10 +23,17 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.ToIntFunction;
 
 class Processor {
-    private HttpClient client = HttpClient.newHttpClient();
+    private HttpClient client;
+    private Channel channel;
     private KafkaProducer<String, String> producer;
-    Channel channel = ManagedChannelBuilder.forAddress(Config.GRPC_HOST, Config.GRPC_PORT).usePlaintext().build();
+    
     Processor(KafkaProducer<String, String> producer) {
+        if (Config.SENDING_PROTOCOL.equals("grpc")) {
+            this.channel = ManagedChannelBuilder.forAddress(Config.TARGET_GRPC_HOST, Config.TARGET_GRPC_PORT).usePlaintext().build();
+        }
+        else {
+            this.client = HttpClient.newHttpClient();
+        }
         this.producer = producer;
     }
 
@@ -48,19 +55,25 @@ class Processor {
                     var statusCode = getStatusCode.applyAsInt(x.getResult());
 
                     if (400 <= statusCode && statusCode < 500) {
-                        produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
+                        if (Config.DEAD_LETTER_TOPIC != null) {
+                            produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
+                        }
                         return;
                     }
                     Monitor.processMessageCompleted(executionStart);
                 })
                 .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(getStatusCode.applyAsInt(x.getLastResult()))), x.getLastFailure(), x.getAttemptCount()))
-                .onRetriesExceeded(__ -> produce("retry", Config.RETRY_TOPIC, record));
+                .onRetriesExceeded(__ -> {
+                    if (Config.RETRY_TOPIC != null) {
+                        produce("retry", Config.RETRY_TOPIC, record);
+                    }
+                });
     }
 
     private CompletableFuture<TargetResponse> callHttpTarget(ConsumerRecord<String, String> record) {
         var request = HttpRequest
                 .newBuilder()
-                .uri(URI.create(Config.TARGET_ENDPOINT))
+                .uri(URI.create("http://" + Config.TARGET_HTTP_HOST + ":" + Config.TARGET_HTTP_PORT))
                 .header("Content-Type", "application/json")
                 .header("x-record-offset", String.valueOf(record.offset()))
                 .header("x-record-timestamp", String.valueOf(record.timestamp()))
@@ -79,13 +92,13 @@ class Processor {
                 .thenApplyAsync(response -> {
                     var callLatency = !response.headers().firstValueAsLong("x-received-timestamp").isPresent() ? OptionalLong.empty() : OptionalLong.of(response.headers().firstValueAsLong("x-received-timestamp").getAsLong() - startTime) ;
                     var resultLatency = !response.headers().firstValueAsLong("x-completed-timestamp").isPresent() ? OptionalLong.empty() : OptionalLong.of((new Date()).getTime() - response.headers().firstValueAsLong("x-completed-timestamp").getAsLong()) ;
-
                     return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
                 })
                 .exceptionally(TargetResponse::Error);
     }
 
     private CompletableFuture<TargetResponse> callGrpcTarget(ConsumerRecord<String, String> record) {
+        System.out.println("3333333333");
         final var json = record.value();
         final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());
@@ -110,12 +123,10 @@ class Processor {
     }
 
     private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
-        if (Config.SENDING_PROTOCOL.equals("grpc")) return callGrpcTarget(record);
-        else if (Config.SENDING_PROTOCOL.equals("http")) return callHttpTarget(record);
-        CompletableFuture<TargetResponse> notSupportedFuture = new CompletableFuture<>();
-        final TargetResponse notSupportedResponse = TargetResponse.Error(new UnsupportedOperationException());
-        notSupportedFuture.complete(notSupportedResponse);
-        return notSupportedFuture;
+        if (Config.SENDING_PROTOCOL.equals("grpc")) {
+            return callGrpcTarget(record);
+        }
+        return callHttpTarget(record);
     }
 
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {

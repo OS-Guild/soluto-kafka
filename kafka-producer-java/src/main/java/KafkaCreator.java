@@ -10,7 +10,7 @@ class KafkaCreator {
         Properties props = new Properties();
         props.put("bootstrap.servers", Config.KAFKA_BROKER);
 
-        if(Config.SHOULD_SKIP_AUTHENTICATION) {
+        if (!Config.AUTHENTICATED_KAFKA) {
             return props;
         }
 

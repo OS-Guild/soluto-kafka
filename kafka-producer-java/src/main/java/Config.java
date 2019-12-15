@@ -10,50 +10,60 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 class Config {
-    public static String PRODUCER_NAME;
-    public static String JAVA_ENV;
+    //Required
     public static int PORT;
+    public static String KAFKA_BROKER;
+    public static String TOPIC;
+
+    //Optional
+    public static String READINESS_TOPIC;
+    public static int LINGER_TIME_MS;
+    public static String COMPRESSION_TYPE;
+
+    //Autentication
+    public static boolean AUTHENTICATED_KAFKA;
+    public static String TRUSTSTORE_LOCATION;
+    public static String KEYSTORE_LOCATION;
     public static String KAFKA_PASSWORD;
-    public static boolean SHOULD_SKIP_AUTHENTICATION;
+
+    //Statsd monitoring
+    public static boolean STATSD_MONITOR;
+    public static String STATSD_PRODUCER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
-    public static String KAFKA_BROKER;
-    public static String TOPIC;
-    public static String READINESS_TOPIC;
-    public static String TRUSTSTORE_LOCATION;
-    public static String KEYSTORE_LOCATION;
-    public static int LINGER_TIME_MS;
-    public static String COMPRESSION_TYPE;
-    public static String CLUSTER;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-        JAVA_ENV = getString(dotenv, "JAVA_ENV");
         PORT = getInt(dotenv, "PORT");
-        SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
-        STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
-        STATSD_HOST = getString(dotenv, "STATSD_HOST");
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
         TOPIC = getString(dotenv, "TOPIC");
+
         READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
-        PRODUCER_NAME = getString(dotenv, "PRODUCER_NAME");
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);
         COMPRESSION_TYPE = getOptionalString(dotenv, "COMPRESSION_TYPE", "none");
-        CLUSTER = getOptionalString(dotenv, "CLUSTER", "local");
-        JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
+        
+        AUTHENTICATED_KAFKA = getOptionalBool(dotenv, "AUTHENTICATED_KAFKA", false);
+        if (AUTHENTICATED_KAFKA) {
+            JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
+            KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
+            String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
+            String keystore = getSecret(secrets, dotenv, "KEYSTORE");
+            TRUSTSTORE_LOCATION = "client.truststore.jks";
+            KEYSTORE_LOCATION = "client.keystore.p12";
+            writeToFile(TRUSTSTORE_LOCATION, truststore);
+            writeToFile(KEYSTORE_LOCATION, keystore);
+        }
 
-        KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
-        STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
-        TRUSTSTORE_LOCATION = "client.truststore.jks";
-        KEYSTORE_LOCATION = "client.keystore.p12";
-
-        String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
-        String keystore = getSecret(secrets, dotenv, "KEYSTORE");
-
-        writeToFile(TRUSTSTORE_LOCATION, truststore);
-        writeToFile(KEYSTORE_LOCATION, keystore);
+        STATSD_MONITOR = getOptionalBool(dotenv, "STATSD_MONITOR", false);
+        if (STATSD_MONITOR) {
+            JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
+            STATSD_PRODUCER_NAME = getString(dotenv, "STATSD_PRODUCER_NAME");
+            STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
+            STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
+            STATSD_HOST = getString(dotenv, "STATSD_HOST");
+        }
     }
 
     private static void writeToFile(String path, String value) throws IOException {
@@ -109,7 +119,11 @@ class Config {
         return value;
     }
 
-    private static boolean getOptionalBoolean(Dotenv dotenv, String name, boolean fallback) {
+    private static boolean getBool(Dotenv dotenv, String name) {
+        return Boolean.parseBoolean(dotenv.get(name));
+    }
+    
+    private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {
         try {
             return Boolean.parseBoolean(getString(dotenv, name));
         } catch (Exception e) {

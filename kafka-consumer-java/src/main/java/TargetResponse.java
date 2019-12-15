@@ -1,8 +1,7 @@
 import java.util.OptionalLong;
 
 enum TargetResponseType {
-    Success,
-    Error
+    Success, Error
 }
 
 public class TargetResponse {
@@ -14,10 +13,8 @@ public class TargetResponse {
     private TargetResponse(Throwable exception) {
         this.type = TargetResponseType.Error;
         this.exception = exception;
-    }
-
-    TargetResponse(TargetResponseType targetResponseType) {
-        this.type = targetResponseType;
+        this.callLatency = OptionalLong.empty();
+        this.resultLatency = OptionalLong.empty();
     }
 
     TargetResponse(TargetResponseType targetResponseType, OptionalLong callLatency, OptionalLong resultLatency) {
@@ -25,14 +22,10 @@ public class TargetResponse {
         this.callLatency = callLatency;
         this.resultLatency = resultLatency;
 
-    }    
-
-	public static TargetResponse Success = new TargetResponse(TargetResponseType.Success);
+    }
 
     public static TargetResponse Error(Throwable t) {
         return new TargetResponse(t);
-    } 
-
-
+    }
 
 }

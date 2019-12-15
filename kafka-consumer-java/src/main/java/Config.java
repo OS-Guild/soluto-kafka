@@ -47,8 +47,8 @@ class Config {
 
         }
         if (SENDING_PROTOCOL == "grpc") {
-            GRPC_HOST = getOptionalString(dotenv, "GRPC_HOST", "localhost");
-            GRPC_PORT = getOptionalInt(dotenv, "GRPC_PORT", 9000);
+            GRPC_HOST = getString(dotenv, "GRPC_HOST");
+            GRPC_PORT = getInt(dotenv, "GRPC_PORT");
         }
 
         JAVA_ENV = getString(dotenv, "JAVA_ENV");

@@ -11,7 +11,7 @@ import java.util.Base64;
 
 class Config {
     public static String JAVA_ENV;
-    public static int PORT;    
+    public static int PORT;
     public static String GRPC_HOST;
     public static int GRPC_PORT;
     public static String SENDING_PROTOCOL;
@@ -24,7 +24,7 @@ class Config {
     public static String KAFKA_BROKER;
     public static String TOPIC;
     public static String RETRY_TOPIC;
-    public static String POISON_MESSAGE_TOPIC;
+    public static String DEAD_LETTER_TOPIC;
     public static String GROUP_ID;
     public static String TARGET_ENDPOINT;
     public static int CONCURRENCY;
@@ -34,17 +34,24 @@ class Config {
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static int CONSUMER_POLL_TIMEOUT;
-	public static int CONSUMER_THREADS;
-	public static String CLUSTER;
+    public static int CONSUMER_THREADS;
+    public static String CLUSTER;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-        JAVA_ENV = getString(dotenv, "JAVA_ENV");
-        PORT = getInt(dotenv, "PORT");
-        GRPC_HOST = getOptionalString(dotenv, "GRPC_HOST","localhost");
-        GRPC_PORT = getOptionalInt(dotenv, "GRPC_PORT",9000);
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
+        if (SENDING_PROTOCOL == "http") {
+            PORT = getInt(dotenv, "PORT");
+            TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
+
+        }
+        if (SENDING_PROTOCOL == "grpc") {
+            GRPC_HOST = getOptionalString(dotenv, "GRPC_HOST", "localhost");
+            GRPC_PORT = getOptionalInt(dotenv, "GRPC_PORT", 9000);
+        }
+
+        JAVA_ENV = getString(dotenv, "JAVA_ENV");
         SHOULD_SKIP_AUTHENTICATION = getOptionalBoolean(dotenv, "SHOULD_SKIP_AUTHENTICATION", false);
         DEDUP_PARTITION_BY_KEY = getOptionalBoolean(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
@@ -52,9 +59,8 @@ class Config {
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
         TOPIC = getString(dotenv, "TOPIC");
         GROUP_ID = getString(dotenv, "GROUP_ID");
-        TARGET_ENDPOINT = getString(dotenv, "TARGET_ENDPOINT");
         RETRY_TOPIC = getString(dotenv, "RETRY_TOPIC");
-        POISON_MESSAGE_TOPIC = getString(dotenv, "POISON_MESSAGE_TOPIC");
+        DEAD_LETTER_TOPIC = getString(dotenv, "DEAD_LETTER_TOPIC");
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);

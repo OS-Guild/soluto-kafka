@@ -2,17 +2,19 @@ import delay from 'delay';
 import * as got from 'got';
 import fetch from 'node-fetch';
 
-jest.setTimeout(60000);
+import readinessCheck from '../readinessCheck'
+
+jest.setTimeout(180000);
 
 describe('tests', () => {
     beforeAll(async () => {
-        await delay(30000)
+        expect(readinessCheck()).resolves.toBeTruthy();
         await fetch('http://localhost:4771/clear');
         await got.post('http://localhost:3000/fake_server_admin/clear');
     });
 
     it('services are alive', async () => {
-        let attempts = 3;
+        let attempts = 10;
         while (attempts > 0) {
             try {
                 const responseConsumer = await fetch('http://localhost:4000/isAlive');
@@ -22,7 +24,7 @@ describe('tests', () => {
                 }
                 attempts--;
             } catch (e) {
-                console.log('not alive', e.message);
+                console.log('not alive');
                 attempts--;
             }
             await delay(10000);
@@ -37,7 +39,7 @@ describe('tests', () => {
             body: JSON.stringify({
                 service: 'CallTarget',
                 method: 'callTarget',
-                input: {matches: {recordTimestamp: '1.576488519765e+12', msgJson: '{"data":1}',}},
+                input: {matches: {msgJson: '{"data":1}',}, recordTimestamp: '(.*)'},
                 output: {
                     data: {
                         message: 'assertion',

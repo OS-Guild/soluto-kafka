@@ -14,6 +14,6 @@
         "noUnusedParameters": true,
         "suppressImplicitAnyIndexErrors": true
     },
-    "include": ["__tests__/**/*"],
+    "include": ["__tests__/**/*", "__tests__/readinessCheck.ts"],
     "exclude": ["node_modules/**/*"]
 }

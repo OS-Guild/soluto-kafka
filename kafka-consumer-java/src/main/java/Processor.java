@@ -97,7 +97,6 @@ class Processor {
     }
 
     private CompletableFuture<TargetResponse> callGrpcTarget(ConsumerRecord<String, String> record) {
-        System.out.println("3333333333");
         final var json = record.value();
         final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());

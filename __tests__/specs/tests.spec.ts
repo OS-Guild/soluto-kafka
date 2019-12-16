@@ -7,7 +7,7 @@ import readinessCheck from '../readinessCheck'
 jest.setTimeout(180000);
 
 const fakeHttpServer = new Server({
-    baseUrl: `http:/localhost`,
+    baseUrl: `http://localhost`,
     port: 3000,
 });
 

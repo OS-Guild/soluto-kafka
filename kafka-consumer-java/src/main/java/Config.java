@@ -15,10 +15,8 @@ class Config {
     public static String TOPIC;
     public static String GROUP_ID;
     public static String SENDING_PROTOCOL;
-    public static String TARGET_GRPC_HOST;
-    public static int TARGET_GRPC_PORT;
-    public static String TARGET_HTTP_HOST;
-    public static int TARGET_HTTP_PORT;
+    public static String TARGET_HOST;
+    public static int TARGET_PORT;
 
     //Optional
     public static String RETRY_TOPIC;
@@ -52,17 +50,8 @@ class Config {
         GROUP_ID = getString(dotenv, "GROUP_ID");
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
-        if (SENDING_PROTOCOL.equals("http")) {
-            TARGET_HTTP_HOST = getString(dotenv, "TARGET_HTTP_HOST");
-            TARGET_HTTP_PORT = getInt(dotenv, "TARGET_HTTP_PORT");
-        }
-        else if (SENDING_PROTOCOL.equals("grpc")) {
-            TARGET_GRPC_HOST = getString(dotenv, "TARGET_GRPC_HOST");
-            TARGET_GRPC_PORT = getInt(dotenv, "TARGET_GRPC_PORT");
-        }
-        else {
-            throw new Exception("invalid SENDING_PROTOCOL, should be either http or grpc");
-        }    
+        TARGET_HOST = getString(dotenv, "TARGET_HOST");
+        TARGET_PORT = getInt(dotenv, "TARGET_PORT");
         
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);

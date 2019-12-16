@@ -29,7 +29,7 @@ class Processor {
     
     Processor(KafkaProducer<String, String> producer) {
         if (Config.SENDING_PROTOCOL.equals("grpc")) {
-            this.grpcChannel = ManagedChannelBuilder.forAddress(Config.TARGET_GRPC_HOST, Config.TARGET_GRPC_PORT).usePlaintext().build();
+            this.grpcChannel = ManagedChannelBuilder.forAddress(Config.TARGET_HOST, Config.TARGET_PORT).usePlaintext().build();
         }
         else {
             this.httpClient = HttpClient.newHttpClient();
@@ -73,7 +73,7 @@ class Processor {
     private CompletableFuture<TargetResponse> callHttpTarget(ConsumerRecord<String, String> record) {
         var request = HttpRequest
                 .newBuilder()
-                .uri(URI.create("http://" + Config.TARGET_HTTP_HOST + ":" + Config.TARGET_HTTP_PORT))
+                .uri(URI.create("http://" + Config.TARGET_HOST + ":" + Config.TARGET_PORT))
                 .header("Content-Type", "application/json")
                 .header("x-record-offset", String.valueOf(record.offset()))
                 .header("x-record-timestamp", String.valueOf(record.timestamp()))

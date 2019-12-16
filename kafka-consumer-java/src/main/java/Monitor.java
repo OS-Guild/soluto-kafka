@@ -13,7 +13,7 @@ public class Monitor {
     static StatsDClient statsdClient;
 
     public static void init() {
-        if (Config.STATSD_MONITOR) {
+        if (Config.STATSD_CONSUMER_NAME != null) {
             statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_CONSUMER_NAME, Config.STATSD_HOST, 8125);
         }
     }

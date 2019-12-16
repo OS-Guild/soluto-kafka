@@ -39,7 +39,6 @@ class Config {
     public static String KEYSTORE_LOCATION;
 
     //Statsd
-    public static boolean STATSD_MONITOR;
     public static String STATSD_CONSUMER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
@@ -88,10 +87,10 @@ class Config {
             writeToFile(KEYSTORE_LOCATION, keystore);
         }
 
-        STATSD_MONITOR = getOptionalBool(dotenv, "STATSD_MONITOR", false);
-        if (STATSD_MONITOR) {
+        STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);
+        if (STATSD_CONSUMER_NAME != null) {
             JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
-            STATSD_CONSUMER_NAME = getString(dotenv, "STATSD_CONSUMER_NAME");
+            STATSD_CONSUMER_NAME = getString(dotenv, "");
             STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
             STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
             STATSD_HOST = getString(dotenv, "STATSD_HOST");

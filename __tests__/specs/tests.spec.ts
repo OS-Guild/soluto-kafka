@@ -54,13 +54,9 @@ describe('tests', () => {
         });
         
         const callId = await fakeHttpServer.mock({
-            url: "http://localhost:3000/fake_server_admin/calls'",
-            body: {
-                method: 'post',
-                url: '/',
-                statusCode: 200,
-            },
-            respondAsJson: true,
+            method: 'post',
+            url: '/',
+            statusCode: 200,
         })
        
         await fetch('http://localhost:6000/produce', {

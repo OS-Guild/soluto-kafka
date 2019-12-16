@@ -119,10 +119,6 @@ class Config {
         return value;
     }
 
-    private static boolean getBool(Dotenv dotenv, String name) {
-        return Boolean.parseBoolean(dotenv.get(name));
-    }
-    
     private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {
         try {
             return Boolean.parseBoolean(getString(dotenv, name));

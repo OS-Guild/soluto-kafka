@@ -23,16 +23,16 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.ToIntFunction;
 
 class Processor {
-    private HttpClient client;
-    private Channel channel;
+    private HttpClient httpClient;
+    private Channel grpcChannel;
     private KafkaProducer<String, String> producer;
     
     Processor(KafkaProducer<String, String> producer) {
         if (Config.SENDING_PROTOCOL.equals("grpc")) {
-            this.channel = ManagedChannelBuilder.forAddress(Config.TARGET_GRPC_HOST, Config.TARGET_GRPC_PORT).usePlaintext().build();
+            this.grpcChannel = ManagedChannelBuilder.forAddress(Config.TARGET_GRPC_HOST, Config.TARGET_GRPC_PORT).usePlaintext().build();
         }
         else {
-            this.client = HttpClient.newHttpClient();
+            this.httpClient = HttpClient.newHttpClient();
         }
         this.producer = producer;
     }
@@ -83,7 +83,7 @@ class Processor {
         final long startTime = (new Date()).getTime();
         var retryPolicy = this.<HttpResponse<String>>getRetryPolicy(record, r -> r.statusCode());
 
-        CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier = () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+        CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier = () -> httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
         
         return Failsafe
                 .with(retryPolicy)
@@ -102,7 +102,7 @@ class Processor {
         callTargetPayloadBuilder.setRecordOffset(record.offset());
         callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
         callTargetPayloadBuilder.setMsgJson(json);
-        final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
+        final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(grpcChannel);
 
         final long startTime = (new Date()).getTime();
         final var retryPolicy = this.<KafkaMessage.CallTargetResponse>getRetryPolicy(record, r -> r.getStatusCode());
@@ -120,7 +120,7 @@ class Processor {
     }
 
     private CompletableFuture<TargetResponse> callTarget(ConsumerRecord<String, String> record) {
-        if (Config.SENDING_PROTOCOL.equals("grpc")) {
+        if (grpcChannel != null) {
             return callGrpcTarget(record);
         }
         return callHttpTarget(record);

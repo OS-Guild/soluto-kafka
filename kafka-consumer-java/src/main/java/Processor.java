@@ -77,7 +77,6 @@ class Processor {
                 .header("Content-Type", "application/json")
                 .header("x-record-offset", String.valueOf(record.offset()))
                 .header("x-record-timestamp", String.valueOf(record.timestamp()))
-                .header("x-record-target-send-timestamp", String.valueOf(System.currentTimeMillis()))
                 .POST(HttpRequest.BodyPublishers.ofString(record.value()))
                 .build();
 
@@ -103,12 +102,11 @@ class Processor {
         final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());
         callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
-        callTargetPayloadBuilder.setRecordTargetSendTimestamp(System.currentTimeMillis());
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(channel);
 
         final long startTime = (new Date()).getTime();
-        final var retryPolicy = this.<KafkaMessage.CallTargetResponse>getRetryPolicy(record, r->r.getStatusCode());
+        final var retryPolicy = this.<KafkaMessage.CallTargetResponse>getRetryPolicy(record, r -> r.getStatusCode());
         CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier = () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
         return Failsafe

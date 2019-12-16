@@ -7,9 +7,10 @@ jest.setTimeout(60000);
 describe('tests', () => {
     beforeAll(async () => {
         await delay(30000)
-        beforeAll(() => got.post('http://localhost:3000/fake_server_admin/clear'));
+        await fetch('http://localhost:4771/clear');
+        await got.post('http://localhost:3000/fake_server_admin/clear');
+    });
 
-    })
     it('services are alive', async () => {
         let attempts = 3;
         while (attempts > 0) {
@@ -20,17 +21,31 @@ describe('tests', () => {
                     return;
                 }
                 attempts--;
-
             } catch (e) {
-                console.log("not alive", e.message)
+                console.log('not alive', e.message);
                 attempts--;
             }
-            await delay(10000)
+            await delay(10000);
         }
         fail();
     });
 
     it('should produce and consume', async () => {
+        await fetch('http://localhost:4771/add', {
+            method: 'post',
+            headers: {'content-type': 'application-json'},
+            body: JSON.stringify({
+                service: 'CallTarget',
+                method: 'callTarget',
+                input: {matches: {recordTimestamp: '1.576488519765e+12', msgJson: '{"data":1}',}},
+                output: {
+                    data: {
+                        message: 'assertion',
+                    },
+                },
+            }),
+        });
+
         const {
             body: {callId},
         } = await got.post('http://localhost:3000/fake_server_admin/calls', {

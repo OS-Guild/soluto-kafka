@@ -15,9 +15,11 @@ public class IsAliveServer {
     }
 
     public IsAliveServer start() throws IOException {
-        server = HttpServer.create(new InetSocketAddress(Config.PORT), 0);
-        isAliveGetRoute(server);
-        server.start();
+        if (Config.IS_ALIVE_PORT != 0) {
+            server = HttpServer.create(new InetSocketAddress(Config.IS_ALIVE_PORT), 0);
+            isAliveGetRoute(server);
+            server.start();
+        }
         return this;
     }
 

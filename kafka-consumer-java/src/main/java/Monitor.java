@@ -1,4 +1,3 @@
-import java.net.http.HttpResponse;
 import java.util.Date;
 import java.util.Optional;
 
@@ -14,8 +13,8 @@ public class Monitor {
     static StatsDClient statsdClient;
 
     public static void init() {
-        if (Config.JAVA_ENV.equals("production")) {
-            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + ".kafka-consumer-"+ Config.TOPIC + "-" + Config.GROUP_ID + "." + Config.CLUSTER, Config.STATSD_HOST, 8125);
+        if (Config.STATSD_CONSUMER_NAME != null) {
+            statsdClient = new NonBlockingStatsDClient(Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_CONSUMER_NAME, Config.STATSD_HOST, 8125);
         }
     }
 
@@ -83,7 +82,10 @@ public class Monitor {
         .put("level", "error")
         .put("message", "unexpected error")
         .put("err", new JSONObject()
-            .put("message", exception.getMessage()));
+            .put("message", exception.getMessage())
+            .put("class", exception.getClass())
+            .put("stacktrace", exception.getStackTrace()));
+
 
         write(log);
     }

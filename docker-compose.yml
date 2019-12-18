@@ -1,74 +1,64 @@
 version: '2.3'
 
 services:
-    consumer:
+    kafka_consumer_http_target:
         build: ./kafka-consumer-java/
         ports:
-            - 2000:3000
+            - 4000:4000
         environment:
-            - JAVA_ENV=test
-            - PORT=3000
-            - KAFKA_PASSWORD=
-            - SHOULD_SKIP_AUTHENTICATION=true
-            - DEDUP_PARTITION_BY_KEY=false
-            - STATSD_API_KEY=stam
-            - STATSD_ROOT=stam
-            - STATSD_HOST=stam
             - KAFKA_BROKER=kafka:9092
             - TOPIC=test
-            - RETRY_TOPIC=test-retry
-            - POISON_MESSAGE_TOPIC=test-poison
-            - GROUP_ID=test
-            - TARGET_ENDPOINT=http://fake-server:2000/target
-            - CONCURRENCY=10
-            - CONCURRENCY_PER_PARTITION=1
-            - PROCESSING_DELAY=0
-            - POLL_RECORDS=200
-            - TRUSTSTORE_LOCATION=stam
-            - KEYSTORE_LOCATION=stam
-            - CONSUMER_POLL_TIMEOUT=5000
-            - CONSUMER_THREADS=2
-            - CLUSTER=test
-            - SECRETS_FILE_LOCATION=stam
-            - TRUSTSTORE=stam
-            - KEYSTORE=stam
-            - GRPC_HOST=localhost
-            - GRPC_PORT=9000
+            - GROUP_ID=test_1
             - SENDING_PROTOCOL=http
+            - TARGET_HOST=fake-http-server
+            - TARGET_PORT=2000
+            - IS_ALIVE_PORT=4000
         depends_on:
             - kafka
-            - fake-server
+            - fake-http-server
+
+    kafka_consumer_grpc_target:
+        build: ./kafka-consumer-java/
+        ports:
+            - 5000:5000
+        environment:
+            - KAFKA_BROKER=kafka:9092
+            - TOPIC=test
+            - GROUP_ID=test_2
+            - SENDING_PROTOCOL=grpc
+            - TARGET_HOST=fake-grpc-server
+            - TARGET_PORT=4770
+            - IS_ALIVE_PORT=5000
+        depends_on:
+            - kafka
+            - fake-grpc-server
+
     producer:
         build: ./kafka-producer-java/
         ports:
-            - 2500:3000
+            - 6000:6000
         environment:
-            - JAVA_ENV=test
-            - PORT=3000
-            - KAFKA_PASSWORD=
-            - SHOULD_SKIP_AUTHENTICATION=true
-            - STATSD_API_KEY=stam
-            - STATSD_ROOT=stam
-            - STATSD_HOST=stam
+            - PORT=6000
             - KAFKA_BROKER=kafka:9092
             - TOPIC=test
-            - READINESS_TOPIC=readiness
-            - TRUSTSTORE_LOCATION=stam
-            - KEYSTORE_LOCATION=stam
-            - CLUSTER=test
-            - SECRETS_FILE_LOCATION=stam
-            - TRUSTSTORE=stam
-            - KEYSTORE=stam
-            - PRODUCER_NAME=producer
 
         depends_on:
             - kafka
-            - fake-server
+            - fake-http-server
 
-    fake-server:
+    fake-http-server:
         image: acreastus.azurecr.io/simple-fake-server-server:latest
         ports:
             - 3000:3000
+
+    fake-grpc-server:
+        image: tkpd/gripmock
+        ports:
+            - 4770:4770
+            - 4771:4771
+        volumes:
+            - ${PWD}/kafka-consumer-java/src/proto:/proto
+        command: /proto/kafkaMessage.proto
 
     zookeeper:
         image: wurstmeister/zookeeper
@@ -85,7 +75,7 @@ services:
             - '9092:9092'
         environment:
             - KAFKA_ADVERTISED_HOST_NAME=kafka
-            - KAFKA_CREATE_TOPICS=test:2:2,readiness:2:2
+            - KAFKA_CREATE_TOPICS=test:2:2
             - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
             - LOG4J_LOGGER_KAFKA=WARN
         depends_on:

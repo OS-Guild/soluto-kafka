@@ -7,10 +7,10 @@ import java.util.Optional;
 
 public class TargetRetryPolicy {
 
-    private ErrorProducer errorProducer;
+    private Producer producer;
 
-    public TargetRetryPolicy(ErrorProducer errorProducer) {
-        this.errorProducer = errorProducer;
+    public TargetRetryPolicy(Producer producer) {
+        this.producer = producer;
     }
 
     public <T> RetryPolicy<T> get(ConsumerRecord<String, String> record, final ToIntFunction<T> getStatusCode) {
@@ -23,7 +23,7 @@ public class TargetRetryPolicy {
 
                 if (400 <= statusCode && statusCode < 500) {
                     if (Config.DEAD_LETTER_TOPIC != null) {
-                        errorProducer.produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
+                        producer.produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
                     }
                     return;
                 }
@@ -32,7 +32,7 @@ public class TargetRetryPolicy {
             .onFailedAttempt(x -> Monitor.targetExecutionRetry(record, Optional.<String>ofNullable(String.valueOf(getStatusCode.applyAsInt(x.getLastResult()))), x.getLastFailure(), x.getAttemptCount()))
             .onRetriesExceeded(__ -> {
                 if (Config.RETRY_TOPIC != null) {
-                    errorProducer.produce("retry", Config.RETRY_TOPIC, record);
+                    producer.produce("retry", Config.RETRY_TOPIC, record);
                 }
             });
     }

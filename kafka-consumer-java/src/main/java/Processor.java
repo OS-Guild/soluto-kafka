@@ -7,8 +7,8 @@ import java.io.IOException;
 class Processor {
     ITarget target;
     
-    Processor(KafkaProducer<String, String> producer) {
-        var targetRetryPolicy = new TargetRetryPolicy(new ErrorProducer(producer));
+    Processor(KafkaProducer<String, String> kafkaProducer) {
+        var targetRetryPolicy = new TargetRetryPolicy(new Producer(kafkaProducer));
         target = Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy) : new HttpTarget(targetRetryPolicy);
     }
 

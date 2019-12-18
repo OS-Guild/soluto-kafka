@@ -2,10 +2,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-public class ErrorProducer {
+public class Producer {
     private KafkaProducer<String, String> producer;
 
-    public ErrorProducer(KafkaProducer<String, String> producer) {
+    public Producer(KafkaProducer<String, String> producer) {
         this.producer = producer;
     }
 

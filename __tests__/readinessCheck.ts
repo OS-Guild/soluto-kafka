@@ -41,7 +41,7 @@ const checkReadiness = async (): Promise<boolean> => {
 
         const res = await promisifiedListTopics();
 
-        const metadata = res && res[1] && res[1].metadata;
+        const metadata = res?.[1]?.metadata;
 
         if (!metadata) return checkReadiness();
 

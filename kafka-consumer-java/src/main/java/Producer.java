@@ -10,13 +10,16 @@ public class Producer {
     }
 
     public void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
-        producer.send(new ProducerRecord<>(topic, record.key(), record.value()), (metadata, err) -> {
-            if (err != null) {
-                Monitor.produceError(topicPrefix, record, err);
-                return;
-            }
+        producer.send(
+            new ProducerRecord<>(topic, record.key(), record.value()),
+            (metadata, err) -> {
+                if (err != null) {
+                    Monitor.produceError(topicPrefix, record, err);
+                    return;
+                }
 
-            Monitor.topicProduced(topicPrefix, record);
-        });
+                Monitor.topicProduced(topicPrefix, record);
+            }
+        );
     }
 }

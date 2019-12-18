@@ -1,13 +1,11 @@
 import io.github.cdimascio.dotenv.Dotenv;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 class Config {
     //Required
@@ -52,7 +50,7 @@ class Config {
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET_HOST = getString(dotenv, "TARGET_HOST");
         TARGET_PORT = getInt(dotenv, "TARGET_PORT");
-        
+
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
         CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
@@ -63,7 +61,7 @@ class Config {
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         IS_ALIVE_PORT = getOptionalInt(dotenv, "IS_ALIVE_PORT", 0);
-        
+
         AUTHENTICATED_KAFKA = getBool(dotenv, "AUTHENTICATED_KAFKA");
         if (AUTHENTICATED_KAFKA) {
             JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
@@ -109,8 +107,7 @@ class Config {
 
         try {
             secret = secrets.getString(name);
-        } catch (JSONException ignored) {
-        }
+        } catch (JSONException ignored) {}
 
         if (secret == null) {
             throw new Exception("missing secret: " + name);
@@ -135,7 +132,7 @@ class Config {
         } catch (Exception e) {
             return fallback;
         }
-    }    
+    }
 
     private static int getInt(Dotenv dotenv, String name) {
         return Integer.parseInt(dotenv.get(name));
@@ -143,7 +140,7 @@ class Config {
 
     private static boolean getBool(Dotenv dotenv, String name) {
         return Boolean.parseBoolean(dotenv.get(name));
-    }    
+    }
 
     private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {
         try {

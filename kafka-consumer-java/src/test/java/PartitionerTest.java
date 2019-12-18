@@ -1,5 +1,4 @@
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,11 +6,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.Test;
 
 class PartitionerTest {
-
     private final Partitioner partitioner;
 
     PartitionerTest() {
@@ -19,9 +17,14 @@ class PartitionerTest {
     }
 
     private ConsumerRecord[][] arrify(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) {
-        return StreamSupport.stream(partitions.spliterator(), false)
-                .map(consumerRecords -> StreamSupport.stream(consumerRecords.spliterator(), false).toArray(ConsumerRecord[]::new))
-                .toArray(ConsumerRecord[][]::new);
+        return StreamSupport
+            .stream(partitions.spliterator(), false)
+            .map(
+                consumerRecords -> StreamSupport
+                    .stream(consumerRecords.spliterator(), false)
+                    .toArray(ConsumerRecord[]::new)
+            )
+            .toArray(ConsumerRecord[][]::new);
     }
 
     private List<ConsumerRecord<String, String>> shuffle(List<ConsumerRecord<String, String>> records) {
@@ -31,10 +34,20 @@ class PartitionerTest {
     }
 
     private List<ConsumerRecord<String, String>> createRecords(int experts, int recordsPerExpert) {
-        return StreamSupport.stream(IntStream.range(0, experts).spliterator(), false)
-                .flatMap(expert -> StreamSupport.stream(IntStream.range(0, recordsPerExpert).map(value -> value + expert * recordsPerExpert).spliterator(), false)
-                        .map(offset -> new ConsumerRecord<>("test", 0, offset, expert.toString(), "")))
-                .collect(Collectors.toList());
+        return StreamSupport
+            .stream(IntStream.range(0, experts).spliterator(), false)
+            .flatMap(
+                expert -> StreamSupport
+                    .stream(
+                        IntStream
+                            .range(0, recordsPerExpert)
+                            .map(value -> value + expert * recordsPerExpert)
+                            .spliterator(),
+                        false
+                    )
+                    .map(offset -> new ConsumerRecord<>("test", 0, offset, expert.toString(), ""))
+            )
+            .collect(Collectors.toList());
     }
 
     @Test
@@ -54,7 +67,6 @@ class PartitionerTest {
         assertEquals(record.offset(), 0);
     }
 
-
     @Test
     void multiplePartitions() {
         var records = shuffle(createRecords(5, 20));
@@ -68,7 +80,9 @@ class PartitionerTest {
         for (var partition : partitionsArray) {
             assertEquals(20, partition.length);
 
-            assertTrue(Arrays.stream(partition).allMatch(consumerRecord -> consumerRecord.key().equals(partition[0].key())));
+            assertTrue(
+                Arrays.stream(partition).allMatch(consumerRecord -> consumerRecord.key().equals(partition[0].key()))
+            );
             for (int i = 0; i < partition.length - 1; i++) {
                 assertTrue(partition[i].offset() < partition[i + 1].offset());
             }

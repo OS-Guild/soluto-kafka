@@ -3,7 +3,7 @@ import java.util.concurrent.CountDownLatch;
 public class ConsumerLoopWrapper implements Runnable, IConsumerLoopLifecycle {
     ConsumerLoop consumerLoop;
     CountDownLatch countDownLatch;
-    
+
     public ConsumerLoopWrapper(ConsumerLoop consumerLoop, CountDownLatch countDownLatch) {
         this.consumerLoop = consumerLoop;
         this.countDownLatch = countDownLatch;

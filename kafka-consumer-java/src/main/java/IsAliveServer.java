@@ -1,10 +1,9 @@
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.List;
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.List;
 
 public class IsAliveServer {
     List<? extends IConsumerLoopLifecycle> consumerLoops;
@@ -29,31 +28,29 @@ public class IsAliveServer {
 
     private void isAliveGetRoute(HttpServer server) {
         var httpContext = server.createContext("/isAlive");
-        httpContext.setHandler(new HttpHandler() {
-            @Override
-            public void handle(HttpExchange exchange) throws IOException {
-                if (!exchange.getRequestMethod().equals("GET")) {
-                    exchange.sendResponseHeaders(404, -1);
-                    return;
-                }
+        httpContext.setHandler(
+            new HttpHandler() {
 
-                var response = consumerLoops
-                    .stream()
-                    .map(x -> x.ready())
-                    .anyMatch(y -> y.equals(true));
+                @Override
+                public void handle(HttpExchange exchange) throws IOException {
+                    if (!exchange.getRequestMethod().equals("GET")) {
+                        exchange.sendResponseHeaders(404, -1);
+                        return;
+                    }
 
-                var responseText = Boolean.toString(response);
-                if (!response) {
-                    exchange.sendResponseHeaders(500, responseText.getBytes().length);
+                    var response = consumerLoops.stream().map(x -> x.ready()).anyMatch(y -> y.equals(true));
+
+                    var responseText = Boolean.toString(response);
+                    if (!response) {
+                        exchange.sendResponseHeaders(500, responseText.getBytes().length);
+                    } else {
+                        exchange.sendResponseHeaders(200, responseText.getBytes().length);
+                    }
+                    var os = exchange.getResponseBody();
+                    os.write(responseText.getBytes());
+                    os.close();
                 }
-                else {
-                    exchange.sendResponseHeaders(200, responseText.getBytes().length);
-                }
-                var os = exchange.getResponseBody();
-                os.write(responseText.getBytes());
-                os.close();
             }
-        });        
+        );
     }
 }
-

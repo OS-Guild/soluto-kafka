@@ -1,14 +1,14 @@
+import java.util.Properties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
-import java.util.Properties;
-
 class KafkaCreator {
+
     private Properties getAuthProperties() {
         var props = new Properties();
         props.put("bootstrap.servers", Config.KAFKA_BROKER);
 
-        if(!Config.AUTHENTICATED_KAFKA) {
+        if (!Config.AUTHENTICATED_KAFKA) {
             return props;
         }
 

@@ -21,11 +21,9 @@ public class TargetResponse {
         this.type = targetResponseType;
         this.callLatency = callLatency;
         this.resultLatency = resultLatency;
-
     }
 
     public static TargetResponse Error(Throwable t) {
         return new TargetResponse(t);
     }
-
 }

@@ -2,7 +2,6 @@ import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
-
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;

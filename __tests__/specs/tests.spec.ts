@@ -2,7 +2,7 @@ import delay from 'delay';
 import fetch from 'node-fetch';
 import Server from 'simple-fake-server-server-client';
 
-import readinessCheck from '../readinessCheck'
+import readinessCheck from '../readinessCheck';
 
 jest.setTimeout(180000);
 
@@ -15,7 +15,7 @@ describe('tests', () => {
     beforeAll(async () => {
         expect(readinessCheck()).resolves.toBeTruthy();
         await fetch('http://localhost:4771/clear');
-        await fakeHttpServer.clear()
+        await fakeHttpServer.clear();
     });
 
     it('services are alive', async () => {
@@ -44,7 +44,7 @@ describe('tests', () => {
             body: JSON.stringify({
                 service: 'CallTarget',
                 method: 'callTarget',
-                input: {matches: {msgJson: '{"data":1}',}, recordTimestamp: '(.*)'},
+                input: {matches: {msgJson: '{"data":1}'}, recordTimestamp: '(.*)'},
                 output: {
                     data: {
                         message: 'assertion',
@@ -52,13 +52,13 @@ describe('tests', () => {
                 },
             }),
         });
-        
+
         const callId = await fakeHttpServer.mock({
             method: 'post',
             url: '/',
             statusCode: 200,
-        })
-       
+        });
+
         await fetch('http://localhost:6000/produce', {
             method: 'post',
             body: JSON.stringify([{key: 'key', message: {data: 1}}]),
@@ -67,7 +67,7 @@ describe('tests', () => {
 
         await delay(5000);
 
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId)
+        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
     });
 });

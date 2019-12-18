@@ -1,13 +1,11 @@
 import io.github.cdimascio.dotenv.Dotenv;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 class Config {
     //Required
@@ -42,7 +40,7 @@ class Config {
         READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);
         COMPRESSION_TYPE = getOptionalString(dotenv, "COMPRESSION_TYPE", "none");
-        
+
         AUTHENTICATED_KAFKA = getOptionalBool(dotenv, "AUTHENTICATED_KAFKA", false);
         if (AUTHENTICATED_KAFKA) {
             JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
@@ -88,8 +86,7 @@ class Config {
 
         try {
             secret = secrets.getString(name);
-        } catch (JSONException ignored) {
-        }
+        } catch (JSONException ignored) {}
 
         if (secret == null) {
             throw new Exception("missing secret: " + name);

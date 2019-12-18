@@ -1,5 +1,4 @@
 import java.util.Date;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -27,16 +26,18 @@ public class Producer {
 
     public boolean produce(ProducerMessage message) {
         var executionStart = (new Date()).getTime();
-        kafkaProducer.send(new ProducerRecord<>(Config.TOPIC, null, executionStart, message.key, message.value),
-                (metadata, err) -> {
-                    if (err != null) {
-                        ready = false;
-                        Monitor.produceFail(err);
-                        return;
-                    }
-                    ready = true;
-                    Monitor.produceLatency(executionStart);
-                });
+        kafkaProducer.send(
+            new ProducerRecord<>(Config.TOPIC, null, executionStart, message.key, message.value),
+            (metadata, err) -> {
+                if (err != null) {
+                    ready = false;
+                    Monitor.produceFail(err);
+                    return;
+                }
+                ready = true;
+                Monitor.produceLatency(executionStart);
+            }
+        );
         return true;
     }
 
@@ -50,13 +51,16 @@ public class Producer {
             ready = true;
             return;
         }
-        kafkaProducer.send(new ProducerRecord<>(Config.READINESS_TOPIC, "ready"), (metadata, err) -> {
-            if (err != null) {
-                ready = false;
-                return;
+        kafkaProducer.send(
+            new ProducerRecord<>(Config.READINESS_TOPIC, "ready"),
+            (metadata, err) -> {
+                if (err != null) {
+                    ready = false;
+                    return;
+                }
+                ready = true;
+                Monitor.ready();
             }
-            ready = true;
-            Monitor.ready();
-        });
+        );
     }
 }

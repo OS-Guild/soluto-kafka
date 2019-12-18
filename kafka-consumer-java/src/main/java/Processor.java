@@ -9,7 +9,7 @@ class Processor {
     
     Processor(KafkaProducer<String, String> producer) {
         var targetRetryPolicy = new TargetRetryPolicy(new ErrorProducer(producer));
-        if (Config.SENDING_PROTOCOL.equals("grpc")) {
+        target = Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy) : target = new HttpTarget(targetRetryPolicy)
             target = new GrpcTarget(targetRetryPolicy);
         }
         else {

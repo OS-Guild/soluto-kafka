@@ -9,12 +9,7 @@ class Processor {
     
     Processor(KafkaProducer<String, String> producer) {
         var targetRetryPolicy = new TargetRetryPolicy(new ErrorProducer(producer));
-        target = Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy) : target = new HttpTarget(targetRetryPolicy)
-            target = new GrpcTarget(targetRetryPolicy);
-        }
-        else {
-            target = new HttpTarget(targetRetryPolicy);
-        }
+        target = Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy) : new HttpTarget(targetRetryPolicy);
     }
 
     void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws IOException, InterruptedException {

@@ -77,7 +77,7 @@ class Config {
         STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);
         if (STATSD_CONSUMER_NAME != null) {
             JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
-            STATSD_CONSUMER_NAME = getString(dotenv, "");
+            STATSD_CONSUMER_NAME = getString(dotenv, "STATSD_CONSUMER_NAME");
             STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
             STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
             STATSD_HOST = getString(dotenv, "STATSD_HOST");

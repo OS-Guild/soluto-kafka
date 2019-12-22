@@ -21,7 +21,7 @@ public class HttpTarget implements ITarget {
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
         final var request = HttpRequest
             .newBuilder()
-            .uri(URI.create("http://" + Config.TARGET_HOST + ":" + Config.TARGET_PORT))
+            .uri(URI.create(Config.TARGET_HOST + ":" + Config.TARGET_PORT))
             .header("Content-Type", "application/json")
             .header("x-record-offset", String.valueOf(record.offset()))
             .header("x-record-timestamp", String.valueOf(record.timestamp()))

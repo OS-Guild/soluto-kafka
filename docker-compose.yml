@@ -10,7 +10,7 @@ services:
             - TOPIC=test
             - GROUP_ID=test_1
             - SENDING_PROTOCOL=http
-            - TARGET_HOST=fake-http-server
+            - TARGET_HOST=http://fake-http-server
             - TARGET_PORT=2000
             - IS_ALIVE_PORT=4000
         depends_on:

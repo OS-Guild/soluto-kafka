@@ -2,7 +2,7 @@ import delay from 'delay';
 import fetch from 'node-fetch';
 import Server from 'simple-fake-server-server-client';
 
-//import readinessCheck from '../readinessCheck';
+import readinessCheck from '../readinessCheck';
 
 jest.setTimeout(180000);
 
@@ -13,7 +13,7 @@ const fakeHttpServer = new Server({
 
 describe('tests', () => {
     beforeAll(async () => {
-        //expect(readinessCheck()).resolves.toBeTruthy();
+        await expect(readinessCheck()).resolves.toBeTruthy();
         await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });

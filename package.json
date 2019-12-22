@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "teardown": "docker-compose down --remove-orphans",
+    "teardown": "docker-compose logs && docker-compose down --remove-orphans",
     "setup": "docker-compose pull && docker-compose build && docker-compose up -d",
     "test": "npm run teardown && npm run setup && npm run jest && docker-compose logs && npm run teardown",
     "format": "prettier --write '**/*.{ts,js,json,java}'",

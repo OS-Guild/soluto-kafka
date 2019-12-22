@@ -13,8 +13,7 @@ class Config {
     public static String TOPIC;
     public static String GROUP_ID;
     public static String SENDING_PROTOCOL;
-    public static String TARGET_HOST;
-    public static int TARGET_PORT;
+    public static String TARGET;
 
     //Optional
     public static String RETRY_TOPIC;
@@ -48,8 +47,7 @@ class Config {
         GROUP_ID = getString(dotenv, "GROUP_ID");
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
-        TARGET_HOST = getString(dotenv, "TARGET_HOST");
-        TARGET_PORT = getInt(dotenv, "TARGET_PORT");
+        TARGET = getString(dotenv, "TARGET");
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
@@ -132,10 +130,6 @@ class Config {
         } catch (Exception e) {
             return fallback;
         }
-    }
-
-    private static int getInt(Dotenv dotenv, String name) {
-        return Integer.parseInt(dotenv.get(name));
     }
 
     private static boolean getBool(Dotenv dotenv, String name) {

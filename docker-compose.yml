@@ -10,8 +10,7 @@ services:
             - TOPIC=test
             - GROUP_ID=test_1
             - SENDING_PROTOCOL=http
-            - TARGET_HOST=http://fake-http-server
-            - TARGET_PORT=2000
+            - TARGET=fake-http-server:2000/consume
             - IS_ALIVE_PORT=4000
         depends_on:
             - kafka
@@ -26,8 +25,7 @@ services:
             - TOPIC=test
             - GROUP_ID=test_2
             - SENDING_PROTOCOL=grpc
-            - TARGET_HOST=fake-grpc-server
-            - TARGET_PORT=4770
+            - TARGET=fake-grpc-server:4770
             - IS_ALIVE_PORT=5000
         depends_on:
             - kafka
@@ -70,7 +68,7 @@ services:
             driver: none
 
     kafka:
-        image: wurstmeister/kafka
+        image: wurstmeister/kafka:2.12-2.2.0
         ports:
             - '9092:9092'
         environment:

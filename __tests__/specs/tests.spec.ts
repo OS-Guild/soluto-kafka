@@ -13,7 +13,7 @@ const fakeHttpServer = new Server({
 
 describe('tests', () => {
     beforeAll(async () => {
-        expect(readinessCheck()).resolves.toBeTruthy();
+        await expect(readinessCheck()).resolves.toBeTruthy();
         await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });
@@ -55,7 +55,7 @@ describe('tests', () => {
 
         const callId = await fakeHttpServer.mock({
             method: 'post',
-            url: '/',
+            url: '/consume',
             statusCode: 200,
         });
 

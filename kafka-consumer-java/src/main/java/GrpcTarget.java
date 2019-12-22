@@ -10,13 +10,12 @@ import net.jodah.failsafe.function.CheckedSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class GrpcTarget implements ITarget {
-    private Channel client = ManagedChannelBuilder
-        .forAddress(Config.TARGET_HOST, Config.TARGET_PORT)
-        .usePlaintext()
-        .build();
+    private Channel client;
     private TargetRetryPolicy retryPolicy;
 
     public GrpcTarget(final TargetRetryPolicy retryPolicy) {
+        var target = Config.TARGET.split(":");
+        this.client = ManagedChannelBuilder.forAddress(target[0], Integer.parseInt(target[1])).usePlaintext().build();
         this.retryPolicy = retryPolicy;
     }
 

@@ -26,6 +26,8 @@ class Config {
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
     public static int IS_ALIVE_PORT;
+    public static boolean DEBUG;
+
 
     //Monitoring
     public static boolean AUTHENTICATED_KAFKA;
@@ -59,6 +61,7 @@ class Config {
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         IS_ALIVE_PORT = getOptionalInt(dotenv, "IS_ALIVE_PORT", 0);
+        DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
         AUTHENTICATED_KAFKA = getBool(dotenv, "AUTHENTICATED_KAFKA");
         if (AUTHENTICATED_KAFKA) {

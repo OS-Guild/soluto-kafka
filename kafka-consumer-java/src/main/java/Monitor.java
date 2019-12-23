@@ -198,6 +198,15 @@ public class Monitor {
         write(log);
     }
 
+    public static void debug(String text) {
+        if (!Config.DEBUG) return;
+        JSONObject log = new JSONObject()
+            .put("level", "debug")
+            .put("message", text);
+
+        write(log);
+    }    
+
     private static void write(JSONObject log) {
         System.out.println(log.toString());
     }

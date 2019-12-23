@@ -28,6 +28,8 @@ public class HttpTarget implements ITarget {
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 
+        Monitor.debug(request.toString());
+
         final long startTime = (new Date()).getTime();
         final CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier =
             () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());

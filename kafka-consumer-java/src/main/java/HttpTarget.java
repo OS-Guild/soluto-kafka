@@ -19,9 +19,6 @@ public class HttpTarget implements ITarget {
     }
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
-        Monitor.debug("before creating HttpRequest");
-        Monitor.debug("URI: " + URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET).toString());
-
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))
@@ -30,8 +27,6 @@ public class HttpTarget implements ITarget {
             .header("x-record-timestamp", String.valueOf(record.timestamp()))
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
-
-        Monitor.debug(request.toString());
 
         final long startTime = (new Date()).getTime();
         final CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier =

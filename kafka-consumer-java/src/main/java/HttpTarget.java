@@ -19,6 +19,9 @@ public class HttpTarget implements ITarget {
     }
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
+        Monitor.debug("before creating HttpRequest");
+        Monitor.debug("URI: " + URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET).toString());
+
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))

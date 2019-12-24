@@ -6,4 +6,4 @@ COPY . ./
 RUN ./gradlew clean test --info
 RUN ./gradlew build
 
-CMD [ "./gradlew", "run"]
+CMD [ "./gradlew", "run", "$JVM_OPTS"]

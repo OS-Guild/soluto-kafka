@@ -12,6 +12,7 @@ services:
             - SENDING_PROTOCOL=http
             - TARGET=fake-http-server:2000/consume
             - IS_ALIVE_PORT=4000
+            - JVM_OPTS=-Xms64M -Xmx256M
         depends_on:
             - kafka
             - fake-http-server
@@ -39,7 +40,7 @@ services:
             - PORT=6000
             - KAFKA_BROKER=kafka:9092
             - TOPIC=test
-
+            - JVM_OPTS=-Xms64M -Xmx256M
         depends_on:
             - kafka
             - fake-http-server

@@ -4,4 +4,4 @@ WORKDIR /service
 COPY . ./
 RUN ./gradlew build
 
-CMD [ "./gradlew", "run"]
+CMD [ "./gradlew", "run", "$JVM_OPTS"]

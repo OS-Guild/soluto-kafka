@@ -1,0 +1,16 @@
+{
+  "name": "@npmsoluto/soluto-kafka-grpc-target",
+  "version": "0.0.7",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && cp -a ./message.proto ./dist//message.proto",
+    "prepare": "yarn build"
+  },
+  "dependencies": {
+    "@grpc/proto-loader": "^0.5.3",
+    "grpc": "^1.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^3.7.4"
+  }
+}

@@ -45,7 +45,7 @@ services:
             - fake-http-server
 
     fake-http-server:
-        image: acreastus.azurecr.io/simple-fake-server-server:latest
+        image: soluto/simple-fake-server
         ports:
             - 3000:3000
 

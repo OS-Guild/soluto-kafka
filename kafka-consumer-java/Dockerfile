@@ -1,9 +1,15 @@
-FROM openjdk:13-alpine
+FROM openjdk:13-alpine AS base
 WORKDIR /service
 
+FROM base AS build
 COPY . ./
 
-RUN ./gradlew clean test --info
-RUN ./gradlew build
+RUN ./gradlew clean test --info --no-daemon
+RUN ./gradlew build --info --no-daemon
 
-CMD [ "./gradlew", "run", "--no-daemon"]
+FROM base AS release
+WORKDIR /service
+
+COPY --from=build /service/build/libs/*-all.jar /service/application.jar
+
+ENTRYPOINT ["java", "-jar","/service/application.jar"]

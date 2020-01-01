@@ -4,7 +4,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "declaration": false,
-        "rootDir": "/",
+        "rootDir": "./",
         "outDir": "dist",
         "removeComments": true,
         "allowSyntheticDefaultImports": true,

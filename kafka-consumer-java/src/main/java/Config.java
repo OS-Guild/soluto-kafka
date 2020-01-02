@@ -3,7 +3,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,6 +39,7 @@ class Config {
     public static String KEYSTORE_LOCATION;
 
     //Statsd
+    public static boolean STATSD_CONFIGURED;
     public static String STATSD_CONSUMER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
@@ -63,12 +67,15 @@ class Config {
         IS_ALIVE_PORT = getOptionalInt(dotenv, "IS_ALIVE_PORT", 0);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
-        AUTHENTICATED_KAFKA = getBool(dotenv, "AUTHENTICATED_KAFKA");
+        JSONObject secrets = buildSecrets(dotenv);
+
+        KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
+        String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
+        String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
+
+        AUTHENTICATED_KAFKA = validateAllParameterConfigured("Missing kafka authentication variable", KAFKA_PASSWORD, truststore, keystore);
+
         if (AUTHENTICATED_KAFKA) {
-            JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
-            KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
-            String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
-            String keystore = getSecret(secrets, dotenv, "KEYSTORE");
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             KEYSTORE_LOCATION = "client.keystore.p12";
             writeToFile(TRUSTSTORE_LOCATION, truststore);
@@ -76,20 +83,37 @@ class Config {
         }
 
         STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);
-        if (STATSD_CONSUMER_NAME != null) {
-            JSONObject secrets = readSecrets(getString(dotenv, "SECRETS_FILE_LOCATION"));
-            STATSD_CONSUMER_NAME = getString(dotenv, "STATSD_CONSUMER_NAME");
-            STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
-            STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
-            STATSD_HOST = getString(dotenv, "STATSD_HOST");
+        STATSD_API_KEY = getOptionalSecret(secrets, dotenv, "STATSD_API_KEY");
+        STATSD_ROOT = getOptionalString(dotenv, "STATSD_ROOT", null);
+        STATSD_HOST = getOptionalString(dotenv, "STATSD_HOST", null);
+        STATSD_CONFIGURED = validateAllParameterConfigured("Missing statsd variable", STATSD_CONSUMER_NAME, STATSD_API_KEY, STATSD_ROOT, STATSD_HOST);
+    }
+
+    private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {
+        if(Arrays.stream(values).allMatch(Objects::isNull)) {
+            return false;
         }
+
+        if(Arrays.stream(values).anyMatch(Objects::isNull)) {
+            throw new Exception(error);
+        }
+
+        return true;
     }
 
     private static void writeToFile(String path, String value) throws IOException {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
+    private static JSONObject buildSecrets(Dotenv dotenv) {
+        return readSecrets(getOptionalString(dotenv, "SECRETS_FILE_LOCATION", null));
+    }
+
     private static JSONObject readSecrets(String secretsFileLocation) {
+        if(secretsFileLocation == null) {
+            return new JSONObject();
+        }
+
         try {
             return new JSONObject(new String(Files.readAllBytes(Paths.get(secretsFileLocation))));
         } catch (IOException e) {
@@ -97,7 +121,7 @@ class Config {
         }
     }
 
-    private static String getSecret(JSONObject secrets, Dotenv dotenv, String name) throws Exception {
+    private static String getOptionalSecret(JSONObject secrets, Dotenv dotenv, String name) {
         String value = dotenv.get(name);
 
         if (value != null) {
@@ -109,10 +133,6 @@ class Config {
         try {
             secret = secrets.getString(name);
         } catch (JSONException ignored) {}
-
-        if (secret == null) {
-            throw new Exception("missing secret: " + name);
-        }
 
         return secret;
     }

@@ -25,6 +25,7 @@ class Config {
     public static int CONCURRENCY;
     public static int CONCURRENCY_PER_PARTITION;
     public static int PROCESSING_DELAY;
+    public static int RETRY_PROCESSING_DELAY;
     public static int POLL_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
@@ -61,6 +62,8 @@ class Config {
         CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         DEDUP_PARTITION_BY_KEY = getOptionalBool(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
+        RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
+
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);

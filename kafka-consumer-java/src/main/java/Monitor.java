@@ -166,8 +166,8 @@ public class Monitor {
         int attempt
     ) {
         JSONObject log = new JSONObject()
-            .put("level", "warning")
-            .put("message", "retry occurred on kafka-consumer-" + Config.TOPIC + "-" + Config.GROUP_ID);
+            .put("level", "info")
+            .put("message", "target retry");
 
         var extra = new JSONObject()
             .put("message", new JSONObject().put("key", consumerRecord.key()).put("value", consumerRecord.value()))

@@ -10,21 +10,23 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     private final Processor processor;
     private final Partitioner partitioner;
     private KafkaConsumer<String, String> consumer;
+    private String topic;
     private boolean running;
     private boolean ready;
     private int id;
 
-    ConsumerLoop(int id, KafkaConsumer<String, String> consumer, KafkaProducer<String, String> producer) {
+    ConsumerLoop(int id, KafkaConsumer<String, String> consumer, String topic, long processingDelay,  KafkaProducer<String, String> producer) {
         this.id = id;
         this.consumer = consumer;
-        this.processor = new Processor(producer);
+        this.topic = topic;
+        this.processor = new Processor(processingDelay, producer);
         this.partitioner = new Partitioner();
     }
 
     @Override
     public void run() {
         running = true;
-        consumer.subscribe(Collections.singletonList(Config.TOPIC));
+        consumer.subscribe(Collections.singletonList(topic));
         try {
             while (running) {
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));

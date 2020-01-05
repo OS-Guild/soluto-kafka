@@ -6,8 +6,9 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 
 class Processor {
     ITarget target;
+    long processingDelay;
 
-    Processor(KafkaProducer<String, String> kafkaProducer) {
+    Processor(long processingDelay, KafkaProducer<String, String> kafkaProducer) {
         var targetRetryPolicy = new TargetRetryPolicy(new Producer(kafkaProducer));
         target =
             Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy)
@@ -16,7 +17,7 @@ class Processor {
 
     void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions)
         throws IOException, InterruptedException {
-        Thread.sleep(Config.PROCESSING_DELAY);
+        Thread.sleep(processingDelay);
         Flowable
             .fromIterable(partitions)
             .flatMap(this::processPartition, Config.CONCURRENCY)

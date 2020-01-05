@@ -41,7 +41,7 @@ describe('tests', () => {
     it('test topic - should produce and consume', async () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
-        
+
         await produce('http://localhost:6000/produce');
         await delay(5000);
 
@@ -58,23 +58,50 @@ describe('tests', () => {
 
         const {hasBeenMade} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
-    });    
+    });
+
+    it('test retry flow - should retry failed consume', async () => {
+        await mockGrpcTarget();
+        const errorCallId = await mockHttpTargetError();
+
+        await produce('http://localhost:6000/produce');
+        await delay(20000);
+
+        const {hasBeenMade: errorHasBeenMade} = await fakeHttpServer.getCall(errorCallId);
+        expect(errorHasBeenMade).toBeTruthy();
+
+        await mockGrpcTarget();
+        const callId = await mockHttpTarget();
+
+        await delay(20000);
+
+        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
+        expect(hasBeenMade).toBeTruthy();
+    });
 });
 
-const produce = (url: string) => fetch(url, {
-    method: 'post',
-    body: JSON.stringify([{key: 'key', message: {data: 1}}]),
-    headers: {'Content-Type': 'application/json'},
-})
+const produce = (url: string) =>
+    fetch(url, {
+        method: 'post',
+        body: JSON.stringify([{key: 'key', message: {data: 1}}]),
+        headers: {'Content-Type': 'application/json'},
+    });
 
-const mockHttpTarget = () => fakeHttpServer.mock({
-    method: 'post',
-    url: '/consume',
-    statusCode: 200,
-})
+const mockHttpTarget = () =>
+    fakeHttpServer.mock({
+        method: 'post',
+        url: '/consume',
+    });
 
-const mockGrpcTarget = () => 
-     fetch('http://localhost:4771/add', {
+const mockHttpTargetError = () =>
+    fakeHttpServer.mock({
+        method: 'post',
+        url: '/consume',
+        statusCode: 500,
+    });
+
+const mockGrpcTarget = () =>
+    fetch('http://localhost:4771/add', {
         method: 'post',
         headers: {'content-type': 'application-json'},
         body: JSON.stringify({

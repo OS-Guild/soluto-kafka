@@ -1,6 +1,8 @@
 import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -39,11 +41,20 @@ public class Monitor {
         statsdClient.recordGaugeValue("consumed-partitions", Iterators.size(partitions.iterator()));
     }
 
+    static final Histogram messageLatencyHistogram = Histogram
+        .build()
+        .linearBuckets(0, 50, 10)
+        .name("message_latency")
+        .help("message_latency")
+        .register();
+
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        if (statsdClient == null) return;
         var latency = (new Date()).getTime() - record.timestamp();
-        statsdClient.recordExecutionTime("message.latency", latency);
-        statsdClient.recordExecutionTime("message." + record.partition() + ".latency", latency);
+        if (statsdClient != null) {
+            statsdClient.recordExecutionTime("message.latency", latency);
+            statsdClient.recordExecutionTime("message." + record.partition() + ".latency", latency);
+        }
+        messageLatencyHistogram.observe(latency);
     }
 
     public static void callTargetLatency(long latency) {
@@ -165,9 +176,7 @@ public class Monitor {
         Throwable exception,
         int attempt
     ) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "target retry");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "target retry");
 
         var extra = new JSONObject()
             .put("message", new JSONObject().put("key", consumerRecord.key()).put("value", consumerRecord.value()))
@@ -202,12 +211,10 @@ public class Monitor {
 
     public static void debug(String text) {
         if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", text);
+        JSONObject log = new JSONObject().put("level", "debug").put("message", text);
 
         write(log);
-    }    
+    }
 
     private static void write(JSONObject log) {
         System.out.println(log.toString());

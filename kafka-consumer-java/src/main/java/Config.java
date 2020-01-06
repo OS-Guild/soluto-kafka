@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,19 +31,19 @@ class Config {
     public static int IS_ALIVE_PORT;
     public static boolean DEBUG;
 
-
-    //Monitoring
+    //Authentication
     public static boolean AUTHENTICATED_KAFKA;
     public static String KAFKA_PASSWORD;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
 
-    //Statsd
+    //Monitoring
     public static boolean STATSD_CONFIGURED;
     public static String STATSD_CONSUMER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
+    public static String USE_PROMETHEUS;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -76,7 +75,13 @@ class Config {
         String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
         String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
 
-        AUTHENTICATED_KAFKA = validateAllParameterConfigured("Missing kafka authentication variable", KAFKA_PASSWORD, truststore, keystore);
+        AUTHENTICATED_KAFKA =
+            validateAllParameterConfigured(
+                "Missing kafka authentication variable",
+                KAFKA_PASSWORD,
+                truststore,
+                keystore
+            );
 
         if (AUTHENTICATED_KAFKA) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
@@ -89,15 +94,23 @@ class Config {
         STATSD_API_KEY = getOptionalSecret(secrets, dotenv, "STATSD_API_KEY");
         STATSD_ROOT = getOptionalString(dotenv, "STATSD_ROOT", null);
         STATSD_HOST = getOptionalString(dotenv, "STATSD_HOST", null);
-        STATSD_CONFIGURED = validateAllParameterConfigured("Missing statsd variable", STATSD_CONSUMER_NAME, STATSD_API_KEY, STATSD_ROOT, STATSD_HOST);
+        STATSD_CONFIGURED =
+            validateAllParameterConfigured(
+                "Missing statsd variable",
+                STATSD_CONSUMER_NAME,
+                STATSD_API_KEY,
+                STATSD_ROOT,
+                STATSD_HOST
+            );
+            USE_PROMETHEUS = U            
     }
 
     private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {
-        if(Arrays.stream(values).allMatch(Objects::isNull)) {
+        if (Arrays.stream(values).allMatch(Objects::isNull)) {
             return false;
         }
 
-        if(Arrays.stream(values).anyMatch(Objects::isNull)) {
+        if (Arrays.stream(values).anyMatch(Objects::isNull)) {
             throw new Exception(error);
         }
 
@@ -113,7 +126,7 @@ class Config {
     }
 
     private static JSONObject readSecrets(String secretsFileLocation) {
-        if(secretsFileLocation == null) {
+        if (secretsFileLocation == null) {
             return new JSONObject();
         }
 
@@ -156,10 +169,6 @@ class Config {
         } catch (Exception e) {
             return fallback;
         }
-    }
-
-    private static boolean getBool(Dotenv dotenv, String name) {
-        return Boolean.parseBoolean(dotenv.get(name));
     }
 
     private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {

@@ -28,21 +28,22 @@ class Config {
     public static int POLL_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
-    public static int IS_ALIVE_PORT;
+    public static int MANAGEMENT_SERVER_PORT;
     public static boolean DEBUG;
 
-    //Monitoring
+    //Authentication
     public static boolean AUTHENTICATED_KAFKA;
     public static String KAFKA_PASSWORD;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
 
-    //Statsd
+    //Monitoring
     public static boolean STATSD_CONFIGURED;
     public static String STATSD_CONSUMER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
+    public static boolean USE_PROMETHEUS;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -65,7 +66,7 @@ class Config {
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
-        IS_ALIVE_PORT = getOptionalInt(dotenv, "IS_ALIVE_PORT", 0);
+        MANAGEMENT_SERVER_PORT = getOptionalInt(dotenv, "MANAGEMENT_SERVER_PORT", 0);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
         JSONObject secrets = buildSecrets(dotenv);
@@ -101,6 +102,7 @@ class Config {
                 STATSD_ROOT,
                 STATSD_HOST
             );
+        USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
     }
 
     private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {
@@ -167,10 +169,6 @@ class Config {
         } catch (Exception e) {
             return fallback;
         }
-    }
-
-    private static boolean getBool(Dotenv dotenv, String name) {
-        return Boolean.parseBoolean(dotenv.get(name));
     }
 
     private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {

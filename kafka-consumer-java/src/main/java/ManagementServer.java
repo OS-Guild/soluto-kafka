@@ -1,23 +1,30 @@
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.HTTPServer;
+import io.prometheus.client.hotspot.DefaultExports;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-public class IsAliveServer {
+public class ManagementServer {
     List<? extends IConsumerLoopLifecycle> consumerLoops;
     HttpServer server;
 
-    public IsAliveServer(List<? extends IConsumerLoopLifecycle> consumerLoops) {
+    public ManagementServer(List<? extends IConsumerLoopLifecycle> consumerLoops) {
         this.consumerLoops = consumerLoops;
     }
 
-    public IsAliveServer start() throws IOException {
-        if (Config.IS_ALIVE_PORT != 0) {
-            server = HttpServer.create(new InetSocketAddress(Config.IS_ALIVE_PORT), 0);
+    public ManagementServer start() throws IOException {
+        if (Config.MANAGEMENT_SERVER_PORT != 0) {
+            server = HttpServer.create(new InetSocketAddress(Config.MANAGEMENT_SERVER_PORT), 0);
             isAliveGetRoute(server);
             server.start();
+            if (Config.USE_PROMETHEUS) {
+                DefaultExports.initialize();
+                new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
+            }
         }
         return this;
     }

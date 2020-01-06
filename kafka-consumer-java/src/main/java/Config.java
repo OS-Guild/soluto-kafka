@@ -28,7 +28,7 @@ class Config {
     public static int POLL_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
-    public static int IS_ALIVE_PORT;
+    public static int MANAGEMENT_SERVER_PORT;
     public static boolean DEBUG;
 
     //Authentication
@@ -66,7 +66,7 @@ class Config {
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
-        IS_ALIVE_PORT = getOptionalInt(dotenv, "IS_ALIVE_PORT", 0);
+        MANAGEMENT_SERVER_PORT = getOptionalInt(dotenv, "MANAGEMENT_SERVER_PORT", 0);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
         JSONObject secrets = buildSecrets(dotenv);

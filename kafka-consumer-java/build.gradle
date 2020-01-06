@@ -36,6 +36,8 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxjava:2.2.7"
     compile group: 'net.jodah', name: 'failsafe', version: '2.0.1'
     compile group: 'io.prometheus', name: 'simpleclient', version: '0.8.0'
+    compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
+    compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
     testImplementation('org.junit.jupiter:junit-jupiter:5.4.2')
 }
 

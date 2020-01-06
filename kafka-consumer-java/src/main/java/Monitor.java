@@ -1,7 +1,6 @@
 import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
-import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import java.util.Date;
 import java.util.Optional;
@@ -11,18 +10,21 @@ import org.json.JSONObject;
 
 public class Monitor {
     static StatsDClient statsdClient;
+    static Histogram messageLatencyHistogram;
 
     public static void init() {
-        if (!Config.STATSD_CONFIGURED) {
-            return;
+        if (Config.STATSD_CONFIGURED) {
+            statsdClient =
+                new NonBlockingStatsDClient(
+                    Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_CONSUMER_NAME,
+                    Config.STATSD_HOST,
+                    8125
+                );
         }
-
-        statsdClient =
-            new NonBlockingStatsDClient(
-                Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_CONSUMER_NAME,
-                Config.STATSD_HOST,
-                8125
-            );
+        if (Config.USE_PROMETHEUS) {
+            messageLatencyHistogram =
+                Histogram.build().linearBuckets(0, 50, 10).name("message_latency").help("message_latency").register();
+        }
     }
 
     public static void consumed(ConsumerRecords<String, String> consumed) {
@@ -41,20 +43,15 @@ public class Monitor {
         statsdClient.recordGaugeValue("consumed-partitions", Iterators.size(partitions.iterator()));
     }
 
-    static final Histogram messageLatencyHistogram = Histogram
-        .build()
-        .linearBuckets(0, 50, 10)
-        .name("message_latency")
-        .help("message_latency")
-        .register();
-
     public static void messageLatency(ConsumerRecord<String, String> record) {
         var latency = (new Date()).getTime() - record.timestamp();
         if (statsdClient != null) {
             statsdClient.recordExecutionTime("message.latency", latency);
             statsdClient.recordExecutionTime("message." + record.partition() + ".latency", latency);
         }
-        messageLatencyHistogram.observe(latency);
+        if (messageLatencyHistogram != null) {
+            messageLatencyHistogram.observe(latency);
+        }
     }
 
     public static void callTargetLatency(long latency) {

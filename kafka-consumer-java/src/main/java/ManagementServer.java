@@ -20,10 +20,11 @@ public class ManagementServer {
         if (Config.MANAGEMENT_SERVER_PORT != 0) {
             server = HttpServer.create(new InetSocketAddress(Config.MANAGEMENT_SERVER_PORT), 0);
             isAliveGetRoute(server);
-            server.start();
             if (Config.USE_PROMETHEUS) {
                 DefaultExports.initialize();
                 new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
+            } else {
+                server.start();
             }
         }
         return this;

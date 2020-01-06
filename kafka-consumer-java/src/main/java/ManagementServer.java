@@ -11,7 +11,6 @@ import java.util.List;
 public class ManagementServer {
     List<? extends IConsumerLoopLifecycle> consumerLoops;
     HttpServer server;
-    HTTPServer prometheuExportServer;
 
     public ManagementServer(List<? extends IConsumerLoopLifecycle> consumerLoops) {
         this.consumerLoops = consumerLoops;
@@ -24,7 +23,7 @@ public class ManagementServer {
             server.start();
             if (Config.USE_PROMETHEUS) {
                 DefaultExports.initialize();
-                prometheuExportServer = new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
+                new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
             }
         }
         return this;
@@ -32,7 +31,6 @@ public class ManagementServer {
 
     public void close() {
         server.stop(1);
-        prometheuExportServer.stop();
     }
 
     private void isAliveGetRoute(HttpServer server) {

@@ -23,5 +23,5 @@
         "experimentalDecorators": true,
         "resolveJsonModule": true
     },
-    "include": ["index.ts"],
+    "include": ["index.ts"]
 }

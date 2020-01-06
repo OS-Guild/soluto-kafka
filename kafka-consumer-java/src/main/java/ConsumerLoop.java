@@ -15,7 +15,13 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     private boolean ready;
     private int id;
 
-    ConsumerLoop(int id, KafkaConsumer<String, String> consumer, String topic, long processingDelay,  KafkaProducer<String, String> producer) {
+    ConsumerLoop(
+        int id,
+        KafkaConsumer<String, String> consumer,
+        String topic,
+        long processingDelay,
+        KafkaProducer<String, String> producer
+    ) {
         this.id = id;
         this.consumer = consumer;
         this.topic = topic;

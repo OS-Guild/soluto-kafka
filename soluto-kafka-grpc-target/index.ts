@@ -49,12 +49,14 @@ type TargetResponse = {
 let _client;
 export const createClient = url => {
     if (!_client) {
-        _client = new ProtobufMessage.CallTarget(url, credentials.createInsecure()); 
+        _client = new ProtobufMessage.CallTarget(url, credentials.createInsecure());
     }
     return {
         callTarget: <T>(payload: T, recordOffset?: number): Promise<TargetResponse> =>
             new Promise(resolve =>
-                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset}, (_, responsePayload) => resolve(responsePayload))
+                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset}, (_, responsePayload) =>
+                    resolve(responsePayload)
+                )
             ),
     };
 };

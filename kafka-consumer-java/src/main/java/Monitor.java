@@ -165,9 +165,7 @@ public class Monitor {
         Throwable exception,
         int attempt
     ) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "target retry");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "target retry");
 
         var extra = new JSONObject()
             .put("message", new JSONObject().put("key", consumerRecord.key()).put("value", consumerRecord.value()))
@@ -202,12 +200,10 @@ public class Monitor {
 
     public static void debug(String text) {
         if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", text);
+        JSONObject log = new JSONObject().put("level", "debug").put("message", text);
 
         write(log);
-    }    
+    }
 
     private static void write(JSONObject log) {
         System.out.println(log.toString());

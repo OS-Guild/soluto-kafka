@@ -43,7 +43,7 @@ class Config {
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
-    public static String USE_PROMETHEUS;
+    public static boolean USE_PROMETHEUS;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -102,7 +102,7 @@ class Config {
                 STATSD_ROOT,
                 STATSD_HOST
             );
-            USE_PROMETHEUS = U            
+        USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
     }
 
     private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {

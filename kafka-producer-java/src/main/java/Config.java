@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,7 +50,13 @@ class Config {
         String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
         String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
 
-        AUTHENTICATED_KAFKA = validateAllParameterConfigured("Missing kafka authentication variable", KAFKA_PASSWORD, truststore, keystore);
+        AUTHENTICATED_KAFKA =
+            validateAllParameterConfigured(
+                "Missing kafka authentication variable",
+                KAFKA_PASSWORD,
+                truststore,
+                keystore
+            );
         if (AUTHENTICATED_KAFKA) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             KEYSTORE_LOCATION = "client.keystore.p12";
@@ -63,15 +68,22 @@ class Config {
         STATSD_API_KEY = getOptionalSecret(secrets, dotenv, "STATSD_API_KEY");
         STATSD_ROOT = getOptionalString(dotenv, "STATSD_ROOT", null);
         STATSD_HOST = getOptionalString(dotenv, "STATSD_HOST", null);
-        STATSD_CONFIGURED = validateAllParameterConfigured("Missing statsd variable", STATSD_PRODUCER_NAME, STATSD_API_KEY, STATSD_ROOT, STATSD_HOST);
+        STATSD_CONFIGURED =
+            validateAllParameterConfigured(
+                "Missing statsd variable",
+                STATSD_PRODUCER_NAME,
+                STATSD_API_KEY,
+                STATSD_ROOT,
+                STATSD_HOST
+            );
     }
 
     private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {
-        if(Arrays.stream(values).allMatch(Objects::isNull)) {
+        if (Arrays.stream(values).allMatch(Objects::isNull)) {
             return false;
         }
 
-        if(Arrays.stream(values).anyMatch(Objects::isNull)) {
+        if (Arrays.stream(values).anyMatch(Objects::isNull)) {
             throw new Exception(error);
         }
 
@@ -87,7 +99,7 @@ class Config {
     }
 
     private static JSONObject readSecrets(String secretsFileLocation) {
-        if(secretsFileLocation == null) {
+        if (secretsFileLocation == null) {
             return new JSONObject();
         }
 

@@ -23,7 +23,12 @@ public class Monitor {
         }
         if (Config.USE_PROMETHEUS) {
             messageLatencyHistogram =
-                Histogram.build().linearBuckets(0, 50, 10).name("message_latency").help("message_latency").register();
+                Histogram
+                    .build()
+                    .buckets(3, 30, 100, 300, 1500, 10000)
+                    .name("message_latency")
+                    .help("message_latency")
+                    .register();
         }
     }
 

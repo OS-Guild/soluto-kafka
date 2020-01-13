@@ -8,8 +8,13 @@ class Processor {
     ITarget target;
     long processingDelay;
 
-    Processor(long processingDelay, KafkaProducer<String, String> kafkaProducer) {
-        var targetRetryPolicy = new TargetRetryPolicy(new Producer(kafkaProducer));
+    Processor(
+        long processingDelay,
+        KafkaProducer<String, String> kafkaProducer,
+        String retryTopic,
+        String deadLetterTopic
+    ) {
+        var targetRetryPolicy = new TargetRetryPolicy(new Producer(kafkaProducer), retryTopic, deadLetterTopic);
         target =
             Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy)
                 : new HttpTarget(targetRetryPolicy);

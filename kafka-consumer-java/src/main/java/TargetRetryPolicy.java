@@ -7,9 +7,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TargetRetryPolicy {
     private Producer producer;
+    private String retryTopic;
+    private String deadLetterTopic;
 
-    public TargetRetryPolicy(Producer producer) {
+    public TargetRetryPolicy(Producer producer, String retryTopic, String deadLetterTopic) {
         this.producer = producer;
+        this.retryTopic = retryTopic;
+        this.deadLetterTopic = deadLetterTopic;
     }
 
     public <T> RetryPolicy<T> get(ConsumerRecord<String, String> record, final ToIntFunction<T> getStatusCode) {
@@ -22,8 +26,8 @@ public class TargetRetryPolicy {
                     var statusCode = getStatusCode.applyAsInt(x.getResult());
 
                     if (400 <= statusCode && statusCode < 500) {
-                        if (Config.DEAD_LETTER_TOPIC != null) {
-                            producer.produce("deadLetter", Config.DEAD_LETTER_TOPIC, record);
+                        if (deadLetterTopic != null) {
+                            producer.produce("deadLetter", deadLetterTopic, record);
                         }
                         return;
                     }
@@ -40,8 +44,8 @@ public class TargetRetryPolicy {
             )
             .onRetriesExceeded(
                 __ -> {
-                    if (Config.RETRY_TOPIC != null) {
-                        producer.produce("retry", Config.RETRY_TOPIC, record);
+                    if (retryTopic != null) {
+                        producer.produce("retry", retryTopic, record);
                     }
                 }
             );

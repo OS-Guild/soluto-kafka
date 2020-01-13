@@ -20,12 +20,14 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
         KafkaConsumer<String, String> consumer,
         String topic,
         long processingDelay,
-        KafkaProducer<String, String> producer
+        KafkaProducer<String, String> producer,
+        String retryTopic,
+        String deadLetterTopic
     ) {
         this.id = id;
         this.consumer = consumer;
         this.topic = topic;
-        this.processor = new Processor(processingDelay, producer);
+        this.processor = new Processor(processingDelay, producer, retryTopic, deadLetterTopic);
         this.partitioner = new Partitioner();
     }
 

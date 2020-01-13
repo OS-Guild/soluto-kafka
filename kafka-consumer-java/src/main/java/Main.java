@@ -17,7 +17,15 @@ public class Main {
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
                 var consumer = kafkaCreator.createConsumer();
                 var consumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(i, consumer, Config.TOPIC, Config.PROCESSING_DELAY, producer),
+                    new ConsumerLoop(
+                        i,
+                        consumer,
+                        Config.TOPIC,
+                        Config.PROCESSING_DELAY,
+                        producer,
+                        Config.RETRY_TOPIC,
+                        Config.DEAD_LETTER_TOPIC
+                    ),
                     countDownLatch
                 );
                 new Thread(consumerLoop).start();
@@ -27,7 +35,15 @@ public class Main {
             if (Config.RETRY_TOPIC != null) {
                 var retryConsumer = kafkaCreator.createConsumer();
                 var retryConsumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(0, retryConsumer, Config.RETRY_TOPIC, Config.RETRY_PROCESSING_DELAY, producer),
+                    new ConsumerLoop(
+                        0,
+                        retryConsumer,
+                        Config.RETRY_TOPIC,
+                        Config.RETRY_PROCESSING_DELAY,
+                        producer,
+                        null,
+                        Config.DEAD_LETTER_TOPIC
+                    ),
                     countDownLatch
                 );
                 new Thread(retryConsumerLoop).start();

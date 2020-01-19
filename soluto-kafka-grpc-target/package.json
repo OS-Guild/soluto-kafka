@@ -1,6 +1,6 @@
 {
   "name": "@npmsoluto/soluto-kafka-grpc-target",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json && cp -a ./message.proto ./dist//message.proto",

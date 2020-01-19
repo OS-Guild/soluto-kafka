@@ -19,11 +19,7 @@ const _callTarget = run => async (call, callback) => {
         await run(payload, parseInt(call.request.recordOffset) || -1, parseInt(call.request.recordTimestamp) || -1);
         callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
     } catch (e) {
-        if (e.statusCode) {
-            callback(null, {statusCode: e.statusCode});
-            return;
-        }
-        callback(null, {statusCode: 500});
+        callback(null, {statusCode: e.statusCode ?? e.status ?? 500});
     }
 };
 

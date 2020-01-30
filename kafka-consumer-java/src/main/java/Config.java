@@ -44,6 +44,7 @@ class Config {
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
     public static boolean USE_PROMETHEUS;
+    public static boolean HIDE_CONSUMED_MESSAGE;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();

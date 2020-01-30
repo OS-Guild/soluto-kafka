@@ -87,7 +87,7 @@ public class Monitor {
                 "extra",
                 new JSONObject()
                     .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? Record.value() : "Hidden")
+                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? consumerRecord.value() : "Hidden")
             );
 
         write(log);
@@ -163,7 +163,7 @@ public class Monitor {
                 "extra",
                 new JSONObject()
                     .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? Record.value() : "Hidden")
+                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? consumerRecord.value() : "Hidden")
             )
             .put("err", new JSONObject().put("message", exception.getMessage()));
 
@@ -182,8 +182,8 @@ public class Monitor {
 
         var extra = new JSONObject()
             .put("message", new JSONObject()
-            .put("key", consumerRecord.key())
-            .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? Record.value() : "Hidden")
+                .put("key", consumerRecord.key())
+                .put("value", (!Config.HIDE_CONSUMED_MESSAGE)? consumerRecord.value() : "Hidden"))
             .put("attempt", attempt);
 
         if (responseBody.isPresent()) {

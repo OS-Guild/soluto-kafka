@@ -11,6 +11,7 @@ import org.json.JSONObject;
 public class Monitor {
     static StatsDClient statsdClient;
     static Histogram messageLatencyHistogram;
+    static Boolean hideConsumedMessage; 
 
     public static void init() {
         if (Config.STATSD_CONFIGURED) {
@@ -30,6 +31,8 @@ public class Monitor {
                     .help("message_latency")
                     .register();
         }
+
+        hideConsumedMessage = Config.HIDE_CONSUMED_MESSAGE;
     }
 
     public static void consumed(ConsumerRecords<String, String> consumed) {
@@ -87,7 +90,7 @@ public class Monitor {
                 "extra",
                 new JSONObject()
                     .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", consumerRecord.value())
+                    .put("value", (!hideConsumedMessage)? Record.value() : "Hidden")
             );
 
         write(log);
@@ -163,7 +166,7 @@ public class Monitor {
                 "extra",
                 new JSONObject()
                     .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", consumerRecord.value())
+                    .put("value", (!hideConsumedMessage)? Record.value() : "Hidden")
             )
             .put("err", new JSONObject().put("message", exception.getMessage()));
 
@@ -181,7 +184,9 @@ public class Monitor {
         JSONObject log = new JSONObject().put("level", "info").put("message", "target retry");
 
         var extra = new JSONObject()
-            .put("message", new JSONObject().put("key", consumerRecord.key()).put("value", consumerRecord.value()))
+            .put("message", new JSONObject()
+            .put("key", consumerRecord.key())
+            .put("value", (!hideConsumedMessage)? Record.value() : "Hidden")
             .put("attempt", attempt);
 
         if (responseBody.isPresent()) {

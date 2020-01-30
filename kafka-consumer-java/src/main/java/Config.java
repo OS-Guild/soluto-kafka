@@ -44,6 +44,7 @@ class Config {
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
     public static boolean USE_PROMETHEUS;
+    public static boolean HIDE_CONSUMED_MESSAGE;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -103,6 +104,7 @@ class Config {
                 STATSD_HOST
             );
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
+        HIDE_CONSUMED_MESSAGE = getOptionalBool(dotenv, "HIDE_CONSUMED_MESSAGE", false);
     }
 
     private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {

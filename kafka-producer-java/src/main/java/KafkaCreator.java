@@ -13,13 +13,19 @@ class KafkaCreator {
             return props;
         }
 
-        props.put("security.protocol", "SSL");
-        props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
-        props.put("ssl.truststore.password", Config.KAFKA_PASSWORD);
-        props.put("ssl.keystore.type", "PKCS12");
-        props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
-        props.put("ssl.keystore.password", Config.KAFKA_PASSWORD);
-        props.put("ssl.key.password", Config.KAFKA_PASSWORD);
+        if (Config.SECURITY_PROTOCOL == "SSL") {
+            props.put("security.protocol", "SSL");
+            props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
+            props.put("ssl.truststore.password", Config.KAFKA_PASSWORD);
+            props.put("ssl.keystore.type", "PKCS12");
+            props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
+            props.put("ssl.keystore.password", Config.KAFKA_PASSWORD);
+            props.put("ssl.key.password", Config.KAFKA_PASSWORD);
+        } else if (Config.SECURITY_PROTOCOL == "SASL_SSL") {
+            props.put("security.protocol", "SASL_SSL");
+            props.put("sasl.mechanism", "PLAIN");
+            props.put("sasl.jaas.config", Config.SASL_JAAS_CONFIG);
+        }
 
         return props;
     }

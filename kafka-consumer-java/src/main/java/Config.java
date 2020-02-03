@@ -74,6 +74,7 @@ class Config {
 
         JSONObject secrets = buildSecrets(dotenv);
 
+        SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", null);
         if (SECURITY_PROTOCOL == "SSL") {
             KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
             String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");

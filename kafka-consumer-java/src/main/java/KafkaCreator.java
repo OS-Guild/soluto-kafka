@@ -24,7 +24,14 @@ class KafkaCreator {
             props.put("security.protocol", "SASL_SSL");
             props.put("ssl.endpoint.identification.algorithm", "https");
             props.put("sasl.mechanism", "PLAIN");
-            props.put("sasl.jaas.config", Config.SASL_JAAS_CONFIG);
+            props.put(
+                "sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" +
+                    Config.SASL_USERNAME +
+                    "\" password=\"" +
+                    Config.SASL_PASSWORD +
+                    "\";"
+            );
         }
 
         return props;

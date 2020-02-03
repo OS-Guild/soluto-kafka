@@ -37,7 +37,8 @@ class Config {
     public static String KAFKA_PASSWORD;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
-    public static String SASL_JAAS_CONFIG;
+    public static String SASL_USERNAME;
+    public static String SASL_PASSWORD;
 
     //Monitoring
     public static boolean STATSD_CONFIGURED;
@@ -91,9 +92,10 @@ class Config {
             writeToFile(TRUSTSTORE_LOCATION, truststore);
             writeToFile(KEYSTORE_LOCATION, keystore);
         } else if (SECURITY_PROTOCOL == "SASL_SSL") {
-            SASL_JAAS_CONFIG = getOptionalSecret(secrets, dotenv, "SASL_JAAS_CONFIG");
+            SASL_USERNAME = getOptionalSecret(secrets, dotenv, "SASL_USERNAME");
+            SASL_PASSWORD = getOptionalSecret(secrets, dotenv, "SASL_PASSWORD");
             AUTHENTICATED_KAFKA =
-                validateAllParameterConfigured("Missing kafka authentication variable", SASL_JAAS_CONFIG);
+                validateAllParameterConfigured("Missing kafka authentication variable", SASL_USERNAME, SASL_PASSWORD);
         }
 
         STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);

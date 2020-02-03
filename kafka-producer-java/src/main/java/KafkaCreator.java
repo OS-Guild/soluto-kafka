@@ -23,6 +23,7 @@ class KafkaCreator {
             props.put("ssl.key.password", Config.KAFKA_PASSWORD);
         } else if (Config.SECURITY_PROTOCOL == "SASL_SSL") {
             props.put("security.protocol", "SASL_SSL");
+            props.put("ssl.endpoint.identification.algorithm", "https");
             props.put("sasl.mechanism", "PLAIN");
             props.put("sasl.jaas.config", Config.SASL_JAAS_CONFIG);
         }

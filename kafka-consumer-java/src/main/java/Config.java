@@ -76,7 +76,7 @@ class Config {
         JSONObject secrets = buildSecrets(dotenv);
 
         SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", null);
-        if (SECURITY_PROTOCOL == "SSL") {
+        if (SECURITY_PROTOCOL.equals("SSL")) {
             KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
             String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
             String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
@@ -91,7 +91,7 @@ class Config {
             KEYSTORE_LOCATION = "client.keystore.p12";
             writeToFile(TRUSTSTORE_LOCATION, truststore);
             writeToFile(KEYSTORE_LOCATION, keystore);
-        } else if (SECURITY_PROTOCOL == "SASL_SSL") {
+        } else if (SECURITY_PROTOCOL.equals("SASL_SSL")) {
             SASL_USERNAME = getOptionalSecret(secrets, dotenv, "SASL_USERNAME");
             SASL_PASSWORD = getOptionalSecret(secrets, dotenv, "SASL_PASSWORD");
             AUTHENTICATED_KAFKA =

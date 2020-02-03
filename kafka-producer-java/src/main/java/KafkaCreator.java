@@ -22,7 +22,7 @@ class KafkaCreator {
                 "\";"
         );
 
-        if (Config.SECURITY_PROTOCOL == "SSL") {
+        if (Config.SECURITY_PROTOCOL.equals("SSL")) {
             props.put("security.protocol", "SSL");
             props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
             props.put("ssl.truststore.password", Config.KAFKA_PASSWORD);
@@ -30,7 +30,7 @@ class KafkaCreator {
             props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
             props.put("ssl.keystore.password", Config.KAFKA_PASSWORD);
             props.put("ssl.key.password", Config.KAFKA_PASSWORD);
-        } else if (Config.SECURITY_PROTOCOL == "SASL_SSL") {
+        } else if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
             props.put("security.protocol", "SASL_SSL");
             props.put("ssl.endpoint.identification.algorithm", "https");
             props.put("sasl.mechanism", "PLAIN");

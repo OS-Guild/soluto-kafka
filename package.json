@@ -30,7 +30,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn foramt && git add ."
+      "pre-commit": "yarn format && git add ."
     }
   }
 }

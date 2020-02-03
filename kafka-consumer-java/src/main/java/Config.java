@@ -33,9 +33,11 @@ class Config {
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA;
+    public static String SECURITY_PROTOCOL;
     public static String KAFKA_PASSWORD;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
+    public static String SASL_JAAS_CONFIG;
 
     //Monitoring
     public static boolean STATSD_CONFIGURED;
@@ -72,23 +74,25 @@ class Config {
 
         JSONObject secrets = buildSecrets(dotenv);
 
-        KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
-        String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
-        String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
-
-        AUTHENTICATED_KAFKA =
-            validateAllParameterConfigured(
-                "Missing kafka authentication variable",
-                KAFKA_PASSWORD,
-                truststore,
-                keystore
-            );
-
-        if (AUTHENTICATED_KAFKA) {
+        if (SECURITY_PROTOCOL == "SSL") {
+            KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
+            String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
+            String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
+            AUTHENTICATED_KAFKA =
+                validateAllParameterConfigured(
+                    "Missing kafka authentication variable",
+                    KAFKA_PASSWORD,
+                    truststore,
+                    keystore
+                );
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             KEYSTORE_LOCATION = "client.keystore.p12";
             writeToFile(TRUSTSTORE_LOCATION, truststore);
             writeToFile(KEYSTORE_LOCATION, keystore);
+        } else if (SECURITY_PROTOCOL == "SASL_SSL") {
+            SASL_JAAS_CONFIG = getOptionalSecret(secrets, dotenv, "SASL_JAAS_CONFIG");
+            AUTHENTICATED_KAFKA =
+                validateAllParameterConfigured("Missing kafka authentication variable", SASL_JAAS_CONFIG);
         }
 
         STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);

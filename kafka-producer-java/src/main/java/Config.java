@@ -3,9 +3,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Objects;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,7 +19,7 @@ class Config {
     public static String COMPRESSION_TYPE;
 
     //Autentication
-    public static boolean AUTHENTICATED_KAFKA;
+    public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
@@ -30,7 +28,7 @@ class Config {
     public static String SASL_PASSWORD;
 
     //Statsd monitoring
-    public static boolean STATSD_CONFIGURED;
+    public static boolean STATSD_CONFIGURED = false;
     public static String STATSD_PRODUCER_NAME;
     public static String STATSD_API_KEY;
     public static String STATSD_ROOT;
@@ -51,51 +49,29 @@ class Config {
 
         SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
         if (SECURITY_PROTOCOL.equals("SSL")) {
-            KAFKA_PASSWORD = getOptionalSecret(secrets, dotenv, "KAFKA_PASSWORD");
-            String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE");
-            String keystore = getOptionalSecret(secrets, dotenv, "KEYSTORE");
-            AUTHENTICATED_KAFKA =
-                validateAllParameterConfigured(
-                    "Missing kafka authentication variable",
-                    KAFKA_PASSWORD,
-                    truststore,
-                    keystore
-                );
+            KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
+            String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
+            String keystore = getSecret(secrets, dotenv, "KEYSTORE");
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             KEYSTORE_LOCATION = "client.keystore.p12";
             writeToFile(TRUSTSTORE_LOCATION, truststore);
             writeToFile(KEYSTORE_LOCATION, keystore);
-        } else if (SECURITY_PROTOCOL.equals("SASL_SSL")) {
-            SASL_USERNAME = getOptionalSecret(secrets, dotenv, "SASL_USERNAME");
-            SASL_PASSWORD = getOptionalSecret(secrets, dotenv, "SASL_PASSWORD");
-            AUTHENTICATED_KAFKA =
-                validateAllParameterConfigured("Missing kafka authentication variable", SASL_USERNAME, SASL_PASSWORD);
+            AUTHENTICATED_KAFKA = true;
+        }
+
+        if (SECURITY_PROTOCOL.equals("SASL_SSL")) {
+            SASL_USERNAME = getString(dotenv, "SASL_USERNAME");
+            SASL_PASSWORD = getSecret(secrets, dotenv, "SASL_PASSWORD");
+            AUTHENTICATED_KAFKA = true;
         }
 
         STATSD_PRODUCER_NAME = getOptionalString(dotenv, "STATSD_PRODUCER_NAME", null);
-        STATSD_API_KEY = getOptionalSecret(secrets, dotenv, "STATSD_API_KEY");
-        STATSD_ROOT = getOptionalString(dotenv, "STATSD_ROOT", null);
-        STATSD_HOST = getOptionalString(dotenv, "STATSD_HOST", null);
-        STATSD_CONFIGURED =
-            validateAllParameterConfigured(
-                "Missing statsd variable",
-                STATSD_PRODUCER_NAME,
-                STATSD_API_KEY,
-                STATSD_ROOT,
-                STATSD_HOST
-            );
-    }
-
-    private static boolean validateAllParameterConfigured(String error, String... values) throws Exception {
-        if (Arrays.stream(values).allMatch(Objects::isNull)) {
-            return false;
+        if (STATSD_PRODUCER_NAME != null) {
+            STATSD_API_KEY = getSecret(secrets, dotenv, "STATSD_API_KEY");
+            STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
+            STATSD_HOST = getString(dotenv, "STATSD_HOST");
+            STATSD_CONFIGURED = true;
         }
-
-        if (Arrays.stream(values).anyMatch(Objects::isNull)) {
-            throw new Exception(error);
-        }
-
-        return true;
     }
 
     private static void writeToFile(String path, String value) throws IOException {
@@ -118,7 +94,7 @@ class Config {
         }
     }
 
-    private static String getOptionalSecret(JSONObject secrets, Dotenv dotenv, String name) {
+    private static String getSecret(JSONObject secrets, Dotenv dotenv, String name) throws Exception {
         String value = dotenv.get(name);
 
         if (value != null) {
@@ -129,7 +105,9 @@ class Config {
 
         try {
             secret = secrets.getString(name);
-        } catch (JSONException ignored) {}
+        } catch (JSONException ignored) {
+            throw new Exception("missing env var: " + name);
+        }
 
         return secret;
     }

@@ -12,25 +12,31 @@ class KafkaCreator {
             return props;
         }
 
-        if (Config.SECURITY_PROTOCOL.equals("SSL")) {
-            props.put("security.protocol", "SSL");
+        props.put("security.protocol", Config.SECURITY_PROTOCOL);
+
+        if (Config.TRUSTSTORE_PASSWORD != null) {
             props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
-            props.put("ssl.truststore.password", Config.KAFKA_PASSWORD);
+            props.put("ssl.truststore.password", Config.TRUSTSTORE_PASSWORD);
+        }
+
+        if (Config.SECURITY_PROTOCOL.equals("SSL")) {
             props.put("ssl.keystore.type", "PKCS12");
             props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
-            props.put("ssl.keystore.password", Config.KAFKA_PASSWORD);
-            props.put("ssl.key.password", Config.KAFKA_PASSWORD);
-        } else if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
+            props.put("ssl.keystore.password", Config.KEYSTORE_PASSWORD);
+            props.put("ssl.key.password", Config.KEY_PASSWORD);
+        }
+
+        if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
             props.put("security.protocol", "SASL_SSL");
             props.put("ssl.endpoint.identification.algorithm", "https");
             props.put("sasl.mechanism", "PLAIN");
             props.put(
                 "sasl.jaas.config",
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" +
-                    Config.SASL_USERNAME +
-                    "\" password=\"" +
-                    Config.SASL_PASSWORD +
-                    "\";"
+                String.format(
+                    "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"%s\" password=\"%s\";",
+                    Config.SASL_USERNAME,
+                    Config.SASL_PASSWORD
+                )
             );
         }
 

@@ -32,9 +32,11 @@ class Config {
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
-    public static String KAFKA_PASSWORD;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
+    public static String TRUSTSTORE_PASSWORD;
+    public static String KEYSTORE_PASSWORD;
+    public static String KEY_PASSWORD;
     public static String SASL_USERNAME;
     public static String SASL_PASSWORD;
 
@@ -73,14 +75,21 @@ class Config {
 
         JSONObject secrets = buildSecrets(dotenv);
 
-        SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
-        if (SECURITY_PROTOCOL.equals("SSL")) {
-            KAFKA_PASSWORD = getSecret(secrets, dotenv, "KAFKA_PASSWORD");
-            String truststore = getSecret(secrets, dotenv, "TRUSTSTORE");
-            String keystore = getSecret(secrets, dotenv, "KEYSTORE");
-            TRUSTSTORE_LOCATION = "client.truststore.jks";
-            KEYSTORE_LOCATION = "client.keystore.p12";
+        TRUSTSTORE_LOCATION = "client.truststore.jks";
+        KEYSTORE_LOCATION = "client.keystore.p12";
+
+        String truststore = getOptionalSecret(secrets, dotenv, "TRUSTSTORE", null);
+        if (truststore != null) {
             writeToFile(TRUSTSTORE_LOCATION, truststore);
+            TRUSTSTORE_PASSWORD = getSecret(secrets, dotenv, "TRUSTSTORE_PASSWORD");
+        }
+
+        SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
+
+        if (SECURITY_PROTOCOL.equals("SSL")) {
+            KEYSTORE_PASSWORD = getSecret(secrets, dotenv, "KEYSTORE_PASSWORD");
+            KEY_PASSWORD = getSecret(secrets, dotenv, "KEY_PASSWORD");
+            String keystore = getSecret(secrets, dotenv, "KEYSTORE");
             writeToFile(KEYSTORE_LOCATION, keystore);
             AUTHENTICATED_KAFKA = true;
         }
@@ -138,6 +147,14 @@ class Config {
         }
 
         return secret;
+    }
+
+    private static String getOptionalSecret(JSONObject secrets, Dotenv dotenv, String name, String fallback) {
+        try {
+            return getSecret(secrets, dotenv, name);
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private static String getString(Dotenv dotenv, String name) throws Exception {

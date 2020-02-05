@@ -13,7 +13,7 @@ class KafkaCreator {
             return props;
         }
 
-        System.out.println("0000000", Config.SECURITY_PROTOCOL);
+        System.out.println("0000000" + Config.SECURITY_PROTOCOL);
 
         props.put("security.protocol", Config.SECURITY_PROTOCOL);
         props.put("ssl.endpoint.identification.algorithm", "");

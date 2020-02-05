@@ -28,7 +28,7 @@ class KafkaCreator {
 
         if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
             props.put("sasl.mechanism", "PLAIN");
-            props.put("ssl.endpoint.identification.algorithm", "https");
+            props.put("ssl.endpoint.identification.algorithm", "");
             props.put(
                 "sasl.jaas.config",
                 String.format(

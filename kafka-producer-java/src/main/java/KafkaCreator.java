@@ -13,6 +13,8 @@ class KafkaCreator {
             return props;
         }
 
+        System.out.println("0000000", Config.SECURITY_PROTOCOL);
+
         props.put("security.protocol", Config.SECURITY_PROTOCOL);
         props.put("ssl.endpoint.identification.algorithm", "");
 
@@ -23,6 +25,10 @@ class KafkaCreator {
         }
 
         if (Config.SECURITY_PROTOCOL.equals("SSL")) {
+            System.out.println("11111" + Config.KEYSTORE_LOCATION);
+            System.out.println("22222" + Config.KEYSTORE_PASSWORD);
+            System.out.println("33333" + Config.KEY_PASSWORD);
+
             props.put("ssl.keystore.type", "PKCS12");
             props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
             props.put("ssl.keystore.password", Config.KEYSTORE_PASSWORD);

@@ -48,7 +48,13 @@ class Config {
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
-            writeToFile(TRUSTSTORE_LOCATION, readSecretFromFile(getString(dotenv, "TRUSTSTORE_FILE_PATH")));
+            var truststore = readSecretFromFile(getString(dotenv, "TRUSTSTORE_FILE_PATH"));
+
+            System.out.println("truststore");
+            System.out.println(truststore);
+            System.out.println("------------------------");
+
+            writeToFile(TRUSTSTORE_LOCATION, truststore);
             TRUSTSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 
@@ -57,8 +63,12 @@ class Config {
         if (SECURITY_PROTOCOL.equals("SSL")) {
             KEYSTORE_LOCATION = "client.keystore.p12";
             KEYSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "KEYSTORE_PASSWORD_FILE_PATH"));
-            var x = readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH"));
-            System.out.println(x);
+            var keystore = readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH"));
+
+            System.out.println("keystore");
+            System.out.println(keystore);
+            System.out.println("------------------------");
+
             writeToFile(KEYSTORE_LOCATION, readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH")));
             KEY_PASSWORD = readSecretFromFile(getString(dotenv, "KEY_PASSWORD_FILE_PATH"));
             AUTHENTICATED_KAFKA = true;

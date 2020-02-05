@@ -13,21 +13,24 @@ class KafkaCreator {
             return props;
         }
 
-        System.out.println("0000000" + Config.SECURITY_PROTOCOL);
+        System.out.println("0000000 " + Config.SECURITY_PROTOCOL);
 
         props.put("security.protocol", Config.SECURITY_PROTOCOL);
         props.put("ssl.endpoint.identification.algorithm", "");
 
         if (Config.TRUSTSTORE_PASSWORD != null) {
             props.put("ssl.truststore.type", "jks");
+            System.out.println("aaaaaa " + Config.KEYSTORE_LOCATION);
+            System.out.println("bbbbbb " + Config.TRUSTSTORE_PASSWORD);
+
             props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
             props.put("ssl.truststore.password", Config.TRUSTSTORE_PASSWORD);
         }
 
         if (Config.SECURITY_PROTOCOL.equals("SSL")) {
-            System.out.println("11111" + Config.KEYSTORE_LOCATION);
-            System.out.println("22222" + Config.KEYSTORE_PASSWORD);
-            System.out.println("33333" + Config.KEY_PASSWORD);
+            System.out.println("11111 " + Config.KEYSTORE_LOCATION);
+            System.out.println("22222 " + Config.KEYSTORE_PASSWORD);
+            System.out.println("33333 " + Config.KEY_PASSWORD);
 
             props.put("ssl.keystore.type", "PKCS12");
             props.put("ssl.keystore.location", Config.KEYSTORE_LOCATION);
@@ -36,7 +39,6 @@ class KafkaCreator {
         }
 
         if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
-            props.put("security.protocol", "SASL_SSL");
             props.put("sasl.mechanism", "PLAIN");
             props.put(
                 "sasl.jaas.config",

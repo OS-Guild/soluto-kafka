@@ -57,6 +57,8 @@ class Config {
         if (SECURITY_PROTOCOL.equals("SSL")) {
             KEYSTORE_LOCATION = "client.keystore.p12";
             KEYSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "KEYSTORE_PASSWORD_FILE_PATH"));
+            var x = readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH"));
+            System.out.println(x);
             writeToFile(KEYSTORE_LOCATION, readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH")));
             KEY_PASSWORD = readSecretFromFile(getString(dotenv, "KEY_PASSWORD_FILE_PATH"));
             AUTHENTICATED_KAFKA = true;

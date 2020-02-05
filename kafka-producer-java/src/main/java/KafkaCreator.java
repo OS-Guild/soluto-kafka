@@ -14,6 +14,7 @@ class KafkaCreator {
         }
 
         props.put("security.protocol", Config.SECURITY_PROTOCOL);
+        props.put("ssl.endpoint.identification.algorithm", "");
 
         if (Config.TRUSTSTORE_PASSWORD != null) {
             props.put("ssl.truststore.type", "jks");
@@ -30,7 +31,6 @@ class KafkaCreator {
 
         if (Config.SECURITY_PROTOCOL.equals("SASL_SSL")) {
             props.put("security.protocol", "SASL_SSL");
-            props.put("ssl.endpoint.identification.algorithm", "");
             props.put("sasl.mechanism", "PLAIN");
             props.put(
                 "sasl.jaas.config",

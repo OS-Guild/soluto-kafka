@@ -16,7 +16,6 @@ class KafkaCreator {
         props.put("ssl.endpoint.identification.algorithm", "");
 
         if (Config.TRUSTSTORE_PASSWORD != null) {
-            props.put("ssl.truststore.type", "jks");
             props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
             props.put("ssl.truststore.password", Config.TRUSTSTORE_PASSWORD);
         }

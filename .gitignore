@@ -49,3 +49,4 @@ client.truststore.jks
 out
 node_modules
 dist
+secret-files

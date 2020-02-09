@@ -30,7 +30,7 @@ class Config {
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
-    public static String TRUSTSTORE_LOCATION;
+    public static String TRUSTSTORE_FILE_PATH;
     public static String KEYSTORE_LOCATION;
     public static String TRUSTSTORE_PASSWORD;
     public static String KEYSTORE_PASSWORD;
@@ -73,8 +73,7 @@ class Config {
 
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {
-            TRUSTSTORE_LOCATION = "client.truststore.jks";
-            copyFile(TRUSTSTORE_LOCATION, readFile(getString(dotenv, "TRUSTSTORE_FILE_PATH")));
+            TRUSTSTORE_FILE_PATH = getString(dotenv, "TRUSTSTORE_FILE_PATH");
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 
@@ -107,10 +106,6 @@ class Config {
 
     private static void writeToFile(String path, String value) throws IOException {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
-    }
-
-    private static void copyFile(String path, String value) throws IOException {
-        Files.write(Paths.get(path), value.getBytes(StandardCharsets.UTF_8));
     }
 
     private static String readFile(String path) throws IOException {

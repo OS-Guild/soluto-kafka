@@ -73,8 +73,7 @@ class Config {
 
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {
-            TRUSTSTORE_LOCATION = "client.truststore.jks";
-            writeToFile(TRUSTSTORE_LOCATION, readSecretFromFile(getString(dotenv, "TRUSTSTORE_FILE_PATH")));
+            TRUSTSTORE_LOCATION = getString(dotenv, "TRUSTSTORE_FILE_PATH");
             TRUSTSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 

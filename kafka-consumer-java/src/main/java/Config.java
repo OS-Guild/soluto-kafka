@@ -74,10 +74,8 @@ class Config {
         MANAGEMENT_SERVER_PORT = getOptionalInt(dotenv, "MANAGEMENT_SERVER_PORT", 0);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
-        String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
-        if (truststoreFilePath != null) {
-            TRUSTSTORE_LOCATION = "client.truststore.jks";
-            FileUtils.copyFile(new File(getString(dotenv, "TRUSTSTORE_FILE_PATH")), new File(TRUSTSTORE_LOCATION));
+        TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
+        if (TRUSTSTORE_FILE_PATH != null) {
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 

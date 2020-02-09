@@ -1,9 +1,11 @@
 import io.github.cdimascio.dotenv.Dotenv;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import org.codehaus.plexus.util.FileUtils;
 
 class Config {
     //Required
@@ -31,6 +33,7 @@ class Config {
     public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
     public static String TRUSTSTORE_FILE_PATH;
+    public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static String TRUSTSTORE_PASSWORD;
     public static String KEYSTORE_PASSWORD;
@@ -73,7 +76,8 @@ class Config {
 
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {
-            TRUSTSTORE_FILE_PATH = getString(dotenv, "TRUSTSTORE_FILE_PATH");
+            TRUSTSTORE_LOCATION = "client.truststore.jks";
+            FileUtils.copyFile(new File(getString(dotenv, "TRUSTSTORE_FILE_PATH")), new File(TRUSTSTORE_LOCATION));
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 

@@ -113,7 +113,6 @@ public class Monitor {
                     .put("errorMessages", errorMessages)
                     .put("class", exception.getClass())
                     .put("stacktrace", exception.getStackTrace())
-                    .put("innerExceptionMesssage", exception.getCause().getMessage())
             );
 
         write(log);

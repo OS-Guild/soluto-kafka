@@ -15,7 +15,7 @@ class KafkaCreator {
         props.put("security.protocol", Config.SECURITY_PROTOCOL);
 
         if (Config.TRUSTSTORE_PASSWORD != null) {
-            props.put("ssl.truststore.location", Config.TRUSTSTORE_FILE_PATH);
+            props.put("ssl.truststore.location", Config.TRUSTSTORE_LOCATION);
             props.put("ssl.truststore.password", Config.TRUSTSTORE_PASSWORD);
         }
 

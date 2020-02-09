@@ -1,11 +1,9 @@
 import io.github.cdimascio.dotenv.Dotenv;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
-import org.codehaus.plexus.util.FileUtils;
 
 class Config {
     //Required
@@ -32,7 +30,7 @@ class Config {
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
-    public static String TRUSTSTORE_FILE_PATH;
+    public static String BASE64_TRUSTSTORE_FILE_PATH;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static String TRUSTSTORE_PASSWORD;
@@ -74,8 +72,10 @@ class Config {
         MANAGEMENT_SERVER_PORT = getOptionalInt(dotenv, "MANAGEMENT_SERVER_PORT", 0);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
-        TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
-        if (TRUSTSTORE_FILE_PATH != null) {
+        BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
+        if (BASE64_TRUSTSTORE_FILE_PATH != null) {
+            TRUSTSTORE_LOCATION = "client.truststore.jks";
+            writeToFile(TRUSTSTORE_LOCATION, readFile(getString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH")));
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 

@@ -236,10 +236,10 @@ public class Monitor {
     }
 
     private static ArrayList<String> getAllErrorMessages(Throwable exception, ArrayList<String> messages) {
-        messages.add(exception.getMessage());
-        if (exception.getCause() == null) {
+        if (exception == null) {
             return messages;
         }
+        messages.add(exception.getMessage());
         return getAllErrorMessages(exception.getCause(), messages);
     }
 }

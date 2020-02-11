@@ -13,12 +13,12 @@ import java.net.URI;
 import java.util.List;
 
 public class MonitoringServer {
-    List<? extends IConsumerLoopLifecycle> consumerLoops;
+    List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
     HttpServer server;
     private static final HttpClient client = HttpClient.newHttpClient();
 
-    public MonitoringServer(final List<? extends IConsumerLoopLifecycle> consumerLoops) {
-        this.consumerLoops = consumerLoops;
+    public MonitoringServer(final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles) {
+        this.consumerLoopLifecycles = consumerLoopLifecycles;
     }
 
     public void start() throws IOException {
@@ -56,7 +56,7 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!consumerReady(consumerLoops)) {
+                    if (!consumerReady(consumerLoopLifecycles)) {
                         writeResponse(500, exchange);
                     }
 

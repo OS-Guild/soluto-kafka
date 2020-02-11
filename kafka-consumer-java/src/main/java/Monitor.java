@@ -1,6 +1,7 @@
 import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,6 +13,9 @@ import org.json.JSONObject;
 public class Monitor {
     static StatsDClient statsdClient;
     static Histogram messageLatencyHistogram;
+    static Counter processMessageSuccessCounter;
+    static Histogram processMessageExecutionTime;
+    static Counter processMessageErrorCounter;
 
     public static void init() {
         if (Config.STATSD_CONFIGURED) {
@@ -30,6 +34,20 @@ public class Monitor {
                     .name("message_latency")
                     .help("message_latency")
                     .register();
+
+            processMessageSuccessCounter =
+                Counter.build().name("process_message_success").help("process_message_success").register();
+
+            processMessageExecutionTime =
+                Histogram
+                    .build()
+                    .buckets(3, 30, 100, 300, 1500, 10000)
+                    .name("process_message_execution_time")
+                    .help("process_message_execution_time")
+                    .register();
+
+            processMessageErrorCounter =
+                Counter.build().name("process_message_error").help("process_message_error").register();
         }
     }
 
@@ -50,13 +68,8 @@ public class Monitor {
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        var latency = (new Date()).getTime() - record.timestamp();
-        if (statsdClient != null) {
-            statsdClient.recordExecutionTime("message.latency", latency);
-            statsdClient.recordExecutionTime("message." + record.partition() + ".latency", latency);
-        }
         if (messageLatencyHistogram != null) {
-            messageLatencyHistogram.observe(latency);
+            messageLatencyHistogram.observe((new Date()).getTime() - record.timestamp());
         }
     }
 
@@ -75,9 +88,19 @@ public class Monitor {
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
     }
 
-    public static void processMessageCompleted(long executionStart) {
-        if (statsdClient == null) return;
-        statsdClient.recordExecutionTime("processMessage.ExecutionTime", new Date().getTime() - executionStart);
+    public static void processMessageSuccess(long executionStart) {
+        if (processMessageSuccessCounter != null) {
+            processMessageSuccessCounter.inc();
+        }
+        if (processMessageExecutionTime != null) {
+            processMessageExecutionTime.observe(new Date().getTime() - executionStart);
+        }
+    }
+
+    public static void processMessageFailed() {
+        if (processMessageErrorCounter != null) {
+            processMessageErrorCounter.inc();
+        }
     }
 
     public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {

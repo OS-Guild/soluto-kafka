@@ -30,6 +30,7 @@ class Config {
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
     public static String SECURITY_PROTOCOL;
+    public static String BASE64_TRUSTSTORE_FILE_PATH;
     public static String TRUSTSTORE_LOCATION;
     public static String KEYSTORE_LOCATION;
     public static String TRUSTSTORE_PASSWORD;
@@ -73,32 +74,32 @@ class Config {
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
-        String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
-        if (truststoreFilePath != null) {
+        BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
+        if (BASE64_TRUSTSTORE_FILE_PATH != null) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
-            writeToFile(TRUSTSTORE_LOCATION, readSecretFromFile(getString(dotenv, "TRUSTSTORE_FILE_PATH")));
-            TRUSTSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
+            writeToFile(TRUSTSTORE_LOCATION, readFile(getString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH")));
+            TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
 
         SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
 
         if (SECURITY_PROTOCOL.equals("SSL")) {
             KEYSTORE_LOCATION = "client.keystore.p12";
-            KEYSTORE_PASSWORD = readSecretFromFile(getString(dotenv, "KEYSTORE_PASSWORD_FILE_PATH"));
-            writeToFile(KEYSTORE_LOCATION, readSecretFromFile(getString(dotenv, "KEYSTORE_FILE_PATH")));
-            KEY_PASSWORD = readSecretFromFile(getString(dotenv, "KEY_PASSWORD_FILE_PATH"));
+            KEYSTORE_PASSWORD = readFile(getString(dotenv, "KEYSTORE_PASSWORD_FILE_PATH"));
+            writeToFile(KEYSTORE_LOCATION, readFile(getString(dotenv, "KEYSTORE_FILE_PATH")));
+            KEY_PASSWORD = readFile(getString(dotenv, "KEY_PASSWORD_FILE_PATH"));
             AUTHENTICATED_KAFKA = true;
         }
 
         if (SECURITY_PROTOCOL.equals("SASL_SSL")) {
             SASL_USERNAME = getString(dotenv, "SASL_USERNAME");
-            SASL_PASSWORD = readSecretFromFile(getString(dotenv, "SASL_PASSWORD_FILE_PATH"));
+            SASL_PASSWORD = readFile(getString(dotenv, "SASL_PASSWORD_FILE_PATH"));
             AUTHENTICATED_KAFKA = true;
         }
 
         STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);
         if (STATSD_CONSUMER_NAME != null) {
-            STATSD_API_KEY = readSecretFromFile(getString(dotenv, "STATSD_API_KEY_FILE_PATH"));
+            STATSD_API_KEY = readFile(getString(dotenv, "STATSD_API_KEY_FILE_PATH"));
             STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
             STATSD_HOST = getString(dotenv, "STATSD_HOST");
             STATSD_CONFIGURED = true;
@@ -111,7 +112,7 @@ class Config {
         Files.write(Paths.get(path), Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8)));
     }
 
-    private static String readSecretFromFile(String path) throws IOException {
+    private static String readFile(String path) throws IOException {
         return new String(Files.readAllBytes(Paths.get(path)));
     }
 

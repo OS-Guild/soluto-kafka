@@ -2,6 +2,7 @@ import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import io.prometheus.client.Histogram;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -97,13 +98,19 @@ public class Monitor {
     }
 
     public static void unexpectedError(Exception exception) {
+        var messages = getAllErrorMessages(exception, new ArrayList<String>());
+        var errorMessages = new JSONObject();
+        for (var i = 0; i < messages.size(); i++) {
+            errorMessages.put("message" + i, messages.get(i));
+        }
+
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "unexpected error")
             .put(
                 "err",
                 new JSONObject()
-                    .put("message", exception.getMessage())
+                    .put("errorMessages", errorMessages)
                     .put("class", exception.getClass())
                     .put("stacktrace", exception.getStackTrace())
             );
@@ -225,5 +232,13 @@ public class Monitor {
 
     private static void write(JSONObject log) {
         System.out.println(log.toString());
+    }
+
+    private static ArrayList<String> getAllErrorMessages(Throwable exception, ArrayList<String> messages) {
+        if (exception == null) {
+            return messages;
+        }
+        messages.add(exception.getMessage());
+        return getAllErrorMessages(exception.getCause(), messages);
     }
 }

@@ -46,6 +46,7 @@ class Config {
     public static String STATSD_ROOT;
     public static String STATSD_HOST;
     public static boolean USE_PROMETHEUS;
+    public static String PROMETHEUS_BUCKETS;
     public static boolean HIDE_CONSUMED_MESSAGE;
     public static String TARGET_IS_ALIVE_HTTP_ENDPOINT;
 
@@ -105,6 +106,7 @@ class Config {
             STATSD_CONFIGURED = true;
         }
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
         HIDE_CONSUMED_MESSAGE = getOptionalBool(dotenv, "HIDE_CONSUMED_MESSAGE", false);
     }
 

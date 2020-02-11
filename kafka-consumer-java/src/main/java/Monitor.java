@@ -1,10 +1,13 @@
 import com.google.common.collect.Iterators;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
+import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
@@ -12,6 +15,10 @@ import org.json.JSONObject;
 public class Monitor {
     static StatsDClient statsdClient;
     static Histogram messageLatencyHistogram;
+    static Counter processMessageStartedCounter;
+    static Counter processMessageSuccessCounter;
+    static Histogram processMessageExecutionTime;
+    static Counter processMessageErrorCounter;
 
     public static void init() {
         if (Config.STATSD_CONFIGURED) {
@@ -22,14 +29,35 @@ public class Monitor {
                     8125
                 );
         }
+
         if (Config.USE_PROMETHEUS) {
+            var buckets = ArrayUtils.toPrimitive(
+                Arrays
+                    .asList(Config.PROMETHEUS_BUCKETS.split(","))
+                    .stream()
+                    .map(s -> Double.parseDouble(s))
+                    .toArray(Double[]::new)
+            );
+
             messageLatencyHistogram =
+                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
+
+            processMessageStartedCounter =
+                Counter.build().name("process_message_started").help("process_message_started").register();
+
+            processMessageSuccessCounter =
+                Counter.build().name("process_message_success").help("process_message_success").register();
+
+            processMessageExecutionTime =
                 Histogram
                     .build()
-                    .buckets(3, 30, 100, 300, 1500, 10000)
-                    .name("message_latency")
-                    .help("message_latency")
+                    .buckets(buckets)
+                    .name("process_message_execution_time")
+                    .help("process_message_execution_time")
                     .register();
+
+            processMessageErrorCounter =
+                Counter.build().name("process_message_error").help("process_message_error").register();
         }
     }
 
@@ -50,13 +78,8 @@ public class Monitor {
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        var latency = (new Date()).getTime() - record.timestamp();
-        if (statsdClient != null) {
-            statsdClient.recordExecutionTime("message.latency", latency);
-            statsdClient.recordExecutionTime("message." + record.partition() + ".latency", latency);
-        }
         if (messageLatencyHistogram != null) {
-            messageLatencyHistogram.observe(latency);
+            messageLatencyHistogram.observe(((new Date()).getTime() - record.timestamp() / 1000));
         }
     }
 
@@ -75,9 +98,25 @@ public class Monitor {
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
     }
 
-    public static void processMessageCompleted(long executionStart) {
-        if (statsdClient == null) return;
-        statsdClient.recordExecutionTime("processMessage.ExecutionTime", new Date().getTime() - executionStart);
+    public static void processMessageStarted() {
+        if (processMessageStartedCounter != null) {
+            processMessageStartedCounter.inc();
+        }
+    }
+
+    public static void processMessageSuccess(long executionStart) {
+        if (processMessageSuccessCounter != null) {
+            processMessageSuccessCounter.inc();
+        }
+        if (processMessageExecutionTime != null) {
+            processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
+        }
+    }
+
+    public static void processMessageFailed() {
+        if (processMessageErrorCounter != null) {
+            processMessageErrorCounter.inc();
+        }
     }
 
     public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {

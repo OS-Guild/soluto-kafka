@@ -27,11 +27,12 @@ public class TargetRetryPolicy {
 
                     if (400 <= statusCode && statusCode < 500) {
                         if (deadLetterTopic != null) {
+                            Monitor.processMessageFailed();
                             producer.produce("deadLetter", deadLetterTopic, record);
                         }
                         return;
                     }
-                    Monitor.processMessageCompleted(executionStart);
+                    Monitor.processMessageSuccess(executionStart);
                 }
             )
             .onFailedAttempt(

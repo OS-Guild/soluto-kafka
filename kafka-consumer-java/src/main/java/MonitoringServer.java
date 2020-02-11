@@ -21,18 +21,18 @@ public class MonitoringServer {
         this.consumerLoops = consumerLoops;
     }
 
-    public MonitoringServer start() throws IOException {
-        if (Config.MONITORING_SERVER_PORT != 0) {
-            server = HttpServer.create(new InetSocketAddress(Config.MONITORING_SERVER_PORT), 0);
-            isAliveGetRoute(server);
-            if (Config.USE_PROMETHEUS) {
-                DefaultExports.initialize();
-                new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
-            } else {
-                server.start();
-            }
+    public void start() throws IOException {
+        if (Config.MONITORING_SERVER_PORT == 0) {
+            return;
         }
-        return this;
+        server = HttpServer.create(new InetSocketAddress(Config.MONITORING_SERVER_PORT), 0);
+        isAliveGetRoute(server);
+        if (Config.USE_PROMETHEUS) {
+            DefaultExports.initialize();
+            new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
+        } else {
+            server.start();
+        }
     }
 
     public void close() {

@@ -50,8 +50,8 @@ public class Main {
                 consumerLoops.add(retryConsumerLoop);
             }
 
-            var managementServer = new ManagementServer(consumerLoops);
-            managementServer.start();
+            var monitoringServer = new MonitoringServer(consumerLoops);
+            monitoringServer.start();
 
             Runtime
                 .getRuntime()
@@ -59,7 +59,7 @@ public class Main {
                     new Thread(
                         () -> {
                             consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
-                            managementServer.close();
+                            monitoringServer.close();
                             Monitor.serviceShutdown();
                         }
                     )
@@ -67,7 +67,7 @@ public class Main {
 
             Monitor.started();
             countDownLatch.await();
-            managementServer.close();
+            monitoringServer.close();
             Monitor.serviceTerminated();
         } catch (Exception e) {
             Monitor.unexpectedError(e);

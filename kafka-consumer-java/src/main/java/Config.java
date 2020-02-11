@@ -24,7 +24,7 @@ class Config {
     public static int POLL_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
-    public static int MANAGEMENT_SERVER_PORT;
+    public static int MONITORING_SERVER_PORT;
     public static boolean DEBUG;
 
     //Authentication
@@ -48,6 +48,7 @@ class Config {
     public static boolean USE_PROMETHEUS;
     public static String PROMETHEUS_BUCKETS;
     public static boolean HIDE_CONSUMED_MESSAGE;
+    public static String TARGET_IS_ALIVE_HTTP_ENDPOINT;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -70,7 +71,8 @@ class Config {
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
         CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
-        MANAGEMENT_SERVER_PORT = getOptionalInt(dotenv, "MANAGEMENT_SERVER_PORT", 0);
+        MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
+        TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
 
         BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);

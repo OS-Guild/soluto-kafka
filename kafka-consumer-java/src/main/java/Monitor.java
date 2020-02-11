@@ -13,6 +13,7 @@ import org.json.JSONObject;
 public class Monitor {
     static StatsDClient statsdClient;
     static Histogram messageLatencyHistogram;
+    static Counter processMessageStartedCounter;
     static Counter processMessageSuccessCounter;
     static Histogram processMessageExecutionTime;
     static Counter processMessageErrorCounter;
@@ -34,6 +35,9 @@ public class Monitor {
                     .name("message_latency")
                     .help("message_latency")
                     .register();
+
+            processMessageStartedCounter =
+                Counter.build().name("process_message_started").help("process_message_started").register();
 
             processMessageSuccessCounter =
                 Counter.build().name("process_message_success").help("process_message_success").register();
@@ -86,6 +90,12 @@ public class Monitor {
     public static void processCompleted(long executionStart) {
         if (statsdClient == null) return;
         statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
+    }
+
+    public static void processMessageStarted() {
+        if (processMessageStartedCounter != null) {
+            processMessageStartedCounter.inc();
+        }
     }
 
     public static void processMessageSuccess(long executionStart) {

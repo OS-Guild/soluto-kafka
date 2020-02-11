@@ -34,6 +34,7 @@ class Processor {
         return Flowable
             .fromIterable(partition)
             .doOnNext(Monitor::messageLatency)
+            .doOnNext(__ -> Monitor.processMessageStarted())
             .flatMap(record -> Flowable.fromFuture(target.call(record)), Config.CONCURRENCY_PER_PARTITION)
             .doOnNext(
                 x -> {

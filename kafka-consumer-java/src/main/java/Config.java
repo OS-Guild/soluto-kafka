@@ -104,7 +104,7 @@ class Config {
             STATSD_CONFIGURED = true;
         }
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
-        PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "");
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
         HIDE_CONSUMED_MESSAGE = getOptionalBool(dotenv, "HIDE_CONSUMED_MESSAGE", false);
     }
 

@@ -4,8 +4,10 @@ import com.timgroup.statsd.StatsDClient;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
@@ -27,14 +29,18 @@ public class Monitor {
                     8125
                 );
         }
+
         if (Config.USE_PROMETHEUS) {
+            var buckets = ArrayUtils.toPrimitive(
+                Arrays
+                    .asList(Config.PROMETHEUS_BUCKETS.split(","))
+                    .stream()
+                    .map(s -> Double.parseDouble(s))
+                    .toArray(Double[]::new)
+            );
+
             messageLatencyHistogram =
-                Histogram
-                    .build()
-                    .buckets(0.003, 0.03, 0.1, 0.3, 1.5, 10)
-                    .name("message_latency")
-                    .help("message_latency")
-                    .register();
+                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
 
             processMessageStartedCounter =
                 Counter.build().name("process_message_started").help("process_message_started").register();
@@ -45,7 +51,7 @@ public class Monitor {
             processMessageExecutionTime =
                 Histogram
                     .build()
-                    .buckets(0.003, 0.03, 0.1, 0.3, 1.5, 10)
+                    .buckets(buckets)
                     .name("process_message_execution_time")
                     .help("process_message_execution_time")
                     .register();

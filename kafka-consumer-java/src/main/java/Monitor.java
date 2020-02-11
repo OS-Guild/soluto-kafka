@@ -31,7 +31,7 @@ public class Monitor {
             messageLatencyHistogram =
                 Histogram
                     .build()
-                    .buckets(3, 30, 100, 300, 1500, 10000)
+                    .buckets(0.003, 0.03, 0.1, 0.3, 1.5, 10)
                     .name("message_latency")
                     .help("message_latency")
                     .register();
@@ -45,7 +45,7 @@ public class Monitor {
             processMessageExecutionTime =
                 Histogram
                     .build()
-                    .buckets(3, 30, 100, 300, 1500, 10000)
+                    .buckets(0.003, 0.03, 0.1, 0.3, 1.5, 10)
                     .name("process_message_execution_time")
                     .help("process_message_execution_time")
                     .register();
@@ -73,7 +73,7 @@ public class Monitor {
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
         if (messageLatencyHistogram != null) {
-            messageLatencyHistogram.observe((new Date()).getTime() - record.timestamp());
+            messageLatencyHistogram.observe(((new Date()).getTime() - record.timestamp() / 1000));
         }
     }
 
@@ -103,7 +103,7 @@ public class Monitor {
             processMessageSuccessCounter.inc();
         }
         if (processMessageExecutionTime != null) {
-            processMessageExecutionTime.observe(new Date().getTime() - executionStart);
+            processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
         }
     }
 

@@ -79,10 +79,13 @@ public class MonitoringServer {
     private static boolean targetAlive(HttpExchange exchange) throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {
-                var targetIsAliveResponse = client.send(
-                    HttpRequest.newBuilder().uri(URI.create(Config.TARGET_IS_ALIVE_HTTP_ENDPOINT)).build(),
-                    HttpResponse.BodyHandlers.ofString()
-                );
+                final var request = HttpRequest
+                    .newBuilder()
+                    .GET()
+                    .uri(URI.create(Config.TARGET_IS_ALIVE_HTTP_ENDPOINT))
+                    .build();
+
+                var targetIsAliveResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
                 if (targetIsAliveResponse.statusCode() != 200) {
                     Monitor.targetNotAlive(targetIsAliveResponse.statusCode());
                     return false;

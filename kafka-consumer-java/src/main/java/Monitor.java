@@ -170,7 +170,7 @@ public class Monitor {
             .put("level", "info")
             .put(
                 "message",
-                "kafka-consumer-" + id + "-" + Config.TOPIC + "-" + Config.GROUP_ID + " was assiged to a partition"
+                "kafka-consumer-" + id + "-" + Config.TOPIC + "-" + Config.GROUP_ID + " was assigned to partitions"
             );
 
         write(log);

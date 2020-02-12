@@ -1,4 +1,4 @@
 public interface IConsumerLoopLifecycle {
-    public boolean ready();
+    public boolean assignedToPartition();
     public void stop();
 }

@@ -25,6 +25,7 @@ public class MonitoringServer {
         if (Config.MONITORING_SERVER_PORT == 0) {
             return;
         }
+
         server = HttpServer.create(new InetSocketAddress(Config.MONITORING_SERVER_PORT), 0);
         isAliveGetRoute(server);
         if (Config.USE_PROMETHEUS) {
@@ -41,6 +42,7 @@ public class MonitoringServer {
 
     private void isAliveGetRoute(final HttpServer server) {
         final var httpContext = server.createContext("/isAlive");
+
         httpContext.setHandler(
             new HttpHandler() {
 
@@ -51,12 +53,12 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!targetAvailable(exchange)) {
+                    if (!targetAlive(exchange)) {
                         writeResponse(500, exchange);
                         return;
                     }
 
-                    if (!consumerReady(consumerLoopLifecycles)) {
+                    if (!consumerAssignedToAtLeastOnePartition(consumerLoopLifecycles)) {
                         writeResponse(500, exchange);
                     }
 
@@ -66,11 +68,15 @@ public class MonitoringServer {
         );
     }
 
-    private static boolean consumerReady(List<? extends IConsumerLoopLifecycle> consumerLoops) {
-        return consumerLoops.stream().map(x -> x.ready()).anyMatch(y -> y.equals(true));
+    private static boolean consumerAssignedToAtLeastOnePartition(List<? extends IConsumerLoopLifecycle> consumerLoops) {
+        var response = consumerLoops.stream().map(x -> x.assignedToPartition()).anyMatch(y -> y.equals(true));
+        if (!response) {
+            Monitor.consumerNotAssignedToAtLeastOnePartition();
+        }
+        return response;
     }
 
-    private static boolean targetAvailable(HttpExchange exchange) throws IOException {
+    private static boolean targetAlive(HttpExchange exchange) throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {
                 var targetIsAliveResponse = client.send(
@@ -78,10 +84,12 @@ public class MonitoringServer {
                     HttpResponse.BodyHandlers.ofString()
                 );
                 if (targetIsAliveResponse.statusCode() != 200) {
+                    Monitor.targetNotAlive(targetIsAliveResponse.statusCode());
                     return false;
                 }
                 return true;
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                Monitor.unexpectedError(e);
                 return false;
             }
         }

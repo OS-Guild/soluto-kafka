@@ -12,7 +12,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     private KafkaConsumer<String, String> consumer;
     private String topic;
     private boolean running;
-    private boolean ready;
+    private boolean assignedToPartition;
     private int id;
 
     ConsumerLoop(
@@ -38,9 +38,9 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
         try {
             while (running) {
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
-                if (!ready && consumer.assignment().size() > 0) {
-                    ready = true;
-                    Monitor.ready(id);
+                if (!assignedToPartition && consumer.assignment().size() > 0) {
+                    assignedToPartition = true;
+                    Monitor.assignedToPartition(id);
                 }
                 if (consumed.count() == 0) continue;
                 Monitor.consumed(consumed);
@@ -66,7 +66,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 Monitor.unexpectedError(e);
             }
         } finally {
-            ready = false;
+            assignedToPartition = false;
             consumer.unsubscribe();
             consumer.close();
         }
@@ -77,7 +77,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     }
 
     @Override
-    public boolean ready() {
-        return ready;
+    public boolean assignedToPartition() {
+        return assignedToPartition;
     }
 }

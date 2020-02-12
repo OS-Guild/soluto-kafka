@@ -165,10 +165,13 @@ public class Monitor {
         write(log);
     }
 
-    public static void ready(int id) {
+    public static void assignedToPartition(int id) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + id + "-" + Config.TOPIC + "-" + Config.GROUP_ID + " ready");
+            .put(
+                "message",
+                "kafka-consumer-" + id + "-" + Config.TOPIC + "-" + Config.GROUP_ID + " was assiged to a partition"
+            );
 
         write(log);
     }
@@ -258,6 +261,23 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "target connection unavailable, terminating consumer");
+
+        write(log);
+    }
+
+    public static void targetNotAlive(int targetIsAliveStatusCode) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "target not alive")
+            .put("targetIsAliveStatusCode", targetIsAliveStatusCode);
+
+        write(log);
+    }
+
+    public static void consumerNotAssignedToAtLeastOnePartition() {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "none of the consumer threads are assigned to a partition");
 
         write(log);
     }

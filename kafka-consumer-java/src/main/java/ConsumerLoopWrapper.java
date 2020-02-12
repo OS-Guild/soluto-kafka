@@ -16,8 +16,8 @@ public class ConsumerLoopWrapper implements Runnable, IConsumerLoopLifecycle {
     }
 
     @Override
-    public boolean ready() {
-        return this.consumerLoop.ready();
+    public boolean assignedToPartition() {
+        return this.consumerLoop.assignedToPartition();
     }
 
     @Override

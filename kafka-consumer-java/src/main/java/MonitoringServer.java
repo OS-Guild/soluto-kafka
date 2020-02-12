@@ -90,6 +90,7 @@ public class MonitoringServer {
                     Monitor.targetNotAlive(targetIsAliveResponse.statusCode());
                     return false;
                 }
+                Monitor.targetAlive(targetIsAliveResponse.statusCode());
                 return true;
             } catch (Exception e) {
                 Monitor.unexpectedError(e);

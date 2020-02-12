@@ -274,6 +274,17 @@ public class Monitor {
         write(log);
     }
 
+    public static void targetAlive(int targetIsAliveStatusCode) {
+        if (Config.DEBUG) {
+            JSONObject log = new JSONObject()
+                .put("level", "info")
+                .put("message", "target alive")
+                .put("targetIsAliveStatusCode", targetIsAliveStatusCode);
+
+            write(log);
+        }
+    }
+
     public static void consumerNotAssignedToAtLeastOnePartition() {
         JSONObject log = new JSONObject()
             .put("level", "info")

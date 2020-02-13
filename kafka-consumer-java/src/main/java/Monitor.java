@@ -121,7 +121,7 @@ public class Monitor {
 
     public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {
         JSONObject log = new JSONObject()
-            .put("level", "error")
+            .put("level", "info")
             .put("message", String.format("%s produced", topicPrefix))
             .put(
                 "extra",

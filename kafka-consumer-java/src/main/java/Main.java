@@ -5,13 +5,13 @@ import java.util.List;
 public class Main {
     static List<ConsumerLoopWrapper> consumerLoops = new ArrayList<>();
     static CountDownLatch countDownLatch;
+    static MonitoringServer monitoringServer;
 
     public static void main(String[] args) {
         try {
             Config.init();
             Monitor.init();
             var kafkaCreator = new KafkaCreator();
-            countDownLatch = new CountDownLatch(Config.CONSUMER_THREADS);
 
             var producer = kafkaCreator.createProducer();
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
@@ -50,9 +50,6 @@ public class Main {
                 consumerLoops.add(retryConsumerLoop);
             }
 
-            var monitoringServer = new MonitoringServer(consumerLoops);
-            monitoringServer.start();
-
             Runtime
                 .getRuntime()
                 .addShutdownHook(
@@ -65,12 +62,19 @@ public class Main {
                     )
                 );
 
+            monitoringServer = new MonitoringServer(consumerLoops);
+            monitoringServer.start();
             Monitor.started();
+
+            countDownLatch = new CountDownLatch(consumerLoops.size());
             countDownLatch.await();
-            monitoringServer.close();
-            Monitor.serviceTerminated();
         } catch (Exception e) {
             Monitor.unexpectedError(e);
+            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
+        } finally {
+            monitoringServer.close();
+            Monitor.serviceTerminated();
+            System.exit(0);
         }
     }
 }

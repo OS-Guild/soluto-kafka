@@ -12,7 +12,6 @@ public class ConsumerLoopWrapper implements Runnable, IConsumerLoopLifecycle {
     @Override
     public void run() {
         this.consumerLoop.run();
-        this.countDownLatch.countDown();
     }
 
     @Override
@@ -23,5 +22,6 @@ public class ConsumerLoopWrapper implements Runnable, IConsumerLoopLifecycle {
     @Override
     public void stop() {
         consumerLoop.stop();
+        this.countDownLatch.countDown();
     }
 }

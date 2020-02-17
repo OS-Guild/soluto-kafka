@@ -89,7 +89,7 @@ public class Monitor {
     }
 
     public static void processMessageStarted() {
-        if (processMessageStarted != null) {
+        if (processMessageStarted == null) {
             processMessageStarted =
                 Counter.build().name("process_message_started").help("process_message_started").register();
         }

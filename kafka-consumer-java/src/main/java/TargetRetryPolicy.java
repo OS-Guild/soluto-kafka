@@ -29,6 +29,7 @@ public class TargetRetryPolicy {
                         if (deadLetterTopic != null) {
                             Monitor.processMessageFailed();
                             producer.produce("deadLetter", deadLetterTopic, record);
+                            Monitor.deadLetterProcdued(record);
                         }
                         return;
                     }
@@ -47,6 +48,7 @@ public class TargetRetryPolicy {
                 __ -> {
                     if (retryTopic != null) {
                         producer.produce("retry", retryTopic, record);
+                        Monitor.retryProduced(record);
                     }
                 }
             );

@@ -17,8 +17,6 @@ public class Producer {
                     Monitor.produceError(topicPrefix, record, err);
                     return;
                 }
-
-                Monitor.topicProduced(topicPrefix, record);
             }
         );
     }

@@ -1,6 +1,3 @@
-import com.google.common.collect.Iterators;
-import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
@@ -13,23 +10,21 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
 
 public class Monitor {
-    static StatsDClient statsdClient;
-    static Histogram messageLatencyHistogram;
-    static Counter processMessageStartedCounter;
-    static Counter processMessageSuccessCounter;
-    static Histogram processMessageExecutionTime;
-    static Counter processMessageErrorCounter;
+    private static Counter processMessageStarted;
+    private static Counter processMessageSuccess;
+    private static Counter processMessageError;
+    private static Counter consumed;
+    private static Counter retryProduced;
+    private static Counter deadLetterProduced;
+    private static Counter produceError;
+    private static Counter targetExecutionRetry;
+    private static Histogram messageLatency;
+    private static Histogram processMessageExecutionTime;
+    private static Histogram processExecutionTime;
+    private static Histogram callTargetLatency;
+    private static Histogram resultTargetLatency;
 
     public static void init() {
-        if (Config.STATSD_CONFIGURED) {
-            statsdClient =
-                new NonBlockingStatsDClient(
-                    Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_CONSUMER_NAME,
-                    Config.STATSD_HOST,
-                    8125
-                );
-        }
-
         if (Config.USE_PROMETHEUS) {
             var buckets = ArrayUtils.toPrimitive(
                 Arrays
@@ -39,14 +34,25 @@ public class Monitor {
                     .toArray(Double[]::new)
             );
 
-            messageLatencyHistogram =
-                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
-
-            processMessageStartedCounter =
+            processMessageStarted =
                 Counter.build().name("process_message_started").help("process_message_started").register();
 
-            processMessageSuccessCounter =
+            processMessageSuccess =
                 Counter.build().name("process_message_success").help("process_message_success").register();
+
+            processMessageError =
+                Counter.build().name("process_message_error").help("process_message_error").register();
+
+            consumed = Counter.build().name("consumed").help("consumed").register();
+
+            retryProduced = Counter.build().name("retry_produced").help("retry_produced").register();
+
+            deadLetterProduced = Counter.build().name("dead_letter_produced").help("dead_letter_produced").register();
+
+            produceError = Counter.build().name("produce_error").help("produce_error").register();
+
+            messageLatency =
+                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
 
             processMessageExecutionTime =
                 Histogram
@@ -56,57 +62,76 @@ public class Monitor {
                     .help("process_message_execution_time")
                     .register();
 
-            processMessageErrorCounter =
-                Counter.build().name("process_message_error").help("process_message_error").register();
+            processExecutionTime =
+                Histogram
+                    .build()
+                    .buckets(buckets)
+                    .name("process_execution_time")
+                    .help("process_execution_time")
+                    .register();
+
+            callTargetLatency =
+                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
+
+            resultTargetLatency =
+                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
+
+            targetExecutionRetry =
+                Counter
+                    .build()
+                    .name("target_execution_rerty")
+                    .labelNames("attempt")
+                    .help("target_execution_rerty")
+                    .register();
         }
     }
 
-    public static void consumed(ConsumerRecords<String, String> consumed) {
+    public static void consumed(ConsumerRecords<String, String> records) {
         JSONObject log = new JSONObject()
             .put("level", "debug")
             .put("message", "consumed messages")
-            .put("extra", new JSONObject().put("count", consumed.count()));
+            .put("extra", new JSONObject().put("count", records.count()));
 
         write(log);
-        if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("consumed", consumed.count());
-    }
 
-    public static void consumedPartitioned(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) {
-        if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("consumed-partitions", Iterators.size(partitions.iterator()));
+        if (consumed != null) {
+            consumed.inc(records.count());
+        }
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        if (messageLatencyHistogram != null) {
-            messageLatencyHistogram.observe(((new Date()).getTime() - record.timestamp() / 1000));
+        if (messageLatency != null) {
+            messageLatency.observe(((new Date()).getTime() - record.timestamp()) / 1000);
         }
     }
 
     public static void callTargetLatency(long latency) {
-        if (statsdClient == null) return;
-        statsdClient.recordExecutionTime("callTarget.latency", latency);
+        if (callTargetLatency != null) {
+            callTargetLatency.observe(latency);
+        }
     }
 
     public static void resultTargetLatency(long latency) {
-        if (statsdClient == null) return;
-        statsdClient.recordExecutionTime("resultTarget.latency", latency);
+        if (resultTargetLatency != null) {
+            resultTargetLatency.observe(latency);
+        }
     }
 
     public static void processCompleted(long executionStart) {
-        if (statsdClient == null) return;
-        statsdClient.recordExecutionTime("process.ExecutionTime", new Date().getTime() - executionStart);
+        if (processExecutionTime != null) {
+            processExecutionTime.observe(((new Date().getTime() - executionStart)) / 1000);
+        }
     }
 
     public static void processMessageStarted() {
-        if (processMessageStartedCounter != null) {
-            processMessageStartedCounter.inc();
+        if (processMessageStarted != null) {
+            processMessageStarted.inc();
         }
     }
 
     public static void processMessageSuccess(long executionStart) {
-        if (processMessageSuccessCounter != null) {
-            processMessageSuccessCounter.inc();
+        if (processMessageSuccess != null) {
+            processMessageSuccess.inc();
         }
         if (processMessageExecutionTime != null) {
             processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
@@ -114,26 +139,34 @@ public class Monitor {
     }
 
     public static void processMessageFailed() {
-        if (processMessageErrorCounter != null) {
-            processMessageErrorCounter.inc();
+        if (processMessageError != null) {
+            processMessageError.inc();
         }
     }
 
-    public static void topicProduced(String topicPrefix, ConsumerRecord<String, String> consumerRecord) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", String.format("%s produced", topicPrefix))
-            .put(
-                "extra",
-                new JSONObject()
-                    .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE) ? consumerRecord.value() : "Hidden")
-            );
+    public static void retryProduced(ConsumerRecord<String, String> consumerRecord) {
+        var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
+        if (Config.LOG_RECORD) {
+            extra.put("value", consumerRecord.value());
+        }
+        JSONObject log = new JSONObject().put("level", "info").put("message", "retry produced").put("extra", extra);
 
         write(log);
+        retryProduced.inc();
+    }
 
-        if (statsdClient == null) return;
-        statsdClient.incrementCounter(String.format("%sProduced", topicPrefix));
+    public static void deadLetterProcdued(ConsumerRecord<String, String> consumerRecord) {
+        var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
+        if (Config.LOG_RECORD) {
+            extra.put("value", consumerRecord.value());
+        }
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "dead letter produced")
+            .put("extra", extra);
+
+        write(log);
+        deadLetterProduced.inc();
     }
 
     public static void unexpectedError(Exception exception) {
@@ -205,20 +238,19 @@ public class Monitor {
         ConsumerRecord<String, String> consumerRecord,
         Exception exception
     ) {
+        var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
+        if (Config.LOG_RECORD) {
+            extra.put("value", consumerRecord.value());
+        }
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", String.format("failed producing message to %s topic", topicPrefix))
-            .put(
-                "extra",
-                new JSONObject()
-                    .put("message", new JSONObject().put("key", consumerRecord.key()))
-                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE) ? consumerRecord.value() : "Hidden")
-            )
+            .put("extra", extra)
             .put("err", new JSONObject().put("message", exception.getMessage()));
 
         write(log);
-        if (statsdClient == null) return;
-        statsdClient.incrementCounter(String.format("%sProduceError", topicPrefix));
+
+        produceError.inc();
     }
 
     public static void targetExecutionRetry(
@@ -227,17 +259,11 @@ public class Monitor {
         Throwable exception,
         int attempt
     ) {
-        JSONObject log = new JSONObject().put("level", "info").put("message", "target retry");
-
-        var extra = new JSONObject()
-            .put(
-                "message",
-                new JSONObject()
-                    .put("key", consumerRecord.key())
-                    .put("value", (!Config.HIDE_CONSUMED_MESSAGE) ? consumerRecord.value() : "Hidden")
-            )
-            .put("attempt", attempt);
-
+        var extra = new JSONObject();
+        extra.put("message", new JSONObject().put("key", consumerRecord.key()));
+        if (Config.LOG_RECORD) {
+            extra.put("value", consumerRecord.value());
+        }
         if (responseBody.isPresent()) {
             extra.put("response", responseBody.get());
         }
@@ -248,13 +274,16 @@ public class Monitor {
             error.put("type", exception.getClass());
         }
 
+        JSONObject log = new JSONObject().put("level", "info").put("message", "target retry");
+
         log.put("extra", extra);
         log.put("err", error);
 
         write(log);
 
-        if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("targetExecutionRetry." + attempt, 1);
+        if (targetExecutionRetry != null) {
+            targetExecutionRetry.labels(String.valueOf(attempt)).inc();
+        }
     }
 
     public static void targetConnectionUnavailable() {

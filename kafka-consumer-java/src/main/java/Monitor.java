@@ -13,6 +13,7 @@ public class Monitor {
     private static Counter processMessageStarted;
     private static Counter processMessageSuccess;
     private static Counter processMessageError;
+    private static Counter processBatchCompleted;
     private static Counter consumed;
     private static Counter retryProduced;
     private static Counter deadLetterProduced;
@@ -24,67 +25,13 @@ public class Monitor {
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
 
-    public static void init() {
-        if (Config.USE_PROMETHEUS) {
-            var buckets = ArrayUtils.toPrimitive(
-                Arrays
-                    .asList(Config.PROMETHEUS_BUCKETS.split(","))
-                    .stream()
-                    .map(s -> Double.parseDouble(s))
-                    .toArray(Double[]::new)
-            );
-
-            processMessageStarted =
-                Counter.build().name("process_message_started").help("process_message_started").register();
-
-            processMessageSuccess =
-                Counter.build().name("process_message_success").help("process_message_success").register();
-
-            processMessageError =
-                Counter.build().name("process_message_error").help("process_message_error").register();
-
-            consumed = Counter.build().name("consumed").help("consumed").register();
-
-            retryProduced = Counter.build().name("retry_produced").help("retry_produced").register();
-
-            deadLetterProduced = Counter.build().name("dead_letter_produced").help("dead_letter_produced").register();
-
-            produceError = Counter.build().name("produce_error").help("produce_error").register();
-
-            messageLatency =
-                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
-
-            processMessageExecutionTime =
-                Histogram
-                    .build()
-                    .buckets(buckets)
-                    .name("process_message_execution_time")
-                    .help("process_message_execution_time")
-                    .register();
-
-            processExecutionTime =
-                Histogram
-                    .build()
-                    .buckets(buckets)
-                    .name("process_execution_time")
-                    .help("process_execution_time")
-                    .register();
-
-            callTargetLatency =
-                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
-
-            resultTargetLatency =
-                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
-
-            targetExecutionRetry =
-                Counter
-                    .build()
-                    .name("target_execution_rerty")
-                    .labelNames("attempt")
-                    .help("target_execution_rerty")
-                    .register();
-        }
-    }
+    private static double[] buckets = ArrayUtils.toPrimitive(
+        Arrays
+            .asList(Config.PROMETHEUS_BUCKETS.split(","))
+            .stream()
+            .map(s -> Double.parseDouble(s))
+            .toArray(Double[]::new)
+    );
 
     public static void consumed(ConsumerRecords<String, String> records) {
         JSONObject log = new JSONObject()
@@ -94,54 +41,86 @@ public class Monitor {
 
         write(log);
 
-        if (consumed != null) {
-            consumed.inc(records.count());
+        if (consumed == null) {
+            consumed = Counter.build().name("consumed").help("consumed").register();
         }
+        consumed.inc(records.count());
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        if (messageLatency != null) {
-            messageLatency.observe(((new Date()).getTime() - record.timestamp()) / 1000);
+        if (messageLatency == null) {
+            messageLatency =
+                Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
         }
+        messageLatency.observe(((new Date()).getTime() - record.timestamp()) / 1000);
     }
 
     public static void callTargetLatency(long latency) {
-        if (callTargetLatency != null) {
-            callTargetLatency.observe(latency);
+        if (callTargetLatency == null) {
+            callTargetLatency =
+                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
         }
+        callTargetLatency.observe(latency);
     }
 
     public static void resultTargetLatency(long latency) {
-        if (resultTargetLatency != null) {
-            resultTargetLatency.observe(latency);
+        if (resultTargetLatency == null) {
+            resultTargetLatency =
+                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
         }
+        resultTargetLatency.observe(latency);
     }
 
-    public static void processCompleted(long executionStart) {
-        if (processExecutionTime != null) {
-            processExecutionTime.observe(((new Date().getTime() - executionStart)) / 1000);
+    public static void processBatchCompleted(long executionStart) {
+        if (processBatchCompleted == null) {
+            Counter.build().name("process_batch_completed").help("process_batch_completed").register();
         }
+        if (processExecutionTime == null) {
+            processExecutionTime =
+                Histogram
+                    .build()
+                    .buckets(buckets)
+                    .name("process_execution_time")
+                    .help("process_execution_time")
+                    .register();
+        }
+        processBatchCompleted.inc();
+        processExecutionTime.observe(((new Date().getTime() - executionStart)) / 1000);
     }
 
     public static void processMessageStarted() {
         if (processMessageStarted != null) {
-            processMessageStarted.inc();
+            processMessageStarted =
+                Counter.build().name("process_message_started").help("process_message_started").register();
         }
+        processMessageStarted.inc();
     }
 
     public static void processMessageSuccess(long executionStart) {
-        if (processMessageSuccess != null) {
-            processMessageSuccess.inc();
+        if (processMessageSuccess == null) {
+            processMessageSuccess =
+                Counter.build().name("process_message_success").help("process_message_success").register();
         }
-        if (processMessageExecutionTime != null) {
-            processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
+        if (processMessageExecutionTime == null) {
+            processMessageExecutionTime =
+                Histogram
+                    .build()
+                    .buckets(buckets)
+                    .name("process_message_execution_time")
+                    .help("process_message_execution_time")
+                    .register();
         }
+
+        processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
+        processMessageSuccess.inc();
     }
 
     public static void processMessageFailed() {
-        if (processMessageError != null) {
-            processMessageError.inc();
+        if (processMessageError == null) {
+            processMessageError =
+                Counter.build().name("process_message_error").help("process_message_error").register();
         }
+        processMessageError.inc();
     }
 
     public static void retryProduced(ConsumerRecord<String, String> consumerRecord) {
@@ -150,8 +129,11 @@ public class Monitor {
             extra.put("value", consumerRecord.value());
         }
         JSONObject log = new JSONObject().put("level", "info").put("message", "retry produced").put("extra", extra);
-
         write(log);
+
+        if (retryProduced == null) {
+            retryProduced = Counter.build().name("retry_produced").help("retry_produced").register();
+        }
         retryProduced.inc();
     }
 
@@ -166,7 +148,11 @@ public class Monitor {
             .put("extra", extra);
 
         write(log);
-        deadLetterProduced.inc();
+
+        if (deadLetterProduced == null) {
+            deadLetterProduced = Counter.build().name("dead_letter_produced").help("dead_letter_produced").register();
+            deadLetterProduced.inc();
+        }
     }
 
     public static void unexpectedError(Exception exception) {
@@ -250,6 +236,9 @@ public class Monitor {
 
         write(log);
 
+        if (produceError == null) {
+            produceError = Counter.build().name("produce_error").help("produce_error").register();
+        }
         produceError.inc();
     }
 
@@ -281,9 +270,16 @@ public class Monitor {
 
         write(log);
 
-        if (targetExecutionRetry != null) {
-            targetExecutionRetry.labels(String.valueOf(attempt)).inc();
+        if (targetExecutionRetry == null) {
+            targetExecutionRetry =
+                Counter
+                    .build()
+                    .name("target_execution_rerty")
+                    .labelNames("attempt")
+                    .help("target_execution_rerty")
+                    .register();
         }
+        targetExecutionRetry.labels(String.valueOf(attempt)).inc();
     }
 
     public static void targetConnectionUnavailable() {

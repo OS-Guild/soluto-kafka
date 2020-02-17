@@ -60,7 +60,7 @@ public class Monitor {
             callTargetLatency =
                 Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
         }
-        callTargetLatency.observe(latency);
+        callTargetLatency.observe(latency / 1000);
     }
 
     public static void resultTargetLatency(long latency) {
@@ -73,7 +73,7 @@ public class Monitor {
                     .help("result_target_latency")
                     .register();
         }
-        resultTargetLatency.observe(latency);
+        resultTargetLatency.observe(latency / 1000);
     }
 
     public static void processBatchCompleted(long executionStart) {

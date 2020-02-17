@@ -46,7 +46,6 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 Monitor.consumed(consumed);
 
                 var consumedPartitioned = partitioner.partition(consumed);
-                Monitor.consumedPartitioned(consumedPartitioned);
 
                 var executionStart = new Date().getTime();
                 processor.process(consumedPartitioned);

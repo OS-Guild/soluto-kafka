@@ -24,7 +24,6 @@ class Config {
     public static int POLL_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
-    public static int MONITORING_SERVER_PORT;
     public static boolean DEBUG;
 
     //Authentication
@@ -40,14 +39,10 @@ class Config {
     public static String SASL_PASSWORD;
 
     //Monitoring
-    public static boolean STATSD_CONFIGURED = false;
-    public static String STATSD_CONSUMER_NAME;
-    public static String STATSD_API_KEY;
-    public static String STATSD_ROOT;
-    public static String STATSD_HOST;
+    public static int MONITORING_SERVER_PORT;
     public static boolean USE_PROMETHEUS;
     public static String PROMETHEUS_BUCKETS;
-    public static boolean HIDE_CONSUMED_MESSAGE;
+    public static boolean LOG_RECORD;
     public static String TARGET_IS_ALIVE_HTTP_ENDPOINT;
 
     public static void init() throws Exception {
@@ -98,16 +93,9 @@ class Config {
             AUTHENTICATED_KAFKA = true;
         }
 
-        STATSD_CONSUMER_NAME = getOptionalString(dotenv, "STATSD_CONSUMER_NAME", null);
-        if (STATSD_CONSUMER_NAME != null) {
-            STATSD_API_KEY = readFile(getString(dotenv, "STATSD_API_KEY_FILE_PATH"));
-            STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
-            STATSD_HOST = getString(dotenv, "STATSD_HOST");
-            STATSD_CONFIGURED = true;
-        }
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
         PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
-        HIDE_CONSUMED_MESSAGE = getOptionalBool(dotenv, "HIDE_CONSUMED_MESSAGE", false);
+        LOG_RECORD = getOptionalBool(dotenv, "LOG_RECORD", false);
     }
 
     private static void writeToFile(String path, String value) throws IOException {

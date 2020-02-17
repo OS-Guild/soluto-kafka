@@ -49,7 +49,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
 
                 var executionStart = new Date().getTime();
                 processor.process(consumedPartitioned);
-                Monitor.processCompleted(executionStart);
+                Monitor.processBatchCompleted(executionStart);
 
                 try {
                     consumer.commitSync();

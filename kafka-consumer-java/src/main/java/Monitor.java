@@ -52,7 +52,7 @@ public class Monitor {
             messageLatency =
                 Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
         }
-        messageLatency.observe(((new Date()).getTime() - record.timestamp()) / 1000);
+        messageLatency.observe((new Date().getTime() - record.timestamp()) / 1000);
     }
 
     public static void callTargetLatency(long latency) {
@@ -66,14 +66,20 @@ public class Monitor {
     public static void resultTargetLatency(long latency) {
         if (resultTargetLatency == null) {
             resultTargetLatency =
-                Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
+                Histogram
+                    .build()
+                    .buckets(buckets)
+                    .name("result_target_latency")
+                    .help("result_target_latency")
+                    .register();
         }
         resultTargetLatency.observe(latency);
     }
 
     public static void processBatchCompleted(long executionStart) {
         if (processBatchCompleted == null) {
-            Counter.build().name("process_batch_completed").help("process_batch_completed").register();
+            processBatchCompleted =
+                Counter.build().name("process_batch_completed").help("process_batch_completed").register();
         }
         if (processExecutionTime == null) {
             processExecutionTime =
@@ -85,7 +91,7 @@ public class Monitor {
                     .register();
         }
         processBatchCompleted.inc();
-        processExecutionTime.observe(((new Date().getTime() - executionStart)) / 1000);
+        processExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
     }
 
     public static void processMessageStarted() {
@@ -115,7 +121,7 @@ public class Monitor {
         processMessageSuccess.inc();
     }
 
-    public static void processMessageFailed() {
+    public static void processMessageError() {
         if (processMessageError == null) {
             processMessageError =
                 Counter.build().name("process_message_error").help("process_message_error").register();
@@ -151,8 +157,8 @@ public class Monitor {
 
         if (deadLetterProduced == null) {
             deadLetterProduced = Counter.build().name("dead_letter_produced").help("dead_letter_produced").register();
-            deadLetterProduced.inc();
         }
+        deadLetterProduced.inc();
     }
 
     public static void unexpectedError(Exception exception) {

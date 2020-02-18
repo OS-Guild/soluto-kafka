@@ -41,7 +41,7 @@ public class Producer {
                     return;
                 }
                 ready = true;
-                Monitor.produceSuccess(executionStart);
+                Monitor.produceSuccess(producerRequest, executionStart);
             }
         );
         return true;

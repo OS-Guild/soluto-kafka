@@ -1,11 +1,11 @@
 public class ProducerRequest {
     String topic;
     String key;
-    String message;
+    String value;
 
-    ProducerRequest(String topic, String key, String message) {
+    ProducerRequest(String topic, String key, String value) {
         this.topic = topic;
         this.key = key;
-        this.message = message;
+        this.value = value;
     }
 }

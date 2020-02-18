@@ -32,7 +32,7 @@ public class Producer {
                 null,
                 executionStart,
                 producerRequest.key,
-                producerRequest.message
+                producerRequest.value
             ),
             (metadata, err) -> {
                 if (err != null) {

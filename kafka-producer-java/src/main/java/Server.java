@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Server {
@@ -77,13 +78,13 @@ public class Server {
                                 jsonItem -> {
                                     var item = new JSONObject(jsonItem.toString());
                                     return new ProducerRequest(
-                                        item.get("topic").toString(),
-                                        item.get("key").toString(),
-                                        item.get("message").toString()
+                                        tryGetValue(item, "topic", null),
+                                        tryGetValue(item, "key", null),
+                                        tryGetValue(item, "message", "value")
                                     );
                                 }
                             )
-                            .map(producerRequest -> producer.produce(validate(producerRequest)))
+                            .map(producerRequest -> producer.produce(producerRequest))
                             .collect(Collectors.toList());
 
                         exchange.sendResponseHeaders(204, -1);
@@ -102,16 +103,20 @@ public class Server {
         );
     }
 
-    private static ProducerRequest validate(ProducerRequest producerRequest) {
-        if (producerRequest.topic == null) {
-            throw new IllegalArgumentException("topic must be provided to producer request");
+    private static String tryGetValue(JSONObject json, String option1, String option2) {
+        String value;
+        try {
+            value = json.getString(option1);
+        } catch (JSONException e1) {
+            if (option2 == null) {
+                throw new IllegalArgumentException(option1 + " is missing");
+            }
+            try {
+                value = json.getString(option2);
+            } catch (JSONException e2) {
+                throw new IllegalArgumentException(option2 + " is missing");
+            }
         }
-        if (producerRequest.key == null) {
-            throw new IllegalArgumentException("key must be provided to producer request");
-        }
-        if (producerRequest.message == null) {
-            throw new IllegalArgumentException("message must be provided to producer request");
-        }
-        return producerRequest;
+        return value;
     }
 }

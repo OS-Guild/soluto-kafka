@@ -19,8 +19,12 @@ public class Monitor {
             );
     }
 
-    public static void produceSuccess(long executionStart) {
-        JSONObject log = new JSONObject().put("level", "debug").put("message", "produce success");
+    public static void produceSuccess(ProducerRequest producerRequest, long executionStart) {
+        JSONObject log = new JSONObject()
+            .put("level", "debug")
+            .put("message", "produce success")
+            .put("extra", new JSONObject().put("topic", producerRequest.topic).put("key", producerRequest.key));
+
         output(log);
 
         if (statsdClient == null) return;

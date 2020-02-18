@@ -54,7 +54,6 @@ services:
         environment:
             - PORT=7000
             - KAFKA_BROKER=kafka:9092
-            - TOPIC=test-retry
 
         depends_on:
             - kafka

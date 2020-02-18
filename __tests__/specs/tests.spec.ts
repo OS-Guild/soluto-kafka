@@ -42,7 +42,7 @@ describe('tests', () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
 
-        await produce('http://localhost:6000/produce');
+        await produce('http://localhost:6000/produce', 'test');
         await delay(5000);
 
         const {hasBeenMade} = await fakeHttpServer.getCall(callId);
@@ -53,7 +53,7 @@ describe('tests', () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
 
-        await produce('http://localhost:7000/produce');
+        await produce('http://localhost:7000/produce', 'test-retry');
         await delay(20000);
 
         const {hasBeenMade} = await fakeHttpServer.getCall(callId);
@@ -64,7 +64,7 @@ describe('tests', () => {
         await mockGrpcTarget();
         const errorCallId = await mockHttpTargetError();
 
-        await produce('http://localhost:6000/produce');
+        await produce('http://localhost:6000/produce', 'test-retry');
         await delay(20000);
 
         const {hasBeenMade: errorHasBeenMade} = await fakeHttpServer.getCall(errorCallId);
@@ -111,10 +111,10 @@ describe('tests', () => {
     });
 });
 
-const produce = (url: string) =>
+const produce = (url: string, topic: string) =>
     fetch(url, {
         method: 'post',
-        body: JSON.stringify([{topic: 'test', key: 'key', message: {data: 1}}]),
+        body: JSON.stringify([{topic, key: 'key', message: {data: 1}}]),
         headers: {'Content-Type': 'application/json'},
     });
 
@@ -141,7 +141,7 @@ const mockGrpcTarget = () =>
             input: {matches: {msgJson: '{"data":1}'}, recordTimestamp: '(.*)'},
             output: {
                 data: {
-                    value: 'assertion',
+                    message: 'assertion',
                 },
             },
         }),

@@ -19,11 +19,13 @@ public class Monitor {
             );
     }
 
-    public static void produceLatency(long executionStart) {
+    public static void produceSuccess(long executionStart) {
+        JSONObject log = new JSONObject().put("level", "debug").put("message", "produce success");
+        output(log);
+
         if (statsdClient == null) return;
-        var latency = (new Date()).getTime() - executionStart;
-        System.out.println("produce.latency: " + latency);
-        statsdClient.recordExecutionTime("produce.latency", latency);
+        statsdClient.recordGaugeValue("produce.success", 1);
+        statsdClient.recordExecutionTime("produce.latency", (new Date()).getTime() - executionStart);
     }
 
     public static void produceFail(Exception exception) {
@@ -39,25 +41,19 @@ public class Monitor {
     }
 
     public static void started() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " started");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer started");
 
         output(log);
     }
 
     public static void ready() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " ready");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer ready");
 
         output(log);
     }
 
     public static void serviceShutdown() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " shutdown");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer shutdown");
 
         output(log);
     }

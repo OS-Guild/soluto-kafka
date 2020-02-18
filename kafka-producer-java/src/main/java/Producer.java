@@ -41,7 +41,7 @@ public class Producer {
                     return;
                 }
                 ready = true;
-                Monitor.produceLatency(executionStart);
+                Monitor.produceSuccess(executionStart);
             }
         );
         return true;

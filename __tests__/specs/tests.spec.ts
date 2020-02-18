@@ -87,19 +87,19 @@ describe('tests', () => {
 
         response = await fetch(producerUrl, {
             method,
-            body: JSON.stringify([{key: 'key', message: {data: 1}}]),
+            body: JSON.stringify([{key: 'key', value: {data: 1}}]),
             headers,
         });
         expect(response.status).toBe(400);
-        expect(await response.text()).toBe('topic must be provided to producer request');
+        expect(await response.text()).toBe('topic is missing');
 
         response = await fetch(producerUrl, {
             method,
-            body: JSON.stringify([{topic: 'test', message: {data: 1}}]),
+            body: JSON.stringify([{topic: 'test', value: {data: 1}}]),
             headers,
         });
         expect(response.status).toBe(400);
-        expect(await response.text()).toBe('key must be provided to producer request');
+        expect(await response.text()).toBe('key is missing');
 
         response = await fetch(producerUrl, {
             method,
@@ -107,7 +107,7 @@ describe('tests', () => {
             headers,
         });
         expect(response.status).toBe(400);
-        expect(await response.text()).toBe('message must be provided to producer request');
+        expect(await response.text()).toBe('value is missing');
     });
 });
 
@@ -141,7 +141,7 @@ const mockGrpcTarget = () =>
             input: {matches: {msgJson: '{"data":1}'}, recordTimestamp: '(.*)'},
             output: {
                 data: {
-                    message: 'assertion',
+                    value: 'assertion',
                 },
             },
         }),

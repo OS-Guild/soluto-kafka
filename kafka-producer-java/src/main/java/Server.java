@@ -76,19 +76,23 @@ public class Server {
                             .map(
                                 jsonItem -> {
                                     var item = new JSONObject(jsonItem.toString());
-                                    return new ProducerMessage(
+                                    return new ProducerRequest(
+                                        item.get("topic").toString(),
                                         item.get("key").toString(),
                                         item.get("message").toString()
                                     );
                                 }
                             )
-                            .map(message -> producer.produce(message))
+                            .map(producerRequest -> producer.produce(validate(producerRequest)))
                             .collect(Collectors.toList());
 
                         exchange.sendResponseHeaders(204, -1);
                     } catch (Exception e) {
                         var response = e.getMessage();
-                        exchange.sendResponseHeaders(500, response.getBytes().length);
+                        exchange.sendResponseHeaders(
+                            e instanceof IllegalArgumentException ? 400 : 500,
+                            response.getBytes().length
+                        );
                         var os = exchange.getResponseBody();
                         os.write(response.getBytes());
                         os.close();
@@ -96,5 +100,18 @@ public class Server {
                 }
             }
         );
+    }
+
+    private static ProducerRequest validate(ProducerRequest producerRequest) {
+        if (producerRequest.topic == null) {
+            throw new IllegalArgumentException("topic must be provided to producer request");
+        }
+        if (producerRequest.key == null) {
+            throw new IllegalArgumentException("key must be provided to producer request");
+        }
+        if (producerRequest.message == null) {
+            throw new IllegalArgumentException("message must be provided to producer request");
+        }
+        return producerRequest;
     }
 }

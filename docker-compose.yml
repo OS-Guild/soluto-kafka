@@ -42,7 +42,6 @@ services:
         environment:
             - PORT=6000
             - KAFKA_BROKER=kafka:9092
-            - TOPIC=test
 
         depends_on:
             - kafka

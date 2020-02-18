@@ -39,7 +39,13 @@ class Config {
 
         PORT = getInt(dotenv, "PORT");
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
-        TOPIC = getString(dotenv, "TOPIC");
+
+        TOPIC = getOptionalString(dotenv, "TOPIC", null);
+        if (TOPIC != null) {
+            throw new Error(
+                "TOPIC as environment variable is not supported anymore, please pass topic in the producer request"
+            );
+        }
 
         READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);

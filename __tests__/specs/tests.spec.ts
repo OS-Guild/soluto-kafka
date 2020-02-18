@@ -78,12 +78,43 @@ describe('tests', () => {
         const {hasBeenMade} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
     });
+
+    it('producer request validation', async () => {
+        const method = 'post';
+        const producerUrl = 'http://localhost:6000/produce';
+        const headers = {'Content-Type': 'application/json'};
+        let response;
+
+        response = await fetch(producerUrl, {
+            method,
+            body: JSON.stringify([{key: 'key', message: {data: 1}}]),
+            headers,
+        });
+        expect(response.status).toBe(400);
+        expect(await response.text()).toBe('topic must be provided to producer request');
+
+        response = await fetch(producerUrl, {
+            method,
+            body: JSON.stringify([{topic: 'test', message: {data: 1}}]),
+            headers,
+        });
+        expect(response.status).toBe(400);
+        expect(await response.text()).toBe('key must be provided to producer request');
+
+        response = await fetch(producerUrl, {
+            method,
+            body: JSON.stringify([{topic: 'test', key: 'key'}]),
+            headers,
+        });
+        expect(response.status).toBe(400);
+        expect(await response.text()).toBe('message must be provided to producer request');
+    });
 });
 
 const produce = (url: string) =>
     fetch(url, {
         method: 'post',
-        body: JSON.stringify([{key: 'key', message: {data: 1}}]),
+        body: JSON.stringify([{topic: 'test', key: 'key', message: {data: 1}}]),
         headers: {'Content-Type': 'application/json'},
     });
 

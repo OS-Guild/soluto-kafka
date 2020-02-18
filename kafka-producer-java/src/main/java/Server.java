@@ -9,7 +9,6 @@ import java.net.InetSocketAddress;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Server {
@@ -104,19 +103,16 @@ public class Server {
     }
 
     private static String tryGetValue(JSONObject json, String option1, String option2) {
-        String value;
-        try {
-            value = json.getString(option1);
-        } catch (JSONException e1) {
-            if (option2 == null) {
-                throw new IllegalArgumentException(option1 + " is missing");
-            }
-            try {
-                value = json.getString(option2);
-            } catch (JSONException e2) {
-                throw new IllegalArgumentException(option2 + " is missing");
-            }
+        if (json.has(option1)) {
+            return json.get(option1).toString();
         }
-        return value;
+        if (json.has(option2)) {
+            return json.get(option2).toString();
+        }
+
+        if (option2 == null) {
+            throw new IllegalArgumentException(option1 + " is missing");
+        }
+        throw new IllegalArgumentException(option2 + " is missing");
     }
 }

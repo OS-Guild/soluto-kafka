@@ -29,7 +29,10 @@ public class Monitor {
 
         if (statsdClient == null) return;
         statsdClient.recordGaugeValue(String.format("produce.%s.success", producerRequest.topic), 1);
-        statsdClient.recordExecutionTime("produce.latency", (new Date()).getTime() - executionStart);
+        statsdClient.recordExecutionTime(
+            String.format("produce.%s.latency", producerRequest.topic),
+            (new Date()).getTime() - executionStart
+        );
     }
 
     public static void produceFail(Exception exception) {

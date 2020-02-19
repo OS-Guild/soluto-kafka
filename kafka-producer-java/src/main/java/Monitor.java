@@ -28,7 +28,7 @@ public class Monitor {
         output(log);
 
         if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("produce.success", 1);
+        statsdClient.recordGaugeValue(String.format("produce.%s.success", producerRequest.topic), 1);
         statsdClient.recordExecutionTime("produce.latency", (new Date()).getTime() - executionStart);
     }
 

@@ -10,6 +10,8 @@ public class Main {
     public static void main(String[] args) {
         try {
             Config.init();
+
+            System.out.println("init: kafka configuration");
             var kafkaCreator = new KafkaCreator();
 
             System.out.println("init: creating producer");

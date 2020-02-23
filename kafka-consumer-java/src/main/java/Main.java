@@ -12,6 +12,13 @@ public class Main {
             Config.init();
             Monitor.init();
 
+            var taretIsAlive = new TargetIsAlive();
+            do {
+                System.out.println("waiting for target to be alive");
+                Thread.sleep(1000);
+            } while (!taretIsAlive.check());
+            System.out.println("target is alive");
+
             var kafkaCreator = new KafkaCreator();
             var producer = kafkaCreator.createProducer();
 
@@ -63,7 +70,7 @@ public class Main {
                     )
                 );
 
-            monitoringServer = new MonitoringServer(consumerLoops);
+            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
             monitoringServer.start();
             Monitor.started();
 

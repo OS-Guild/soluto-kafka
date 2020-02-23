@@ -19,11 +19,20 @@ public class Monitor {
             );
     }
 
-    public static void produceLatency(long executionStart) {
+    public static void produceSuccess(ProducerRequest producerRequest, long executionStart) {
+        JSONObject log = new JSONObject()
+            .put("level", "debug")
+            .put("message", "produce success")
+            .put("extra", new JSONObject().put("topic", producerRequest.topic).put("key", producerRequest.key));
+
+        output(log);
+
         if (statsdClient == null) return;
-        var latency = (new Date()).getTime() - executionStart;
-        System.out.println("produce.latency: " + latency);
-        statsdClient.recordExecutionTime("produce.latency", latency);
+        statsdClient.recordGaugeValue(String.format("produce.%s.success", producerRequest.topic), 1);
+        statsdClient.recordExecutionTime(
+            String.format("produce.%s.latency", producerRequest.topic),
+            (new Date()).getTime() - executionStart
+        );
     }
 
     public static void produceFail(Exception exception) {
@@ -39,25 +48,19 @@ public class Monitor {
     }
 
     public static void started() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " started");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer started");
 
         output(log);
     }
 
     public static void ready() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " ready");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer ready");
 
         output(log);
     }
 
     public static void serviceShutdown() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-producer-" + Config.TOPIC + " shutdown");
+        JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer shutdown");
 
         output(log);
     }

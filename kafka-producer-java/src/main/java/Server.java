@@ -76,19 +76,23 @@ public class Server {
                             .map(
                                 jsonItem -> {
                                     var item = new JSONObject(jsonItem.toString());
-                                    return new ProducerMessage(
-                                        item.get("key").toString(),
-                                        item.get("message").toString()
+                                    return new ProducerRequest(
+                                        tryGetValue(item, "topic", null),
+                                        tryGetValue(item, "key", null),
+                                        tryGetValue(item, "message", "value")
                                     );
                                 }
                             )
-                            .map(message -> producer.produce(message))
+                            .map(producerRequest -> producer.produce(producerRequest))
                             .collect(Collectors.toList());
 
                         exchange.sendResponseHeaders(204, -1);
                     } catch (Exception e) {
                         var response = e.getMessage();
-                        exchange.sendResponseHeaders(500, response.getBytes().length);
+                        exchange.sendResponseHeaders(
+                            e instanceof IllegalArgumentException ? 400 : 500,
+                            response.getBytes().length
+                        );
                         var os = exchange.getResponseBody();
                         os.write(response.getBytes());
                         os.close();
@@ -96,5 +100,19 @@ public class Server {
                 }
             }
         );
+    }
+
+    private static String tryGetValue(JSONObject json, String option1, String option2) {
+        if (json.has(option1)) {
+            return json.get(option1).toString();
+        }
+        if (json.has(option2)) {
+            return json.get(option2).toString();
+        }
+
+        if (option2 == null) {
+            throw new IllegalArgumentException(option1 + " is missing");
+        }
+        throw new IllegalArgumentException(option2 + " is missing");
     }
 }

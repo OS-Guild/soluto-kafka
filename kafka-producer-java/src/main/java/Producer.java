@@ -24,10 +24,16 @@ public class Producer {
         return ready;
     }
 
-    public boolean produce(ProducerMessage message) {
+    public boolean produce(ProducerRequest producerRequest) {
         var executionStart = (new Date()).getTime();
         kafkaProducer.send(
-            new ProducerRecord<>(Config.TOPIC, null, executionStart, message.key, message.value),
+            new ProducerRecord<>(
+                producerRequest.topic,
+                null,
+                executionStart,
+                producerRequest.key,
+                producerRequest.value
+            ),
             (metadata, err) -> {
                 if (err != null) {
                     ready = false;
@@ -35,7 +41,7 @@ public class Producer {
                     return;
                 }
                 ready = true;
-                Monitor.produceLatency(executionStart);
+                Monitor.produceSuccess(producerRequest, executionStart);
             }
         );
         return true;

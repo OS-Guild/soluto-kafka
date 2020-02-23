@@ -9,17 +9,12 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            System.out.println("init: config");
             Config.init();
             Monitor.init();
 
-            System.out.println("init: kafka configuration");
             var kafkaCreator = new KafkaCreator();
-
-            System.out.println("init: creating producer");
             var producer = kafkaCreator.createProducer();
 
-            System.out.println("init: creating consumers");
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
                 var consumer = kafkaCreator.createConsumer();
                 var consumerLoop = new ConsumerLoopWrapper(
@@ -39,7 +34,6 @@ public class Main {
             }
 
             if (Config.RETRY_TOPIC != null) {
-                System.out.println("init: creating retry consumer");
                 var retryConsumer = kafkaCreator.createConsumer();
                 var retryConsumerLoop = new ConsumerLoopWrapper(
                     new ConsumerLoop(
@@ -57,7 +51,6 @@ public class Main {
                 consumerLoops.add(retryConsumerLoop);
             }
 
-            System.out.println("init: adding shutdown hook");
             Runtime
                 .getRuntime()
                 .addShutdownHook(
@@ -70,7 +63,6 @@ public class Main {
                     )
                 );
 
-            System.out.println("init: starting monitoring server");
             monitoringServer = new MonitoringServer(consumerLoops);
             monitoringServer.start();
             Monitor.started();

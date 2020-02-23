@@ -9,6 +9,7 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            System.out.println("init: config");
             Config.init();
 
             System.out.println("init: kafka configuration");

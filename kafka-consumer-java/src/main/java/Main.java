@@ -11,6 +11,7 @@ public class Main {
         try {
             System.out.println("init: config");
             Config.init();
+            Monitor.init();
 
             System.out.println("init: kafka configuration");
             var kafkaCreator = new KafkaCreator();

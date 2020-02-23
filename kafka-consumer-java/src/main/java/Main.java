@@ -13,11 +13,21 @@ public class Main {
             Config.init();
             Monitor.init();
 
+            do {
+                System.out.println("waiting for target to be alive");
+                Thread.sleep(1000);
+            } while (!new TargetIsAlive().check());
+            System.out.println("target is alive");
+
             System.out.println("init: kafka configuration");
             var kafkaCreator = new KafkaCreator();
 
             System.out.println("init: creating producer");
             var producer = kafkaCreator.createProducer();
+
+            while (true) {
+                break;
+            }
 
             System.out.println("init: creating consumers");
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {

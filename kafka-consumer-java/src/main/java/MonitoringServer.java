@@ -5,21 +5,21 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
 import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.List;
 
 public class MonitoringServer {
     List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
     HttpServer server;
     HTTPServer prometheusServer;
-    private static final HttpClient client = HttpClient.newHttpClient();
+    TargetIsAlive targetIsAlive;
 
-    public MonitoringServer(final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles) {
+    public MonitoringServer(
+        final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles,
+        TargetIsAlive targetIsAlive
+    ) {
         this.consumerLoopLifecycles = consumerLoopLifecycles;
+        this.targetIsAlive = targetIsAlive;
     }
 
     public void start() throws IOException {
@@ -78,22 +78,10 @@ public class MonitoringServer {
         return response;
     }
 
-    private static boolean targetAlive(HttpExchange exchange) throws IOException {
+    private boolean targetAlive(HttpExchange exchange) throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {
-                final var request = HttpRequest
-                    .newBuilder()
-                    .GET()
-                    .uri(URI.create(Config.TARGET_IS_ALIVE_HTTP_ENDPOINT))
-                    .build();
-
-                var targetIsAliveResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (targetIsAliveResponse.statusCode() != 200) {
-                    Monitor.targetNotAlive(targetIsAliveResponse.statusCode());
-                    return false;
-                }
-                Monitor.targetAlive(targetIsAliveResponse.statusCode());
-                return true;
+                return this.targetIsAlive.check();
             } catch (Exception e) {
                 Monitor.unexpectedError(e);
                 return false;
@@ -102,7 +90,7 @@ public class MonitoringServer {
         return true;
     }
 
-    private static void writeResponse(int statusCode, HttpExchange exchange) throws IOException {
+    private void writeResponse(int statusCode, HttpExchange exchange) throws IOException {
         final var os = exchange.getResponseBody();
         var responseText = (statusCode == 500 ? "false" : "true");
         exchange.sendResponseHeaders(statusCode, responseText.getBytes().length);

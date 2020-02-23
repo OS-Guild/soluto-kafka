@@ -10,9 +10,18 @@ public class Main {
     public static void main(String[] args) {
         try {
             Config.init();
-            var kafkaCreator = new KafkaCreator();
+            Monitor.init();
 
+            var taretIsAlive = new TargetIsAlive();
+            do {
+                System.out.println("waiting for target to be alive");
+                Thread.sleep(1000);
+            } while (!taretIsAlive.check());
+            System.out.println("target is alive");
+
+            var kafkaCreator = new KafkaCreator();
             var producer = kafkaCreator.createProducer();
+
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
                 var consumer = kafkaCreator.createConsumer();
                 var consumerLoop = new ConsumerLoopWrapper(
@@ -61,7 +70,7 @@ public class Main {
                     )
                 );
 
-            monitoringServer = new MonitoringServer(consumerLoops);
+            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
             monitoringServer.start();
             Monitor.started();
 
@@ -71,7 +80,9 @@ public class Main {
             Monitor.unexpectedError(e);
             consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
         } finally {
-            monitoringServer.close();
+            if (monitoringServer != null) {
+                monitoringServer.close();
+            }
             Monitor.serviceTerminated();
             System.exit(0);
         }

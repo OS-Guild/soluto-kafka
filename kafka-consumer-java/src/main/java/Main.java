@@ -9,27 +9,19 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            System.out.println("init: config");
             Config.init();
             Monitor.init();
 
+            var taretIsAlive = new TargetIsAlive();
             do {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
-            } while (!new TargetIsAlive().check());
+            } while (!taretIsAlive.check());
             System.out.println("target is alive");
 
-            System.out.println("init: kafka configuration");
             var kafkaCreator = new KafkaCreator();
-
-            System.out.println("init: creating producer");
             var producer = kafkaCreator.createProducer();
 
-            while (true) {
-                break;
-            }
-
-            System.out.println("init: creating consumers");
             for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
                 var consumer = kafkaCreator.createConsumer();
                 var consumerLoop = new ConsumerLoopWrapper(
@@ -49,7 +41,6 @@ public class Main {
             }
 
             if (Config.RETRY_TOPIC != null) {
-                System.out.println("init: creating retry consumer");
                 var retryConsumer = kafkaCreator.createConsumer();
                 var retryConsumerLoop = new ConsumerLoopWrapper(
                     new ConsumerLoop(
@@ -67,7 +58,6 @@ public class Main {
                 consumerLoops.add(retryConsumerLoop);
             }
 
-            System.out.println("init: adding shutdown hook");
             Runtime
                 .getRuntime()
                 .addShutdownHook(
@@ -80,8 +70,7 @@ public class Main {
                     )
                 );
 
-            System.out.println("init: starting monitoring server");
-            monitoringServer = new MonitoringServer(consumerLoops);
+            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
             monitoringServer.start();
             Monitor.started();
 

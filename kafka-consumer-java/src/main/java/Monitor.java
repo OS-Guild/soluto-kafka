@@ -106,7 +106,15 @@ public class Monitor {
 
     public static void processBatchCompleted(long executionStart) {
         processBatchCompleted.inc();
-        processExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
+        var executionTime = (new Date().getTime() - executionStart) / 1000;
+        if (Config.DEBUG) {
+            JSONObject log = new JSONObject()
+                .put("level", "debug")
+                .put("message", "processBatchCompleted")
+                .put("extra", new JSONObject().put("executionTime`", executionTime));
+            write(log);
+        }
+        processExecutionTime.observe(executionTime);
     }
 
     public static void processMessageStarted() {

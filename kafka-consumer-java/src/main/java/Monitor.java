@@ -93,25 +93,25 @@ public class Monitor {
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        messageLatency.observe((new Date().getTime() - record.timestamp()) / 1000);
+        messageLatency.observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
     }
 
     public static void callTargetLatency(long latency) {
-        callTargetLatency.observe(latency / 1000);
+        callTargetLatency.observe((double) latency / 1000);
     }
 
     public static void resultTargetLatency(long latency) {
-        resultTargetLatency.observe(latency / 1000);
+        resultTargetLatency.observe((double) latency / 1000);
     }
 
     public static void processBatchCompleted(long executionStart) {
         processBatchCompleted.inc();
-        var executionTime = (new Date().getTime() - executionStart) / 1000;
+        var executionTime = ((double) (new Date().getTime() - executionStart)) / 1000;
         if (Config.DEBUG) {
             JSONObject log = new JSONObject()
                 .put("level", "debug")
                 .put("message", "processBatchCompleted")
-                .put("extra", new JSONObject().put("executionTime`", executionTime));
+                .put("extra", new JSONObject().put("executionTime", executionTime));
             write(log);
         }
         processExecutionTime.observe(executionTime);
@@ -122,7 +122,7 @@ public class Monitor {
     }
 
     public static void processMessageSuccess(long executionStart) {
-        processMessageExecutionTime.observe((new Date().getTime() - executionStart) / 1000);
+        processMessageExecutionTime.observe(((double) (new Date().getTime() - executionStart)) / 1000);
         processMessageSuccess.inc();
     }
 

@@ -37,11 +37,15 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
         consumer.subscribe(Collections.singletonList(topic));
         try {
             while (running) {
-                var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
                 if (!assignedToPartition && consumer.assignment().size() > 0) {
                     assignedToPartition = true;
                     Monitor.assignedToPartition(id);
                 }
+                if (!assignedToPartition) {
+                    Thread.sleep(1000);
+                    continue;
+                }
+                var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
                 if (consumed.count() == 0) continue;
                 Monitor.consumed(consumed);
 

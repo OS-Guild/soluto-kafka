@@ -42,7 +42,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                     Monitor.assignedToPartition(id);
                 }
                 if (!assignedToPartition) {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                     continue;
                 }
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));

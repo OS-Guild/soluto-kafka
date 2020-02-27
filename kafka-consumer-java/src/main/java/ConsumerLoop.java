@@ -42,11 +42,10 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                     assignedToPartition = true;
                     Monitor.assignedToPartition(id);
                 }
-                if (!assignedToPartition) {
+                if (consumed.count() == 0) {
                     Thread.sleep(100);
                     continue;
                 }
-                if (consumed.count() == 0) continue;
                 Monitor.consumed(consumed);
 
                 var consumedPartitioned = partitioner.partition(consumed);

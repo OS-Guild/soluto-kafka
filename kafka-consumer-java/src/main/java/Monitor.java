@@ -188,10 +188,15 @@ public class Monitor {
     public static void assignedToPartition(int id) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put(
-                "message",
-                "kafka-consumer-" + id + "-" + Config.TOPIC + "-" + Config.GROUP_ID + " was assigned to partitions"
-            );
+            .put("message", "consumer " + id + " was assigned to partitions");
+
+        write(log);
+    }
+
+    public static void waitingForAssignment(int id) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "consumer " + id + " is waiting for partitions assignment..");
 
         write(log);
     }

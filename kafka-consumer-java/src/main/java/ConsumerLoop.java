@@ -43,6 +43,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                     Monitor.assignedToPartition(id);
                 }
                 if (!assignedToPartition) {
+                    Monitor.waitingForAssignment(id);
                     Thread.sleep(1000);
                 }
                 if (consumed.count() == 0) {

@@ -29,6 +29,7 @@ public class MonitoringServer {
 
         server = HttpServer.create(new InetSocketAddress(Config.MONITORING_SERVER_PORT), 0);
         isAliveGetRoute(server);
+        readyGetRoute(server);
         if (Config.USE_PROMETHEUS) {
             DefaultExports.initialize();
             new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
@@ -57,6 +58,25 @@ public class MonitoringServer {
 
                     if (!targetAlive(exchange)) {
                         writeResponse(500, exchange);
+                        return;
+                    }
+
+                    writeResponse(200, exchange);
+                }
+            }
+        );
+    }
+
+    private void readyGetRoute(final HttpServer server) {
+        final var httpContext = server.createContext("/ready");
+
+        httpContext.setHandler(
+            new HttpHandler() {
+
+                @Override
+                public void handle(final HttpExchange exchange) throws IOException {
+                    if (!exchange.getRequestMethod().equals("GET")) {
+                        exchange.sendResponseHeaders(404, -1);
                         return;
                     }
 

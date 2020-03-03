@@ -37,7 +37,7 @@ public class Producer {
             (metadata, err) -> {
                 if (err != null) {
                     ready = false;
-                    Monitor.produceFail(err);
+                    Monitor.produceError(err);
                     return;
                 }
                 ready = true;

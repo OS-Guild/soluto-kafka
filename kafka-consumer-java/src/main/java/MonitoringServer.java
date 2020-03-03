@@ -62,6 +62,7 @@ public class MonitoringServer {
 
                     if (!consumerAssignedToAtLeastOnePartition(consumerLoopLifecycles)) {
                         writeResponse(500, exchange);
+                        return;
                     }
 
                     writeResponse(200, exchange);

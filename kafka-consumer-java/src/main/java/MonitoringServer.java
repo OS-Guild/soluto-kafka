@@ -38,7 +38,7 @@ public class MonitoringServer {
     }
 
     public void close() {
-        server.stop(1);
+        server.stop(0);
         prometheusServer.stop();
     }
 

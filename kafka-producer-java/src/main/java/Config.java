@@ -93,14 +93,12 @@ class Config {
         return value;
     }
 
-    private static String getOptionalString(Dotenv dotenv, String name, String defaultString) {
-        String value = dotenv.get(name);
-
-        if (value == null) {
-            return defaultString;
+    private static String getOptionalString(Dotenv dotenv, String name, String fallback) {
+        try {
+            return getString(dotenv, name);
+        } catch (Exception e) {
+            return fallback;
         }
-
-        return value;
     }
 
     private static int getInt(Dotenv dotenv, String name) {

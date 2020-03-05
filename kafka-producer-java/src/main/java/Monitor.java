@@ -2,6 +2,7 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.Arrays;
 import java.util.Date;
+import org.apache.commons.lang.ArrayUtils;
 import org.json.JSONObject;
 
 public class Monitor {

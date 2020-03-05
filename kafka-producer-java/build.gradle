@@ -26,4 +26,5 @@ dependencies {
     compile group: 'io.prometheus', name: 'simpleclient', version: '0.8.0'
     compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
     compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
 }

@@ -2,7 +2,6 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.Arrays;
 import java.util.Date;
-import org.apache.commons.lang.ArrayUtils;
 import org.json.JSONObject;
 
 public class Monitor {
@@ -10,13 +9,11 @@ public class Monitor {
     private static Counter produceError;
     private static Histogram produceLatency;
 
-    private static double[] buckets = ArrayUtils.toPrimitive(
-        Arrays
-            .asList(Config.PROMETHEUS_BUCKETS.split(","))
-            .stream()
-            .map(s -> Double.parseDouble(s))
-            .toArray(Double[]::new)
-    );
+    private static double[] buckets = Arrays
+        .asList(Config.PROMETHEUS_BUCKETS.split(","))
+        .stream()
+        .mapToDouble(s -> Double.parseDouble(s))
+        .toArray();
 
     public static void init() {
         produceSuccess = Counter.build().name("produce_success").labelNames("topic").help("produce_success").register();

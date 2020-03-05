@@ -18,7 +18,6 @@ public class Server {
     Config config;
     Monitor monitor;
     HttpServer server;
-    HTTPServer prometheusServer;
     Producer producer;
 
     Server(Config config, Monitor monitor, Producer producer) {
@@ -42,7 +41,6 @@ public class Server {
 
     public void close() {
         server.stop(0);
-        prometheusServer.stop();
     }
 
     private void isAliveGetRoute(HttpServer server) {

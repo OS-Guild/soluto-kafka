@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
@@ -25,13 +24,11 @@ public class Monitor {
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
 
-    private static double[] buckets = ArrayUtils.toPrimitive(
-        Arrays
-            .asList(Config.PROMETHEUS_BUCKETS.split(","))
-            .stream()
-            .map(s -> Double.parseDouble(s))
-            .toArray(Double[]::new)
-    );
+    private static double[] buckets = Arrays
+        .asList(Config.PROMETHEUS_BUCKETS.split(","))
+        .stream()
+        .mapToDouble(s -> Double.parseDouble(s))
+        .toArray();
 
     public static void init() {
         consumed = Counter.build().name("consumed").help("consumed").register();

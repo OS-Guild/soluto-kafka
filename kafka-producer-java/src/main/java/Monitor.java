@@ -1,22 +1,32 @@
-import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
+import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
+import java.util.Arrays;
 import java.util.Date;
 import org.json.JSONObject;
 
 public class Monitor {
-    static StatsDClient statsdClient;
+    private static Counter produceSuccess;
+    private static Counter produceError;
+    private static Histogram produceLatency;
+
+    private static double[] buckets = Arrays
+        .asList(Config.PROMETHEUS_BUCKETS.split(","))
+        .stream()
+        .mapToDouble(s -> Double.parseDouble(s))
+        .toArray();
 
     public static void init() {
-        if (!Config.STATSD_CONFIGURED) {
-            return;
-        }
+        produceSuccess = Counter.build().name("produce_success").labelNames("topic").help("produce_success").register();
+        produceError = Counter.build().name("produce_error").help("produce_error").register();
 
-        statsdClient =
-            new NonBlockingStatsDClient(
-                Config.STATSD_API_KEY + "." + Config.STATSD_ROOT + "." + Config.STATSD_PRODUCER_NAME,
-                Config.STATSD_HOST,
-                8125
-            );
+        produceLatency =
+            Histogram
+                .build()
+                .buckets(buckets)
+                .name("produce_latency")
+                .labelNames("topic")
+                .help("produce_latency")
+                .register();
     }
 
     public static void produceSuccess(ProducerRequest producerRequest, long executionStart) {
@@ -27,15 +37,11 @@ public class Monitor {
 
         output(log);
 
-        if (statsdClient == null) return;
-        statsdClient.recordGaugeValue(String.format("produce.%s.success", producerRequest.topic), 1);
-        statsdClient.recordExecutionTime(
-            String.format("produce.%s.latency", producerRequest.topic),
-            (new Date()).getTime() - executionStart
-        );
+        produceSuccess.labels(producerRequest.topic).inc();
+        produceLatency.labels(producerRequest.topic).observe(((double) (new Date().getTime() - executionStart)) / 1000);
     }
 
-    public static void produceFail(Exception exception) {
+    public static void produceError(Exception exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "produce failed")
@@ -43,8 +49,7 @@ public class Monitor {
 
         output(log);
 
-        if (statsdClient == null) return;
-        statsdClient.recordGaugeValue("produce.error", 1);
+        produceError.inc();
     }
 
     public static void started() {

@@ -11,7 +11,6 @@ import java.util.List;
 public class MonitoringServer {
     List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
     HttpServer server;
-    HTTPServer prometheusServer;
     TargetIsAlive targetIsAlive;
 
     public MonitoringServer(
@@ -38,8 +37,7 @@ public class MonitoringServer {
     }
 
     public void close() {
-        server.stop(1);
-        prometheusServer.stop();
+        server.stop(0);
     }
 
     private void isAliveGetRoute(final HttpServer server) {

@@ -3,6 +3,9 @@ import com.google.common.io.CharStreams;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.HTTPServer;
+import io.prometheus.client.hotspot.DefaultExports;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -27,12 +30,17 @@ public class Server {
         server = HttpServer.create(new InetSocketAddress(Config.PORT), 0);
         isAliveGetRoute(server);
         producePostRoute(server);
-        server.start();
+        if (Config.USE_PROMETHEUS) {
+            DefaultExports.initialize();
+            new HTTPServer(server, CollectorRegistry.defaultRegistry, false);
+        } else {
+            server.start();
+        }
         return this;
     }
 
     public void close() {
-        server.stop(5);
+        server.stop(0);
     }
 
     private void isAliveGetRoute(HttpServer server) {

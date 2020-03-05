@@ -27,12 +27,9 @@ class Config {
     public static String SASL_USERNAME;
     public static String SASL_PASSWORD;
 
-    //Statsd monitoring
-    public static boolean STATSD_CONFIGURED = false;
-    public static String STATSD_PRODUCER_NAME;
-    public static String STATSD_API_KEY;
-    public static String STATSD_ROOT;
-    public static String STATSD_HOST;
+    //Monitoring
+    public static boolean USE_PROMETHEUS;
+    public static String PROMETHEUS_BUCKETS;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -74,13 +71,8 @@ class Config {
             AUTHENTICATED_KAFKA = true;
         }
 
-        STATSD_PRODUCER_NAME = getOptionalString(dotenv, "STATSD_PRODUCER_NAME", null);
-        if (STATSD_PRODUCER_NAME != null) {
-            STATSD_API_KEY = readFile(getString(dotenv, "STATSD_API_KEY_FILE_PATH"));
-            STATSD_ROOT = getString(dotenv, "STATSD_ROOT");
-            STATSD_HOST = getString(dotenv, "STATSD_HOST");
-            STATSD_CONFIGURED = true;
-        }
+        USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
     }
 
     private static void writeToFile(String path, String value) throws IOException {
@@ -101,14 +93,12 @@ class Config {
         return value;
     }
 
-    private static String getOptionalString(Dotenv dotenv, String name, String defaultString) {
-        String value = dotenv.get(name);
-
-        if (value == null) {
-            return defaultString;
+    private static String getOptionalString(Dotenv dotenv, String name, String fallback) {
+        try {
+            return getString(dotenv, name);
+        } catch (Exception e) {
+            return fallback;
         }
-
-        return value;
     }
 
     private static int getInt(Dotenv dotenv, String name) {
@@ -119,6 +109,14 @@ class Config {
         try {
             return Integer.parseInt(dotenv.get(name));
         } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private static boolean getOptionalBool(Dotenv dotenv, String name, boolean fallback) {
+        try {
+            return Boolean.parseBoolean(getString(dotenv, name));
+        } catch (Exception e) {
             return fallback;
         }
     }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
@@ -154,19 +155,13 @@ public class Monitor {
     }
 
     public static void unexpectedError(Exception exception) {
-        var messages = getAllErrorMessages(exception, new ArrayList<String>());
-        var errorMessages = new JSONObject();
-        for (var i = 0; i < messages.size(); i++) {
-            errorMessages.put("message" + i, messages.get(i));
-        }
-
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "unexpected error")
             .put(
                 "err",
                 new JSONObject()
-                    .put("errorMessages", errorMessages)
+                    .put("errorMessages", getErrorMessages(exception))
                     .put("class", exception.getClass())
                     .put("stacktrace", exception.getStackTrace())
             );
@@ -214,10 +209,11 @@ public class Monitor {
         write(log);
     }
 
-    public static void commitFailed() {
+    public static void commitFailed(CommitFailedException exception) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "commit failed, this usually indicates on consumer rebalancing");
+            .put("message", "commit failed")
+            .put("err", new JSONObject().put("errorMessages", getErrorMessages(exception)));
 
         write(log);
     }
@@ -320,11 +316,20 @@ public class Monitor {
         System.out.println(log.toString());
     }
 
-    private static ArrayList<String> getAllErrorMessages(Throwable exception, ArrayList<String> messages) {
+    private static ArrayList<String> getErrorMessagesArray(Throwable exception, ArrayList<String> messages) {
         if (exception == null) {
             return messages;
         }
         messages.add(exception.getMessage());
-        return getAllErrorMessages(exception.getCause(), messages);
+        return getErrorMessagesArray(exception.getCause(), messages);
+    }
+
+    private static JSONObject getErrorMessages(Exception exception) {
+        var messages = getErrorMessagesArray(exception, new ArrayList<String>());
+        var errorMessages = new JSONObject();
+        for (var i = 0; i < messages.size(); i++) {
+            errorMessages.put("message" + i, messages.get(i));
+        }
+        return errorMessages;
     }
 }

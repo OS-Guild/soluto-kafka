@@ -59,8 +59,8 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
 
                 try {
                     consumer.commitSync();
-                } catch (CommitFailedException ignored) {
-                    Monitor.commitFailed();
+                } catch (CommitFailedException e) {
+                    Monitor.commitFailed(e);
                 }
             }
         } catch (Exception e) {

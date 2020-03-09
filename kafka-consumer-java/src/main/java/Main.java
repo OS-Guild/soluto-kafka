@@ -36,7 +36,7 @@ public class Main {
                     ),
                     countDownLatch
                 );
-                new Thread(consumerLoop).start();
+                new Thread(consumerLoop, "consumer_" + i).start();
                 consumerLoops.add(consumerLoop);
             }
 

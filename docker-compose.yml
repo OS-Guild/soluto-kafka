@@ -3,8 +3,6 @@ version: '2.3'
 services:
     kafka_consumer_http_target:
         build: ./kafka-consumer-java/
-        ports:
-            - 4000:4000
         environment:
             - KAFKA_BROKER=kafka:9092
             - TOPICS=test,another_test
@@ -20,8 +18,6 @@ services:
 
     kafka_consumer_grpc_target:
         build: ./kafka-consumer-java/
-        ports:
-            - 5000:5000
         environment:
             - KAFKA_BROKER=kafka:9092
             - TOPICS=test
@@ -68,7 +64,6 @@ services:
         image: tkpd/gripmock
         ports:
             - 4770:4770
-            - 4771:4771
         volumes:
             - ${PWD}/soluto-kafka-grpc-target:/proto
         command: /proto/message.proto
@@ -77,8 +72,6 @@ services:
         image: wurstmeister/zookeeper
         environment:
             - LOG4J_LOGGER_KAFKA=WARN
-        ports:
-            - '2181:2181'
         logging:
             driver: none
 

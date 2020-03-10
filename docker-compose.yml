@@ -63,7 +63,7 @@ services:
     fake-grpc-server:
         image: tkpd/gripmock
         ports:
-            - 4770:4770
+            - 4771:4771
         volumes:
             - ${PWD}/soluto-kafka-grpc-target:/proto
         command: /proto/message.proto

@@ -56,7 +56,7 @@ describe('tests', () => {
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', 'test');
-        await produce('http://localhost:6000/produce', 'test2');
+        await produce('http://localhost:6000/produce', 'another_test');
 
         await delay(5000);
 

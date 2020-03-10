@@ -66,7 +66,7 @@ class Config {
         RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
+        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);

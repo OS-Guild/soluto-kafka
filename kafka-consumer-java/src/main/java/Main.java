@@ -37,7 +37,7 @@ public class Main {
                     ),
                     countDownLatch
                 );
-                new Thread(consumerLoop, "consumer_" + i).start();
+                new Thread(consumerLoop, "consumer " + i).start();
                 consumerLoops.add(consumerLoop);
             }
 
@@ -55,7 +55,7 @@ public class Main {
                     ),
                     countDownLatch
                 );
-                new Thread(retryConsumerLoop).start();
+                new Thread(retryConsumerLoop, "retry consumer").start();
                 consumerLoops.add(retryConsumerLoop);
             }
 

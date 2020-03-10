@@ -25,10 +25,11 @@ describe('tests', () => {
         let attempts = 10;
         while (attempts > 0) {
             try {
-                const responseConsumer = await fetch('http://localhost:4000/isAlive');
-                const responseProducer = await fetch('http://localhost:6000/isAlive');
-                const responseRetryProducer = await fetch('http://localhost:7000/isAlive');
-                if (responseConsumer.ok && responseProducer.ok && responseRetryProducer.ok) {
+                const consumer1 = await fetch('http://localhost:4000/isAlive');
+                const consumer2 = await fetch('http://localhost:5000/isAlive');
+                const producer1 = await fetch('http://localhost:6000/isAlive');
+                const producer2 = await fetch('http://localhost:7000/isAlive');
+                if (consumer1.ok && consumer2.ok && producer1.ok && producer2.ok) {
                     return;
                 }
                 attempts--;

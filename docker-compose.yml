@@ -3,6 +3,8 @@ version: '2.3'
 services:
     kafka_consumer_http_target:
         build: ./kafka-consumer-java/
+        ports:
+            - 4000:4000
         environment:
             - KAFKA_BROKER=kafka:9092
             - TOPICS=test,another_test
@@ -18,6 +20,8 @@ services:
 
     kafka_consumer_grpc_target:
         build: ./kafka-consumer-java/
+        ports:
+            - 5000:5000
         environment:
             - KAFKA_BROKER=kafka:9092
             - TOPICS=test

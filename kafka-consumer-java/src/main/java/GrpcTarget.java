@@ -21,18 +21,19 @@ public class GrpcTarget implements ITarget {
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
         final var json = record.value();
-        final var callTargetPayloadBuilder = KafkaMessage.CallTargetPayload.newBuilder();
+        final var callTargetPayloadBuilder = Message.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());
         callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
+        callTargetPayloadBuilder.setTopic(record.topic());
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(client);
 
         final long startTime = (new Date()).getTime();
-        CheckedSupplier<CompletionStage<KafkaMessage.CallTargetResponse>> completionStageCheckedSupplier =
+        CheckedSupplier<CompletionStage<Message.CallTargetResponse>> completionStageCheckedSupplier =
             () -> ListenableFuturesExtra.toCompletableFuture(futureStub.callTarget(callTargetPayloadBuilder.build()));
 
         return Failsafe
-            .with(retryPolicy.<KafkaMessage.CallTargetResponse>get(record, r -> r.getStatusCode()))
+            .with(retryPolicy.<Message.CallTargetResponse>get(record, r -> r.getStatusCode()))
             .getStageAsync(completionStageCheckedSupplier)
             .thenApplyAsync(
                 response -> {

@@ -7,7 +7,8 @@ service CallTarget {
 message CallTargetPayload {
     int64 recordOffset = 1;
     int64 recordTimestamp = 2;
-    string msgJson = 3;
+    string topic = 3;
+    string msgJson = 4;
 }
 
 message CallTargetResponse {

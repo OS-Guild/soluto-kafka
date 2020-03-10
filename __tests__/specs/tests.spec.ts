@@ -14,6 +14,9 @@ const fakeHttpServer = new Server({
 describe('tests', () => {
     beforeAll(async () => {
         await expect(readinessCheck()).resolves.toBeTruthy();
+    });
+
+    beforeEach(async () => {
         await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });
@@ -50,7 +53,6 @@ describe('tests', () => {
     });
 
     it('should consume from multiple topics', async () => {
-        await mockGrpcTarget();
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', 'test');

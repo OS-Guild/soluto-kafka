@@ -52,7 +52,7 @@ describe('tests', () => {
         expect(hasBeenMade).toBeTruthy();
     });
 
-    it.only('should consume from multiple topics', async () => {
+    it('should consume from multiple topics', async () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
 

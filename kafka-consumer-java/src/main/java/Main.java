@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class Main {
                     new ConsumerLoop(
                         i,
                         consumer,
-                        Config.TOPIC,
+                        Config.TOPICS,
                         Config.PROCESSING_DELAY,
                         producer,
                         Config.RETRY_TOPIC,
@@ -46,7 +47,7 @@ public class Main {
                     new ConsumerLoop(
                         0,
                         retryConsumer,
-                        Config.RETRY_TOPIC,
+                        Collections.singletonList(Config.RETRY_TOPIC),
                         Config.RETRY_PROCESSING_DELAY,
                         producer,
                         null,

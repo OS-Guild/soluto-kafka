@@ -1,7 +1,7 @@
 import java.net.ConnectException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -10,7 +10,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     private final Processor processor;
     private final Partitioner partitioner;
     private KafkaConsumer<String, String> consumer;
-    private String topic;
+    private List<String> topics;
     private boolean running;
     private boolean assignedToPartition;
     private int id;
@@ -18,7 +18,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     ConsumerLoop(
         int id,
         KafkaConsumer<String, String> consumer,
-        String topic,
+        List<String> topics,
         long processingDelay,
         KafkaProducer<String, String> producer,
         String retryTopic,
@@ -26,7 +26,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     ) {
         this.id = id;
         this.consumer = consumer;
-        this.topic = topic;
+        this.topics = topics;
         this.processor = new Processor(processingDelay, producer, retryTopic, deadLetterTopic);
         this.partitioner = new Partitioner();
     }
@@ -34,7 +34,7 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     @Override
     public void run() {
         running = true;
-        consumer.subscribe(Collections.singletonList(topic));
+        consumer.subscribe(topics);
         try {
             while (running) {
                 var consumed = consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT));
@@ -44,7 +44,6 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
                 }
                 if (!assignedToPartition) {
                     Monitor.waitingForAssignment(id);
-                    Thread.sleep(50);
                 }
                 if (consumed.count() == 0) {
                     continue;

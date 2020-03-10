@@ -53,6 +53,7 @@ describe('tests', () => {
     });
 
     it.only('should consume from multiple topics', async () => {
+        await mockGrpcTarget();
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', 'test');

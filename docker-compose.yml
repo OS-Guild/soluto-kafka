@@ -67,15 +67,18 @@ services:
     fake-grpc-server:
         image: tkpd/gripmock
         ports:
+            - 4770:4770
             - 4771:4771
         volumes:
-            - ${PWD}/kafka-consumer-java/src/proto:/proto
-        command: /proto/kafkaMessage.proto
+            - ${PWD}/soluto-kafka-grpc-target:/proto
+        command: /proto/message.proto
 
     zookeeper:
         image: wurstmeister/zookeeper
         environment:
             - LOG4J_LOGGER_KAFKA=WARN
+        ports:
+            - '2181:2181'
         logging:
             driver: none
 

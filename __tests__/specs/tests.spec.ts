@@ -52,7 +52,7 @@ describe('tests', () => {
         expect(hasBeenMade).toBeTruthy();
     });
 
-    it('should consume from multiple topics', async () => {
+    it.only('should consume from multiple topics', async () => {
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', 'test');

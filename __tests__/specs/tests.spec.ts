@@ -65,6 +65,8 @@ describe('tests', () => {
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
+        expect(madeCalls[0].headers['x-record-topic']).toBe('test');
+        expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
     });
 
     it('test retry topic - should produce and consume', async () => {

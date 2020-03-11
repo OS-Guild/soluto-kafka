@@ -15,7 +15,7 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  */
-@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.24.0)", comments = "Source: kafkaMessage.proto")
+@javax.annotation.Generated(value = "by gRPC proto compiler (version 1.24.0)", comments = "Source: message.proto")
 public final class CallTargetGrpc {
 
     private CallTargetGrpc() {}
@@ -23,34 +23,34 @@ public final class CallTargetGrpc {
     public static final String SERVICE_NAME = "CallTarget";
 
     // Static method descriptors that strictly reflect the proto.
-    private static volatile io.grpc.MethodDescriptor<KafkaMessage.CallTargetPayload, KafkaMessage.CallTargetResponse> getCallTargetMethod;
+    private static volatile io.grpc.MethodDescriptor<Message.CallTargetPayload, Message.CallTargetResponse> getCallTargetMethod;
 
     @io.grpc.stub.annotations.RpcMethod(
         fullMethodName = SERVICE_NAME + '/' + "callTarget",
-        requestType = KafkaMessage.CallTargetPayload.class,
-        responseType = KafkaMessage.CallTargetResponse.class,
+        requestType = Message.CallTargetPayload.class,
+        responseType = Message.CallTargetResponse.class,
         methodType = io.grpc.MethodDescriptor.MethodType.UNARY
     )
-    public static io.grpc.MethodDescriptor<KafkaMessage.CallTargetPayload, KafkaMessage.CallTargetResponse> getCallTargetMethod() {
-        io.grpc.MethodDescriptor<KafkaMessage.CallTargetPayload, KafkaMessage.CallTargetResponse> getCallTargetMethod;
+    public static io.grpc.MethodDescriptor<Message.CallTargetPayload, Message.CallTargetResponse> getCallTargetMethod() {
+        io.grpc.MethodDescriptor<Message.CallTargetPayload, Message.CallTargetResponse> getCallTargetMethod;
         if ((getCallTargetMethod = CallTargetGrpc.getCallTargetMethod) == null) {
             synchronized (CallTargetGrpc.class) {
                 if ((getCallTargetMethod = CallTargetGrpc.getCallTargetMethod) == null) {
                     CallTargetGrpc.getCallTargetMethod =
                         getCallTargetMethod =
                             io
-                                .grpc.MethodDescriptor.<KafkaMessage.CallTargetPayload, KafkaMessage.CallTargetResponse>newBuilder()
+                                .grpc.MethodDescriptor.<Message.CallTargetPayload, Message.CallTargetResponse>newBuilder()
                                 .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
                                 .setFullMethodName(generateFullMethodName(SERVICE_NAME, "callTarget"))
                                 .setSampledToLocalTracing(true)
                                 .setRequestMarshaller(
                                     io.grpc.protobuf.ProtoUtils.marshaller(
-                                        KafkaMessage.CallTargetPayload.getDefaultInstance()
+                                        Message.CallTargetPayload.getDefaultInstance()
                                     )
                                 )
                                 .setResponseMarshaller(
                                     io.grpc.protobuf.ProtoUtils.marshaller(
-                                        KafkaMessage.CallTargetResponse.getDefaultInstance()
+                                        Message.CallTargetResponse.getDefaultInstance()
                                     )
                                 )
                                 .setSchemaDescriptor(new CallTargetMethodDescriptorSupplier("callTarget"))
@@ -89,8 +89,8 @@ public final class CallTargetGrpc {
         /**
          */
         public void callTarget(
-            KafkaMessage.CallTargetPayload request,
-            io.grpc.stub.StreamObserver<KafkaMessage.CallTargetResponse> responseObserver
+            Message.CallTargetPayload request,
+            io.grpc.stub.StreamObserver<Message.CallTargetResponse> responseObserver
         ) {
             asyncUnimplementedUnaryCall(getCallTargetMethod(), responseObserver);
         }
@@ -102,7 +102,7 @@ public final class CallTargetGrpc {
                 .addMethod(
                     getCallTargetMethod(),
                     asyncUnaryCall(
-                        new MethodHandlers<KafkaMessage.CallTargetPayload, KafkaMessage.CallTargetResponse>(
+                        new MethodHandlers<Message.CallTargetPayload, Message.CallTargetResponse>(
                             this,
                             METHODID_CALL_TARGET
                         )
@@ -132,8 +132,8 @@ public final class CallTargetGrpc {
         /**
          */
         public void callTarget(
-            KafkaMessage.CallTargetPayload request,
-            io.grpc.stub.StreamObserver<KafkaMessage.CallTargetResponse> responseObserver
+            Message.CallTargetPayload request,
+            io.grpc.stub.StreamObserver<Message.CallTargetResponse> responseObserver
         ) {
             asyncUnaryCall(getChannel().newCall(getCallTargetMethod(), getCallOptions()), request, responseObserver);
         }
@@ -158,7 +158,7 @@ public final class CallTargetGrpc {
 
         /**
          */
-        public KafkaMessage.CallTargetResponse callTarget(KafkaMessage.CallTargetPayload request) {
+        public Message.CallTargetResponse callTarget(Message.CallTargetPayload request) {
             return blockingUnaryCall(getChannel(), getCallTargetMethod(), getCallOptions(), request);
         }
     }
@@ -182,8 +182,8 @@ public final class CallTargetGrpc {
 
         /**
          */
-        public com.google.common.util.concurrent.ListenableFuture<KafkaMessage.CallTargetResponse> callTarget(
-            KafkaMessage.CallTargetPayload request
+        public com.google.common.util.concurrent.ListenableFuture<Message.CallTargetResponse> callTarget(
+            Message.CallTargetPayload request
         ) {
             return futureUnaryCall(getChannel().newCall(getCallTargetMethod(), getCallOptions()), request);
         }
@@ -211,8 +211,8 @@ public final class CallTargetGrpc {
             switch (methodId) {
                 case METHODID_CALL_TARGET:
                     serviceImpl.callTarget(
-                        (KafkaMessage.CallTargetPayload) request,
-                        (io.grpc.stub.StreamObserver<KafkaMessage.CallTargetResponse>) responseObserver
+                        (Message.CallTargetPayload) request,
+                        (io.grpc.stub.StreamObserver<Message.CallTargetResponse>) responseObserver
                     );
                     break;
                 default:
@@ -234,7 +234,7 @@ public final class CallTargetGrpc {
 
         @java.lang.Override
         public com.google.protobuf.Descriptors.FileDescriptor getFileDescriptor() {
-            return KafkaMessage.getDescriptor();
+            return Message.getDescriptor();
         }
 
         @java.lang.Override

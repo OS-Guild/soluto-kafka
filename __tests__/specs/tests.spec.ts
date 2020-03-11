@@ -14,6 +14,9 @@ const fakeHttpServer = new Server({
 describe('tests', () => {
     beforeAll(async () => {
         await expect(readinessCheck()).resolves.toBeTruthy();
+    });
+
+    beforeEach(async () => {
         await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });
@@ -22,10 +25,11 @@ describe('tests', () => {
         let attempts = 10;
         while (attempts > 0) {
             try {
-                const responseConsumer = await fetch('http://localhost:4000/isAlive');
-                const responseProducer = await fetch('http://localhost:6000/isAlive');
-                const responseRetryProducer = await fetch('http://localhost:7000/isAlive');
-                if (responseConsumer.ok && responseProducer.ok && responseRetryProducer.ok) {
+                const consumer1 = await fetch('http://localhost:4000/isAlive');
+                const consumer2 = await fetch('http://localhost:5000/isAlive');
+                const producer1 = await fetch('http://localhost:6000/isAlive');
+                const producer2 = await fetch('http://localhost:7000/isAlive');
+                if (consumer1.ok && consumer2.ok && producer1.ok && producer2.ok) {
                     return;
                 }
                 attempts--;
@@ -47,6 +51,22 @@ describe('tests', () => {
 
         const {hasBeenMade} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
+    });
+
+    it('should consume from multiple topics', async () => {
+        await mockGrpcTarget();
+        const callId = await mockHttpTarget();
+
+        await produce('http://localhost:6000/produce', 'test');
+        await produce('http://localhost:6000/produce', 'another_test');
+
+        await delay(5000);
+
+        const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
+        expect(hasBeenMade).toBeTruthy();
+        expect(madeCalls.length).toBe(2);
+        expect(madeCalls[0].headers['x-record-topic']).toBe('test');
+        expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
     });
 
     it('test retry topic - should produce and consume', async () => {

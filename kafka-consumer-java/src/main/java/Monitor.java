@@ -32,7 +32,7 @@ public class Monitor {
         .toArray();
 
     public static void init() {
-        consumed = Counter.build().name("consumed").help("consumed").register();
+        consumed = Counter.build().name("consumed").labelNames("topic", "partition").help("consumed").register();
 
         messageLatency = Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
 
@@ -80,14 +80,19 @@ public class Monitor {
     }
 
     public static void consumed(ConsumerRecords<String, String> records) {
+        var recordsDetails = "";
+        var recordsIterator = records.iterator();
+        while (recordsIterator.hasNext()) {
+            var recored = recordsIterator.next();
+            recordsDetails += recored.topic() + ":" + recored.partition();
+            consumed.labels(recored.topic(), String.valueOf(recored.partition())).inc();
+        }
         JSONObject log = new JSONObject()
             .put("level", "debug")
             .put("message", "consumed messages")
-            .put("extra", new JSONObject().put("count", records.count()));
+            .put("extra", new JSONObject().put("count", records.count()).put("recordsDetails", recordsDetails));
 
         write(log);
-
-        consumed.inc(records.count());
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
@@ -172,7 +177,7 @@ public class Monitor {
     public static void started() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.TOPIC + "-" + Config.GROUP_ID + " started");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " started");
 
         write(log);
     }
@@ -196,7 +201,7 @@ public class Monitor {
     public static void serviceShutdown() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.TOPIC + "-" + Config.GROUP_ID + "shutdown");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + "shutdown");
 
         write(log);
     }
@@ -204,7 +209,7 @@ public class Monitor {
     public static void serviceTerminated() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.TOPIC + "-" + Config.GROUP_ID + " termindated");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " termindated");
 
         write(log);
     }

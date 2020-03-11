@@ -3,12 +3,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 class Config {
     //Required
     public static String KAFKA_BROKER;
-    public static String TOPIC;
+    public static List<String> TOPICS;
     public static String GROUP_ID;
     public static String SENDING_PROTOCOL;
     public static String TARGET;
@@ -49,7 +51,7 @@ class Config {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
-        TOPIC = getString(dotenv, "TOPIC");
+        TOPICS = getStringList(dotenv, "TOPICS");
         GROUP_ID = getString(dotenv, "GROUP_ID");
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
@@ -63,8 +65,8 @@ class Config {
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
-        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 100);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 4);
+        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
+        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
@@ -114,6 +116,16 @@ class Config {
         }
 
         return value;
+    }
+
+    private static List<String> getStringList(Dotenv dotenv, String name) throws Exception {
+        String value = dotenv.get(name);
+
+        if (value == null) {
+            throw new Exception("missing env var: " + name);
+        }
+
+        return Arrays.asList(value.split(","));
     }
 
     private static String getOptionalString(Dotenv dotenv, String name, String fallback) {

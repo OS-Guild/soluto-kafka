@@ -7,7 +7,7 @@ services:
             - 4000:4000
         environment:
             - KAFKA_BROKER=kafka:9092
-            - TOPIC=test
+            - TOPICS=test,another_test
             - GROUP_ID=consumer_1
             - SENDING_PROTOCOL=http
             - TARGET=fake-http-server:2000/consume
@@ -24,7 +24,7 @@ services:
             - 5000:5000
         environment:
             - KAFKA_BROKER=kafka:9092
-            - TOPIC=test
+            - TOPICS=test
             - GROUP_ID=consumer_2
             - SENDING_PROTOCOL=grpc
             - TARGET=fake-grpc-server:4770
@@ -67,18 +67,15 @@ services:
     fake-grpc-server:
         image: tkpd/gripmock
         ports:
-            - 4770:4770
             - 4771:4771
         volumes:
-            - ${PWD}/kafka-consumer-java/src/proto:/proto
-        command: /proto/kafkaMessage.proto
+            - ${PWD}/soluto-kafka-grpc-target:/proto
+        command: /proto/message.proto
 
     zookeeper:
         image: wurstmeister/zookeeper
         environment:
             - LOG4J_LOGGER_KAFKA=WARN
-        ports:
-            - '2181:2181'
         logging:
             driver: none
 
@@ -88,7 +85,7 @@ services:
             - '9092:9092'
         environment:
             - KAFKA_ADVERTISED_HOST_NAME=kafka
-            - KAFKA_CREATE_TOPICS=test:1:1,test-retry:1:1
+            - KAFKA_CREATE_TOPICS=test:1:1,another_test:1:1,test-retry:1:1
             - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
             - LOG4J_LOGGER_KAFKA=WARN
         depends_on:

@@ -3,6 +3,12 @@ import {loadSync} from '@grpc/proto-loader';
 
 const PROTO_PATH = __dirname + '/message.proto';
 
+export type Headers = {
+    recordOffset: string;
+    recordTimestamp: string;
+    topic: string;
+};
+
 const packageDefinition = loadSync(PROTO_PATH, {
     keepCase: true,
     longs: String,
@@ -16,7 +22,14 @@ const _callTarget = run => async (call, callback) => {
     try {
         const receivedTimestamp = Date.now();
         const payload = JSON.parse(call.request.msgJson);
-        await run(payload, parseInt(call.request.recordOffset) || -1, parseInt(call.request.recordTimestamp) || -1);
+        await run({
+            payload,
+            headers: {
+                recordOffset: parseInt(call.request.recordOffset) || -1,
+                recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
+                topic: call.request.topic,
+            },
+        });
         callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
     } catch (e) {
         callback(null, {statusCode: e.statusCode ?? e.status ?? 500});

@@ -25,7 +25,7 @@ public class Monitor {
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
 
-    private static double[] buckets = new double[];
+    private static double[] buckets = new double[0];
 
     public static void init() {
         if(Config.PROMETHEUS_BUCKETS != null) {

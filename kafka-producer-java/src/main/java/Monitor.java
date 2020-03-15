@@ -9,13 +9,17 @@ public class Monitor {
     private static Counter produceError;
     private static Histogram produceLatency;
 
-    private static double[] buckets = Arrays
-        .asList(Config.PROMETHEUS_BUCKETS.split(","))
-        .stream()
-        .mapToDouble(s -> Double.parseDouble(s))
-        .toArray();
+    private static double[] buckets = new double[0];
 
     public static void init() {
+        if(Config.PROMETHEUS_BUCKETS != null) {
+            buckets = Arrays
+                .asList(Config.PROMETHEUS_BUCKETS.split(","))
+                .stream()
+                .mapToDouble(s -> Double.parseDouble(s))
+                .toArray();
+        }
+        
         produceSuccess = Counter.build().name("produce_success").labelNames("topic").help("produce_success").register();
         produceError = Counter.build().name("produce_error").help("produce_error").register();
 

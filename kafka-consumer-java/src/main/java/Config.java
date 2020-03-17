@@ -8,6 +8,9 @@ import java.util.Base64;
 import java.util.List;
 
 class Config {
+    //Constants
+    public static String ORIGINAL_TOPIC = "original-topic";
+
     //Required
     public static String KAFKA_BROKER;
     public static List<String> TOPICS;

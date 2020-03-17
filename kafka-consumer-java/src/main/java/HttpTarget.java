@@ -5,10 +5,12 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.OptionalLong;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 
 public class HttpTarget implements ITarget {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -25,7 +27,7 @@ public class HttpTarget implements ITarget {
             .header("Content-Type", "application/json")
             .header("x-record-offset", String.valueOf(record.offset()))
             .header("x-record-timestamp", String.valueOf(record.timestamp()))
-            .header("x-record-topic", String.valueOf(record.topic()))
+            .header("x-record-topic", this.getOriginalTopic(record))
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 

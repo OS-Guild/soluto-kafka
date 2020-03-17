@@ -61,9 +61,9 @@ export const createClient = url => {
         _client = new ProtobufMessage.CallTarget(url, credentials.createInsecure());
     }
     return {
-        callTarget: <T>(payload: T, recordOffset?: number): Promise<TargetResponse> =>
+        callTarget: <T>(payload: T, recordOffset?: number,  customData: {[key: string]: string} = {}): Promise<TargetResponse> =>
             new Promise(resolve =>
-                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset}, (_, responsePayload) =>
+                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset, ...customData}, (_, responsePayload) =>
                     resolve(responsePayload)
                 )
             ),

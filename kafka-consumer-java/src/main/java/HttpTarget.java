@@ -5,12 +5,10 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.OptionalLong;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.function.CheckedSupplier;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
 
 public class HttpTarget implements ITarget {
     private final HttpClient client = HttpClient.newHttpClient();

@@ -23,7 +23,7 @@ public class Producer {
             headersToSend.add(Config.ORIGINAL_TOPIC, record.topic().getBytes());
         }
         producer.send(
-            new ProducerRecord<>(topic, record.key(), record.value(), headersToSend),
+            new ProducerRecord(topic, null, record.key(), record.value(), headersToSend),
             (metadata, err) -> {
                 if (err != null) {
                     Monitor.produceError(topicPrefix, record, err);

@@ -8,6 +8,7 @@ import java.util.Base64;
 import java.util.List;
 
 class Config {
+    
     //Constants
     public static String ORIGINAL_TOPIC = "original-topic";
 

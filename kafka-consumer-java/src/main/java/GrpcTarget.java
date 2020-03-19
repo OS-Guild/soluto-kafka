@@ -24,7 +24,7 @@ public class GrpcTarget implements ITarget {
         final var callTargetPayloadBuilder = Message.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());
         callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
-        callTargetPayloadBuilder.setTopic(record.topic());
+        callTargetPayloadBuilder.setTopic(this.getOriginalTopic(record));
         callTargetPayloadBuilder.setMsgJson(json);
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(client);
 

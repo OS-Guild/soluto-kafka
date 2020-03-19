@@ -28,12 +28,13 @@ public class Monitor {
     private static double[] buckets = new double[0];
 
     public static void init() {
-        if(Config.PROMETHEUS_BUCKETS != null) {
-            buckets = Arrays
-                .asList(Config.PROMETHEUS_BUCKETS.split(","))
-                .stream()
-                .mapToDouble(s -> Double.parseDouble(s))
-                .toArray();
+        if (Config.PROMETHEUS_BUCKETS != null) {
+            buckets =
+                Arrays
+                    .asList(Config.PROMETHEUS_BUCKETS.split(","))
+                    .stream()
+                    .mapToDouble(s -> Double.parseDouble(s))
+                    .toArray();
         }
 
         consumed = Counter.build().name("consumed").labelNames("topic", "partition").help("consumed").register();

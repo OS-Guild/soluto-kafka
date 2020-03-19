@@ -25,7 +25,7 @@ public class HttpTarget implements ITarget {
             .header("Content-Type", "application/json")
             .header("x-record-offset", String.valueOf(record.offset()))
             .header("x-record-timestamp", String.valueOf(record.timestamp()))
-            .header("x-record-topic", String.valueOf(record.topic()))
+            .header("x-record-topic", this.getOriginalTopic(record))
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 

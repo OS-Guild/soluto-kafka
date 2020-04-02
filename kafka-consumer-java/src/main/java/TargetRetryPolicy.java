@@ -26,12 +26,15 @@ public class TargetRetryPolicy {
                     var statusCode = getStatusCode.applyAsInt(x.getResult());
 
                     if (400 <= statusCode && statusCode < 500) {
-                        if (deadLetterTopic != null) {
-                            Monitor.processMessageError();
-                            if (statusCode == 408) {
+                        Monitor.processMessageError();
+
+                        if (statusCode == 408) {
+                            if (deadLetterTopic != null) {
                                 producer.produce("retry", retryTopic, record);
                                 Monitor.retryProduced(record);
-                            } else {
+                            }
+                        } else {
+                            if (retryTopic != null) {
                                 producer.produce("deadLetter", deadLetterTopic, record);
                                 Monitor.deadLetterProcdued(record);
                             }

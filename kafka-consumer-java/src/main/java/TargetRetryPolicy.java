@@ -29,12 +29,12 @@ public class TargetRetryPolicy {
                         Monitor.processMessageError();
 
                         if (statusCode == 408) {
-                            if (deadLetterTopic != null) {
+                            if (retryTopic != null) {
                                 producer.produce("retry", retryTopic, record);
                                 Monitor.retryProduced(record);
                             }
                         } else {
-                            if (retryTopic != null) {
+                            if (deadLetterTopic != null) {
                                 producer.produce("deadLetter", deadLetterTopic, record);
                                 Monitor.deadLetterProcdued(record);
                             }

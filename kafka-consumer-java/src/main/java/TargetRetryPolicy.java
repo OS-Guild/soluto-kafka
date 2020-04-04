@@ -20,27 +20,29 @@ public class TargetRetryPolicy {
         var executionStart = new Date().getTime();
         return new RetryPolicy<T>()
             .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-            .handleResultIf(r -> getStatusCode.applyAsInt(r) >= 500)
+            .handleResultIf(r -> getStatusCode.applyAsInt(r) >= 500 && getStatusCode.applyAsInt(r) != 503)
             .onSuccess(
                 x -> {
                     var statusCode = getStatusCode.applyAsInt(x.getResult());
 
+                    if (statusCode == 408 || statusCode == 503) {
+                        Monitor.processMessageError();
+                        if (retryTopic != null) {
+                            producer.produce("retry", retryTopic, record);
+                            Monitor.retryProduced(record);
+                            return;
+                        }
+                    }
+
                     if (400 <= statusCode && statusCode < 500) {
                         Monitor.processMessageError();
-
-                        if (statusCode == 408) {
-                            if (retryTopic != null) {
-                                producer.produce("retry", retryTopic, record);
-                                Monitor.retryProduced(record);
-                            }
-                        } else {
-                            if (deadLetterTopic != null) {
-                                producer.produce("deadLetter", deadLetterTopic, record);
-                                Monitor.deadLetterProcdued(record);
-                            }
+                        if (deadLetterTopic != null) {
+                            producer.produce("deadLetter", deadLetterTopic, record);
+                            Monitor.deadLetterProcdued(record);
                         }
                         return;
                     }
+
                     Monitor.processMessageSuccess(executionStart);
                 }
             )

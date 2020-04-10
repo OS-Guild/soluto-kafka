@@ -23,9 +23,12 @@ public class HttpTarget implements ITarget {
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))
             .header("Content-Type", "application/json")
+            .header("x-record-topic", record.topic())
+            .header("x-record-key", record.key())
+            .header("x-record-partition", String.valueOf(record.partition()))
             .header("x-record-offset", String.valueOf(record.offset()))
             .header("x-record-timestamp", String.valueOf(record.timestamp()))
-            .header("x-record-topic", this.getOriginalTopic(record))
+            .header("x-record-original-topic", this.getOriginalTopic(record))
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 

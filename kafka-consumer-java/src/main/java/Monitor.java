@@ -164,7 +164,7 @@ public class Monitor {
         deadLetterProduced.inc();
     }
 
-    public static void unexpectedError(Exception exception) {
+    public static void unexpectedError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "unexpected error")
@@ -334,7 +334,7 @@ public class Monitor {
         return getErrorMessagesArray(exception.getCause(), messages);
     }
 
-    private static JSONObject getErrorMessages(Exception exception) {
+    private static JSONObject getErrorMessages(Throwable exception) {
         var messages = getErrorMessagesArray(exception, new ArrayList<String>());
         var errorMessages = new JSONObject();
         for (var i = 0; i < messages.size(); i++) {

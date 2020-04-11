@@ -1,7 +1,12 @@
 FROM openjdk:13-alpine AS base
 WORKDIR /service
 
-FROM base AS build
+FROM base as dependencies
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+RUN ./gradlew build || return 0
+
+FROM dependencies AS build
 COPY . ./
 
 RUN ./gradlew clean test --info --no-daemon

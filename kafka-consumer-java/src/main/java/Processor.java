@@ -20,9 +20,10 @@ class Processor {
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions)
-        throws IOException, InterruptedException {
+    void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws InterruptedException {
         Thread.sleep(processingDelay);
+        System.out.println("Processing");
+
         Flowable
             .fromIterable(partitions)
             .flatMap(this::processPartition, Config.CONCURRENCY)
@@ -31,6 +32,8 @@ class Processor {
     }
 
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
+        System.out.println("Processing partition");
+
         return Flowable
             .fromIterable(partition)
             .doOnNext(Monitor::messageLatency)
@@ -38,6 +41,8 @@ class Processor {
             .flatMap(record -> Flowable.fromFuture(target.call(record)), Config.CONCURRENCY_PER_PARTITION)
             .doOnNext(
                 x -> {
+                    System.out.println("doOnNext");
+
                     if (x.callLatency.isPresent()) {
                         Monitor.callTargetLatency(x.callLatency.getAsLong());
                     }

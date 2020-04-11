@@ -32,6 +32,11 @@ public class ConsumerLoop implements Runnable, IConsumerLoopLifecycle {
     }
 
     @Override
+    public void start() {
+        new Thread(this).start();
+    }
+
+    @Override
     public void run() {
         running = true;
         consumer.subscribe(topics);

@@ -19,6 +19,8 @@ public class HttpTarget implements ITarget {
     }
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
+        System.out.println("calling http target");
+
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))
@@ -31,13 +33,19 @@ public class HttpTarget implements ITarget {
 
         final long startTime = (new Date()).getTime();
         final CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier =
-            () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+            () -> {
+                System.out.println("Sending request");
+                return client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+            };
 
         return Failsafe
             .with(retryPolicy.<HttpResponse<String>>get(record, r -> r.statusCode()))
             .getStageAsync(completionStageCheckedSupplier)
             .thenApplyAsync(
                 response -> {
+                    System.out.println("Topic: " + record.topic());
+
+                    System.out.println("Response: " + response.request().uri() + " - " + response.statusCode());
                     var callLatency = !response.headers().firstValueAsLong("x-received-timestamp").isPresent()
                         ? OptionalLong.empty()
                         : OptionalLong.of(

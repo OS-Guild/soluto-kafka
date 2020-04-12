@@ -203,10 +203,18 @@ public class Monitor {
         write(log);
     }
 
+    public static void monitorDroppedRecords(int id, int droppedCount) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "consumer " + id + " dropped " + droppedCount);
+
+        write(log);
+    }
+
     public static void serviceShutdown() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + "shutdown");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " shutdown");
 
         write(log);
     }

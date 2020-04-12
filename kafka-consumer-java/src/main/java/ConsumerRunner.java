@@ -29,7 +29,6 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
         String retryTopic,
         String deadLetterTopic
     ) {
-        System.out.println("Creating consumer " + id);
         this.id = id;
         this.consumer = consumer;
         this.topics = topics;
@@ -39,25 +38,36 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
 
     public void start() {
         running = true;
-        System.out.println("Topics: " + topics);
         consumer.subscribe(topics);
+        FlowableOnSubscribe<ConsumerRecords<String, String>> source =
+            emitter -> {
+                while (!emitter.isCancelled() && running) {
+                    emitter.onNext(consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT)));
+                }
+                consumer.unsubscribe();
+                consumer.close();
+                emitter.onComplete();
+            };
         disposableFlowable =
             Flowable
-                .create(new FlowableKafkaOnSubscribe(consumer), BackpressureStrategy.BUFFER)
+                .create(source, BackpressureStrategy.DROP)
+                .onBackpressureDrop(this::monitorDrops)
+                .doOnNext(this::monitorPartitionStatus)
+                .filter(records -> records.count() > 0)
                 .subscribeOn(Schedulers.io())
                 .doOnError(this::handleErrorAndStop)
                 .subscribe(this::processRecords);
     }
 
+    private void monitorDrops(ConsumerRecords<String, String> consumerRecords) {
+        Monitor.monitorDroppedRecords(id, consumerRecords.count());
+    }
+
     public void stop() {
         try {
-            if (disposableFlowable != null) {
-                disposableFlowable.dispose();
-            }
             assignedToPartition = false;
-            consumer.unsubscribe();
-            consumer.close();
             running = false;
+            Thread.sleep(Config.CONSUMER_POLL_TIMEOUT);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -73,7 +83,7 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
         stop();
     }
 
-    private void processRecords(ConsumerRecords<String, String> records) throws InterruptedException {
+    private void monitorPartitionStatus(ConsumerRecords<String, String> records) {
         if (!assignedToPartition && consumer.assignment().size() > 0) {
             assignedToPartition = true;
             Monitor.assignedToPartition(id);
@@ -81,11 +91,9 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
         if (!assignedToPartition) {
             Monitor.waitingForAssignment(id);
         }
-        if (records.count() == 0) {
-            return;
-        }
-        System.out.println("I'm in");
+    }
 
+    private void processRecords(ConsumerRecords<String, String> records) throws InterruptedException {
         Monitor.consumed(records);
 
         var consumedPartitioned = partitioner.partition(records);

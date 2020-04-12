@@ -99,7 +99,8 @@ class Config {
         }
 
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
-        PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, "PROMETHEUS_BUCKETS", "0.003,0.03,0.1,0.3,1.5,10");
+
         LOG_RECORD = getOptionalBool(dotenv, "LOG_RECORD", false);
     }
 

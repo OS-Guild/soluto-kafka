@@ -92,6 +92,8 @@ public class Monitor {
             recordsDetails += recored.topic() + ":" + recored.partition();
             consumed.labels(recored.topic(), String.valueOf(recored.partition())).inc();
         }
+
+        if (!Config.DEBUG) return;
         JSONObject log = new JSONObject()
             .put("level", "debug")
             .put("message", "consumed messages")
@@ -115,14 +117,15 @@ public class Monitor {
     public static void processBatchCompleted(long executionStart) {
         processBatchCompleted.inc();
         var executionTime = ((double) (new Date().getTime() - executionStart)) / 1000;
-        if (Config.DEBUG) {
-            JSONObject log = new JSONObject()
-                .put("level", "debug")
-                .put("message", "processBatchCompleted")
-                .put("extra", new JSONObject().put("executionTime", executionTime));
-            write(log);
-        }
         processExecutionTime.observe(executionTime);
+
+        if (!Config.DEBUG) return;
+        JSONObject log = new JSONObject()
+            .put("level", "debug")
+            .put("message", "processBatchCompleted")
+            .put("extra", new JSONObject().put("executionTime", executionTime));
+
+        write(log);
     }
 
     public static void processMessageStarted() {

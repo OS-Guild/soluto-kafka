@@ -26,8 +26,7 @@ class Processor {
             .fromIterable(partitions)
             .flatMap(this::processPartition, Config.CONCURRENCY)
             .subscribeOn(Schedulers.io())
-            .subscribe()//.blockingSubscribe()
-        ;
+            .subscribe(); //.blockingSubscribe()
     }
 
     private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {

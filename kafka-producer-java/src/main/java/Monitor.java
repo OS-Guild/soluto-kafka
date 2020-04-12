@@ -35,15 +35,16 @@ public class Monitor {
     }
 
     public static void produceSuccess(ProducerRequest producerRequest, long executionStart) {
+        produceSuccess.labels(producerRequest.topic).inc();
+        produceLatency.labels(producerRequest.topic).observe(((double) (new Date().getTime() - executionStart)) / 1000);
+
+        if (!Config.DEBUG) return;
         JSONObject log = new JSONObject()
             .put("level", "debug")
             .put("message", "produce success")
             .put("extra", new JSONObject().put("topic", producerRequest.topic).put("key", producerRequest.key));
 
-        output(log);
-
-        produceSuccess.labels(producerRequest.topic).inc();
-        produceLatency.labels(producerRequest.topic).observe(((double) (new Date().getTime() - executionStart)) / 1000);
+        write(log);
     }
 
     public static void produceError(Exception exception) {
@@ -52,30 +53,27 @@ public class Monitor {
             .put("message", "produce failed")
             .put("err", new JSONObject().put("message", exception.getMessage()));
 
-        output(log);
+        write(log);
 
         produceError.inc();
     }
 
     public static void started() {
         JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer started");
-
-        output(log);
+        write(log);
     }
 
     public static void ready() {
         JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer ready");
-
-        output(log);
+        write(log);
     }
 
     public static void serviceShutdown() {
         JSONObject log = new JSONObject().put("level", "info").put("message", "kafka-producer shutdown");
-
-        output(log);
+        write(log);
     }
 
-    private static void output(JSONObject log) {
+    private static void write(JSONObject log) {
         System.out.println(log.toString());
     }
 }

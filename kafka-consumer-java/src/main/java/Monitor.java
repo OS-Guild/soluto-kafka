@@ -197,10 +197,8 @@ public class Monitor {
         write(log);
     }
 
-    public static void assignedToPartition(int id) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "consumer " + id + " was assigned to partitions");
+    public static void assignedToPartition() {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer was assigned to partitions");
 
         write(log);
     }

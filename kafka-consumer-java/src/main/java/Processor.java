@@ -20,7 +20,9 @@ class Processor {
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    Flowable<ConsumerRecord<String, String>> process(Iterable<ConsumerRecord<String, String>> consumedPartitioned) {
+    Flowable<ConsumerRecord<String, String>> processBatch(
+        Iterable<ConsumerRecord<String, String>> consumedPartitioned
+    ) {
         return Flowable
             .fromIterable(consumedPartitioned)
             .delay(processingDelay, TimeUnit.MILLISECONDS)

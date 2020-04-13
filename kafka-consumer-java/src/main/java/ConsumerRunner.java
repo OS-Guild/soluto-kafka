@@ -12,6 +12,7 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
     private KafkaConsumer<String, String> consumer;
     private List<String> topics;
     private Disposable consumerFlowable;
+    private boolean assignedToPartition;
 
     ConsumerRunner(
         KafkaConsumer<String, String> consumer,
@@ -40,9 +41,11 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                     BackpressureStrategy.DROP
                 )
                 .onBackpressureDrop(this::monitorDrops)
+                .filter(__ -> consumer.assignment().size() > 0)
+                .doOnNext(this::assignedToPartition)
                 .filter(records -> records.count() > 0)
                 .doOnNext(this::monitorConsumed)
-                .flatMap(processor::process)
+                .concatMap(processor::processBatch)
                 .toList()
                 .flatMap(
                     x -> {
@@ -70,9 +73,21 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
     public void stop() {
         try {
             consumerFlowable.dispose();
+            assignedToPartition = false;
             Thread.sleep(3 * Config.CONSUMER_POLL_TIMEOUT);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean ready() {
+        return assignedToPartition;
+    }
+
+    private void assignedToPartition(ConsumerRecords<String, String> records) {
+        if (!assignedToPartition) {
+            assignedToPartition = true;
+            Monitor.assignedToPartition();
         }
     }
 

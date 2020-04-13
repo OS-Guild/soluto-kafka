@@ -1,4 +1,5 @@
 public interface IConsumerRunnerLifecycle {
-    void stop();
     void start();
+    void stop();
+    boolean ready();
 }

@@ -174,7 +174,7 @@ public class Monitor {
         deadLetterProduced.inc();
     }
 
-    public static void unexpectedError(Exception exception) {
+    public static void unexpectedError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "unexpected error")
@@ -213,10 +213,16 @@ public class Monitor {
         write(log);
     }
 
+    public static void monitorDroppedRecords(int droppedCount) {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer dropped" + droppedCount);
+
+        write(log);
+    }
+
     public static void serviceShutdown() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + "shutdown");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " shutdown");
 
         write(log);
     }
@@ -229,11 +235,11 @@ public class Monitor {
         write(log);
     }
 
-    public static void commitFailed(CommitFailedException exception) {
+    public static void commitFailed(Throwable throwable) {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "commit failed")
-            .put("err", new JSONObject().put("errorMessages", getErrorMessages(exception)));
+            .put("err", new JSONObject().put("errorMessages", getErrorMessages(throwable)));
 
         write(log);
     }
@@ -344,7 +350,7 @@ public class Monitor {
         return getErrorMessagesArray(exception.getCause(), messages);
     }
 
-    private static JSONObject getErrorMessages(Exception exception) {
+    private static JSONObject getErrorMessages(Throwable exception) {
         var messages = getErrorMessagesArray(exception, new ArrayList<String>());
         var errorMessages = new JSONObject();
         for (var i = 0; i < messages.size(); i++) {

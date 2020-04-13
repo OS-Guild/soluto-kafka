@@ -9,12 +9,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 public class MonitoringServer {
-    List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
+    List<? extends IConsumerRunnerLifecycle> consumerLoopLifecycles;
     HttpServer server;
     TargetIsAlive targetIsAlive;
 
     public MonitoringServer(
-        final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles,
+        final List<? extends IConsumerRunnerLifecycle> consumerLoopLifecycles,
         TargetIsAlive targetIsAlive
     ) {
         this.consumerLoopLifecycles = consumerLoopLifecycles;
@@ -58,25 +58,25 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!consumerAssignedToAtLeastOnePartition(consumerLoopLifecycles)) {
-                        writeResponse(500, exchange);
-                        return;
-                    }
-
+                    // if (!consumerAssignedToAtLeastOnePartition(consumerLoopLifecycles)) {
+                    //     writeResponse(500, exchange);
+                    //     return;
+                    // }
                     writeResponse(200, exchange);
                 }
             }
         );
     }
 
-    private static boolean consumerAssignedToAtLeastOnePartition(List<? extends IConsumerLoopLifecycle> consumerLoops) {
-        var response = consumerLoops.stream().map(x -> x.assignedToPartition()).anyMatch(y -> y.equals(true));
-        if (!response) {
-            Monitor.consumerNotAssignedToAtLeastOnePartition();
-        }
-        return response;
-    }
-
+    // private static boolean consumerAssignedToAtLeastOnePartition(
+    //     List<? extends IConsumerRunnerLifecycle> consumerLoops
+    // ) {
+    //     var response = consumerLoops.stream().map(x -> x.assignedToPartition()).anyMatch(y -> y.equals(true));
+    //     if (!response) {
+    //         Monitor.consumerNotAssignedToAtLeastOnePartition();
+    //     }
+    //     return response;
+    // }
     private boolean targetAlive(HttpExchange exchange) throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {

@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
 public class Main {
-    static List<ConsumerLoopWrapper> consumerLoops = new ArrayList<>();
+    static List<IConsumerRunnerLifecycle> consumerRunners = new ArrayList<>();
     static CountDownLatch countDownLatch;
     static MonitoringServer monitoringServer;
 
@@ -23,40 +23,31 @@ public class Main {
             var kafkaCreator = new KafkaCreator();
             var producer = kafkaCreator.createProducer();
 
-            for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
-                var consumer = kafkaCreator.createConsumer();
-                var consumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        i,
-                        consumer,
-                        Config.TOPICS,
-                        Config.PROCESSING_DELAY,
-                        producer,
-                        Config.RETRY_TOPIC,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
-                );
-                new Thread(consumerLoop, "consumer " + i).start();
-                consumerLoops.add(consumerLoop);
-            }
+            var consumer = kafkaCreator.createConsumer();
+
+            var consumerRunner = new ConsumerRunner(
+                consumer,
+                Config.TOPICS,
+                Config.PROCESSING_DELAY,
+                producer,
+                Config.RETRY_TOPIC,
+                Config.DEAD_LETTER_TOPIC
+            );
+            consumerRunner.start();
+            consumerRunners.add(consumerRunner);
 
             if (Config.RETRY_TOPIC != null) {
                 var retryConsumer = kafkaCreator.createConsumer();
-                var retryConsumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        0,
-                        retryConsumer,
-                        Collections.singletonList(Config.RETRY_TOPIC),
-                        Config.RETRY_PROCESSING_DELAY,
-                        producer,
-                        null,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
+                var retryConsumerRunner = new ConsumerRunner(
+                    retryConsumer,
+                    Collections.singletonList(Config.RETRY_TOPIC),
+                    Config.RETRY_PROCESSING_DELAY,
+                    producer,
+                    null,
+                    Config.DEAD_LETTER_TOPIC
                 );
-                new Thread(retryConsumerLoop, "retry consumer").start();
-                consumerLoops.add(retryConsumerLoop);
+                retryConsumerRunner.start();
+                consumerRunners.add(retryConsumerRunner);
             }
 
             Runtime
@@ -64,26 +55,26 @@ public class Main {
                 .addShutdownHook(
                     new Thread(
                         () -> {
-                            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
+                            consumerRunners.forEach(runner -> runner.stop());
                             monitoringServer.close();
                             Monitor.serviceShutdown();
                         }
                     )
                 );
 
-            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
+            monitoringServer = new MonitoringServer(consumerRunners, taretIsAlive);
             monitoringServer.start();
             Monitor.started();
 
-            countDownLatch = new CountDownLatch(consumerLoops.size());
+            countDownLatch = new CountDownLatch(consumerRunners.size());
             countDownLatch.await();
         } catch (Exception e) {
             Monitor.unexpectedError(e);
-            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
         } finally {
             if (monitoringServer != null) {
                 monitoringServer.close();
             }
+            consumerRunners.forEach(consumerRunner -> consumerRunner.stop());
             Monitor.serviceTerminated();
             System.exit(0);
         }

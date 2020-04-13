@@ -48,7 +48,7 @@ class KafkaCreator {
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("enable.auto.commit", "false");
-        props.put("max.poll.records", String.valueOf(Config.POLL_RECORDS));
+        props.put("max.poll.records", String.valueOf(Config.CONCURRENT_RECORDS));
 
         return new KafkaConsumer<>(props);
     }

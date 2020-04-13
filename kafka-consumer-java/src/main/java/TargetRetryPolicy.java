@@ -18,22 +18,20 @@ public class TargetRetryPolicy {
 
     public <T> RetryPolicy<T> get(ConsumerRecord<String, String> record, final ToIntFunction<T> getStatusCode) {
         var executionStart = new Date().getTime();
-        var delay = Config.TARGET_RETRY_POLICY_EXPONENTIAL_BACKOFF.get(0);
-        var maxDelay = Config.TARGET_RETRY_POLICY_EXPONENTIAL_BACKOFF.get(1);
-        var delayFactor = Config.TARGET_RETRY_POLICY_EXPONENTIAL_BACKOFF.get(2);
+        var delay = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(0);
+        var maxDelay = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(1);
+        var delayFactor = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(2);
 
         return new RetryPolicy<T>()
             .withBackoff(delay, maxDelay, ChronoUnit.MILLIS, delayFactor)
             .handleResultIf(
-                r -> String
-                    .valueOf(getStatusCode.applyAsInt(r))
-                    .matches(Config.TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX)
+                r -> String.valueOf(getStatusCode.applyAsInt(r)).matches(Config.RETRY_PROCESS_WHEN_STATUS_CODE_MATCH)
             )
             .onSuccess(
                 x -> {
                     var statusCode = String.valueOf(getStatusCode.applyAsInt(x.getResult()));
 
-                    if (statusCode.matches(Config.TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX)) {
+                    if (statusCode.matches(Config.PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (retryTopic != null) {
                             producer.produce("retry", retryTopic, record);
@@ -42,7 +40,7 @@ public class TargetRetryPolicy {
                         }
                     }
 
-                    if (statusCode.matches(Config.TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX)) {
+                    if (statusCode.matches(Config.PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (deadLetterTopic != null) {
                             producer.produce("deadLetter", deadLetterTopic, record);

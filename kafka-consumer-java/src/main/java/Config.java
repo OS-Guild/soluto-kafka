@@ -31,10 +31,10 @@ class Config {
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
     public static boolean DEBUG;
-    public static String TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX;
-    public static String TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX;
-    public static String TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX;
-    public static List<Integer> TARGET_RETRY_POLICY_EXPONENTIAL_BACKOFF;
+    public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
+    public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
+    public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
+    public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -65,14 +65,14 @@ class Config {
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
 
-        TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX =
-            getOptionalString(dotenv, "TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX", "500|503");
-        TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX =
-            getOptionalString(dotenv, "TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX", "408");
-        TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX =
-            getOptionalString(dotenv, "TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX", "400|404");
-        TARGET_RETRY_POLICY_EXPONENTIAL_BACKOFF =
-            getOptionalIntList(dotenv, "TARGET_RETRY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
+        RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "500|503");
+        PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH", "408");
+        PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "400|404");
+        RETRY_POLICY_EXPONENTIAL_BACKOFF =
+            getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);

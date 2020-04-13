@@ -22,7 +22,6 @@ class Config {
     //Optional
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
-    public static boolean DEDUP_PARTITION_BY_KEY;
     public static int CONCURRENCY_PER_PARTITION;
     public static int PROCESSING_DELAY;
     public static int RETRY_PROCESSING_DELAY;
@@ -75,7 +74,6 @@ class Config {
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
         CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
-        DEDUP_PARTITION_BY_KEY = getOptionalBool(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 

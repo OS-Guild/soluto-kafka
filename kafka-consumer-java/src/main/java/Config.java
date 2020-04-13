@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class Config {
     //Constants
@@ -30,6 +31,10 @@ class Config {
     public static int CONSUMER_POLL_TIMEOUT;
     public static int CONSUMER_THREADS;
     public static boolean DEBUG;
+    public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
+    public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
+    public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
+    public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -59,6 +64,15 @@ class Config {
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
+
+        RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
+        PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH", "408");
+        PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
+            getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "4[0-9][0-79]");
+        RETRY_POLICY_EXPONENTIAL_BACKOFF =
+            getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
@@ -130,6 +144,32 @@ class Config {
         }
 
         return Arrays.asList(value.split(","));
+    }
+
+    private static List<Integer> getOptionalIntList(
+        Dotenv dotenv,
+        String name,
+        int expectedSize,
+        List<Integer> fallback
+    )
+        throws Exception {
+        String value = dotenv.get(name);
+
+        if (value == null) {
+            return fallback;
+        }
+        var list = Arrays.asList(value.split(",")).stream().map(x -> Integer.parseInt(x)).collect(Collectors.toList());
+
+        if (expectedSize != -1 && expectedSize != list.size()) {
+            throw new Exception(
+                String.format(
+                    "env var parse error: expected list with size of %1$s, got list with size of %2$s",
+                    expectedSize,
+                    list.size()
+                )
+            );
+        }
+        return list;
     }
 
     private static String getOptionalString(Dotenv dotenv, String name, String fallback) {

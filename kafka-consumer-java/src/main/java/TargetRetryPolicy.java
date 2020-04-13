@@ -18,14 +18,20 @@ public class TargetRetryPolicy {
 
     public <T> RetryPolicy<T> get(ConsumerRecord<String, String> record, final ToIntFunction<T> getStatusCode) {
         var executionStart = new Date().getTime();
+        var delay = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(0);
+        var maxDelay = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(1);
+        var delayFactor = Config.RETRY_POLICY_EXPONENTIAL_BACKOFF.get(2);
+
         return new RetryPolicy<T>()
-            .withBackoff(10, 250, ChronoUnit.MILLIS, 5)
-            .handleResultIf(r -> getStatusCode.applyAsInt(r) >= 500 && getStatusCode.applyAsInt(r) != 503)
+            .withBackoff(delay, maxDelay, ChronoUnit.MILLIS, delayFactor)
+            .handleResultIf(
+                r -> String.valueOf(getStatusCode.applyAsInt(r)).matches(Config.RETRY_PROCESS_WHEN_STATUS_CODE_MATCH)
+            )
             .onSuccess(
                 x -> {
-                    var statusCode = getStatusCode.applyAsInt(x.getResult());
+                    var statusCode = String.valueOf(getStatusCode.applyAsInt(x.getResult()));
 
-                    if (statusCode == 408 || statusCode == 503) {
+                    if (statusCode.matches(Config.PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (retryTopic != null) {
                             producer.produce("retry", retryTopic, record);
@@ -34,7 +40,7 @@ public class TargetRetryPolicy {
                         }
                     }
 
-                    if (400 <= statusCode && statusCode < 500) {
+                    if (statusCode.matches(Config.PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (deadLetterTopic != null) {
                             producer.produce("deadLetter", deadLetterTopic, record);

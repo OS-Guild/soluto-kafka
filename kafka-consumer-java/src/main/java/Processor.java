@@ -1,6 +1,4 @@
 import io.reactivex.Flowable;
-import io.reactivex.schedulers.Schedulers;
-import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -22,23 +20,13 @@ class Processor {
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    Flowable<ConsumerRecord<String, String>> process(
-        Iterable<Iterable<ConsumerRecord<String, String>>> consumedPartitioned
-    ) {
+    Flowable<ConsumerRecord<String, String>> process(Iterable<ConsumerRecord<String, String>> consumedPartitioned) {
         return Flowable
             .fromIterable(consumedPartitioned)
             .delay(processingDelay, TimeUnit.MILLISECONDS)
-            .flatMap(this::processPartition, Config.CONCURRENT_RECORDS);
-    }
-
-    private Flowable<ConsumerRecord<String, String>> processPartition(
-        Iterable<ConsumerRecord<String, String>> partition
-    ) {
-        return Flowable
-            .fromIterable(partition)
             .doOnNext(Monitor::messageLatency)
             .doOnNext(__ -> Monitor.processMessageStarted())
-            .flatMap(record -> Flowable.fromFuture(target.call(record)), Config.CONCURRENCY_PER_PARTITION)
+            .flatMap(record -> Flowable.fromFuture(target.call(record)), Config.CONCURRENT_RECORDS)
             .doOnNext(
                 x -> {
                     if (x.callLatency.isPresent()) {

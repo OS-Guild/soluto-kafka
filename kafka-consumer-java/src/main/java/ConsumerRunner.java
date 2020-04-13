@@ -9,7 +9,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 
 public class ConsumerRunner implements IConsumerRunnerLifecycle {
     private final Processor processor;
-    private final Partitioner partitioner;
     private KafkaConsumer<String, String> consumer;
     private List<String> topics;
     private Disposable consumerFlowable;
@@ -25,7 +24,6 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
         this.consumer = consumer;
         this.topics = topics;
         this.processor = new Processor(processingDelay, producer, retryTopic, deadLetterTopic);
-        this.partitioner = new Partitioner();
     }
 
     public void start() {
@@ -44,7 +42,6 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                 .onBackpressureDrop(this::monitorDrops)
                 .filter(records -> records.count() > 0)
                 .doOnNext(this::monitorConsumed)
-                .map(records -> partitioner.partition(records))
                 .flatMap(processor::process)
                 .toList()
                 .flatMap(

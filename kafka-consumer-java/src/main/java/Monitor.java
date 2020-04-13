@@ -39,7 +39,14 @@ public class Monitor {
 
         consumed = Counter.build().name("consumed").labelNames("topic", "partition").help("consumed").register();
 
-        messageLatency = Histogram.build().buckets(buckets).name("message_latency").help("message_latency").register();
+        messageLatency =
+            Histogram
+                .build()
+                .buckets(buckets)
+                .labelNames("topic")
+                .name("message_latency")
+                .help("message_latency")
+                .register();
 
         callTargetLatency =
             Histogram.build().buckets(buckets).name("call_target_latency").help("call_target_latency").register();
@@ -103,7 +110,7 @@ public class Monitor {
     }
 
     public static void messageLatency(ConsumerRecord<String, String> record) {
-        messageLatency.observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
+        messageLatency.labels(record.topic()).observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
     }
 
     public static void callTargetLatency(long latency) {

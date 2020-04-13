@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
 public class Main {
-    static List<IConsumerLoopLifecycle> consumerRunners = new ArrayList<>();
+    static List<IConsumerRunnerLifecycle> consumerRunners = new ArrayList<>();
     static CountDownLatch countDownLatch;
     static MonitoringServer monitoringServer;
 

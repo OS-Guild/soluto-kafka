@@ -31,15 +31,14 @@ public class HttpTarget implements ITarget {
 
         final long startTime = (new Date()).getTime();
         final CheckedSupplier<CompletionStage<HttpResponse<String>>> completionStageCheckedSupplier =
-            () -> {
-                return client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
-            };
+            () -> client.sendAsync(request, HttpResponse.BodyHandlers.ofString());
 
         return Failsafe
             .with(retryPolicy.<HttpResponse<String>>get(record, r -> r.statusCode()))
             .getStageAsync(completionStageCheckedSupplier)
             .thenApplyAsync(
                 response -> {
+                    System.out.println("Response");
                     var callLatency = !response.headers().firstValueAsLong("x-received-timestamp").isPresent()
                         ? OptionalLong.empty()
                         : OptionalLong.of(

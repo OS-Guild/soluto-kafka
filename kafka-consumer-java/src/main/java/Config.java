@@ -22,13 +22,11 @@ class Config {
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
     public static boolean DEDUP_PARTITION_BY_KEY;
-    public static int CONCURRENCY;
     public static int CONCURRENCY_PER_PARTITION;
     public static int PROCESSING_DELAY;
     public static int RETRY_PROCESSING_DELAY;
-    public static int POLL_RECORDS;
+    public static int CONCURRENT_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
-    public static int CONSUMER_THREADS;
     public static boolean DEBUG;
 
     //Authentication
@@ -62,15 +60,13 @@ class Config {
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
-        CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
         CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         DEDUP_PARTITION_BY_KEY = getOptionalBool(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
+        CONCURRENT_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);

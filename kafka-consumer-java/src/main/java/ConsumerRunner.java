@@ -3,14 +3,16 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import java.net.ConnectException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
-public class ConsumerRunner implements IConsumerLoopLifecycle {
+public class ConsumerRunner implements IConsumerRunnerLifecycle {
     private final Processor processor;
     private final Partitioner partitioner;
     private KafkaConsumer<String, String> consumer;
@@ -48,26 +50,34 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
                 consumer.close();
                 emitter.onComplete();
             };
-        disposableFlowable =
-            Flowable
-                .create(source, BackpressureStrategy.DROP)
-                .onBackpressureDrop(this::monitorDrops)
-                .doOnNext(this::monitorPartitionStatus)
-                .filter(records -> records.count() > 0)
-                .subscribeOn(Schedulers.io())
-                .doOnError(this::handleErrorAndStop)
-                .subscribe(this::processRecords);
+
+        Flowable
+            .create(source, BackpressureStrategy.DROP)
+            .onBackpressureDrop(this::monitorDrops)
+            .doOnNext(this::monitorPartitionStatus)
+            .filter(records -> records.count() > 0)
+            .doOnNext(this::monitorConsumed)
+            .doOnError(this::handleErrorAndStop)
+            //.delay(this.processingDelay, TimeUnit.MILLISECONDS)
+            .map(records -> partitioner.partition(records))
+            .flatMap(processor::process)
+            .subscribeOn(Schedulers.io())
+            .blockingSubscribe();
     }
 
-    private void monitorDrops(ConsumerRecords<String, String> consumerRecords) {
-        Monitor.monitorDroppedRecords(id, consumerRecords.count());
+    private void monitorConsumed(ConsumerRecords<String, String> records) {
+        Monitor.consumed(records);
+    }
+
+    private void monitorDrops(ConsumerRecords<String, String> records) {
+        Monitor.monitorDroppedRecords(id, records.count());
     }
 
     public void stop() {
         try {
             assignedToPartition = false;
             running = false;
-            Thread.sleep(Config.CONSUMER_POLL_TIMEOUT);
+            Thread.sleep(3 * Config.CONSUMER_POLL_TIMEOUT);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,16 +103,9 @@ public class ConsumerRunner implements IConsumerLoopLifecycle {
         }
     }
 
-    private void processRecords(ConsumerRecords<String, String> records) throws InterruptedException {
-        Monitor.consumed(records);
-
-        var consumedPartitioned = partitioner.partition(records);
-
-        var executionStart = new Date().getTime();
-        processor.process(consumedPartitioned);
-        Monitor.processBatchCompleted(executionStart);
-
+    private void commit(ConsumerRecord<String, String> record) {
         try {
+            System.out.println("Commit");
             consumer.commitSync();
         } catch (CommitFailedException e) {
             Monitor.commitFailed(e);

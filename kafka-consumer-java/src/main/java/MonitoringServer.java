@@ -9,12 +9,12 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 public class MonitoringServer {
-    List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
+    List<? extends IConsumerRunnerLifecycle> consumerLoopLifecycles;
     HttpServer server;
     TargetIsAlive targetIsAlive;
 
     public MonitoringServer(
-        final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles,
+        final List<? extends IConsumerRunnerLifecycle> consumerLoopLifecycles,
         TargetIsAlive targetIsAlive
     ) {
         this.consumerLoopLifecycles = consumerLoopLifecycles;
@@ -69,7 +69,9 @@ public class MonitoringServer {
         );
     }
 
-    private static boolean consumerAssignedToAtLeastOnePartition(List<? extends IConsumerLoopLifecycle> consumerLoops) {
+    private static boolean consumerAssignedToAtLeastOnePartition(
+        List<? extends IConsumerRunnerLifecycle> consumerLoops
+    ) {
         var response = consumerLoops.stream().map(x -> x.assignedToPartition()).anyMatch(y -> y.equals(true));
         if (!response) {
             Monitor.consumerNotAssignedToAtLeastOnePartition();

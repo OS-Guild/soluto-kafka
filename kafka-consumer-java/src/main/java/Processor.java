@@ -1,6 +1,6 @@
 import io.reactivex.Flowable;
 import io.reactivex.schedulers.Schedulers;
-import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
@@ -14,22 +14,25 @@ class Processor {
         String retryTopic,
         String deadLetterTopic
     ) {
+        this.processingDelay = processingDelay;
         var targetRetryPolicy = new TargetRetryPolicy(new Producer(kafkaProducer), retryTopic, deadLetterTopic);
         target =
             Config.SENDING_PROTOCOL.equals("grpc") ? new GrpcTarget(targetRetryPolicy)
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    void process(Iterable<Iterable<ConsumerRecord<String, String>>> partitions) throws InterruptedException {
-        Thread.sleep(processingDelay);
-        Flowable
-            .fromIterable(partitions)
-            .flatMap(this::processPartition, Config.CONCURRENCY)
-            .subscribeOn(Schedulers.io())
-            .subscribe();
+    Flowable<ConsumerRecord<String, String>> process(
+        Iterable<Iterable<ConsumerRecord<String, String>>> consumedPartitioned
+    ) {
+        return Flowable
+            .fromIterable(consumedPartitioned)
+            .delay(processingDelay, TimeUnit.MILLISECONDS)
+            .flatMap(this::processPartition, Config.CONCURRENT_RECORDS);
     }
 
-    private Flowable processPartition(Iterable<ConsumerRecord<String, String>> partition) {
+    private Flowable<ConsumerRecord<String, String>> processPartition(
+        Iterable<ConsumerRecord<String, String>> partition
+    ) {
         return Flowable
             .fromIterable(partition)
             .doOnNext(Monitor::messageLatency)

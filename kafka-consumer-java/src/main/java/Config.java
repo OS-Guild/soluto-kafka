@@ -66,11 +66,11 @@ class Config {
         TARGET = getString(dotenv, "TARGET");
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
-            getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "500|503");
+            getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
         PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH", "408");
         PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
-            getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "400|404");
+            getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "4[0-9][0-79]");
         RETRY_POLICY_EXPONENTIAL_BACKOFF =
             getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
 

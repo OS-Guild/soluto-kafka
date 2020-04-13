@@ -2,7 +2,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.function.ToIntFunction;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -26,16 +25,15 @@ public class TargetRetryPolicy {
         return new RetryPolicy<T>()
             .withBackoff(delay, maxDelay, ChronoUnit.MILLIS, delayFactor)
             .handleResultIf(
-                r -> matches(
-                    String.valueOf(getStatusCode.applyAsInt(r)),
-                    Config.TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX
-                )
+                r -> String
+                    .valueOf(getStatusCode.applyAsInt(r))
+                    .matches(Config.TARGET_RETRY_POLICY_RETRY_STATUS_CODES_REGEX)
             )
             .onSuccess(
                 x -> {
                     var statusCode = String.valueOf(getStatusCode.applyAsInt(x.getResult()));
 
-                    if (matches(statusCode, Config.TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX)) {
+                    if (statusCode.matches(Config.TARGET_RETRY_POLICY_RETRY_TOPIC_STATUS_CODES_REGEX)) {
                         Monitor.processMessageError();
                         if (retryTopic != null) {
                             producer.produce("retry", retryTopic, record);
@@ -44,7 +42,7 @@ public class TargetRetryPolicy {
                         }
                     }
 
-                    if (matches(statusCode, Config.TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX)) {
+                    if (statusCode.matches(Config.TARGET_RETRY_POLICY_DEAD_LETTER_TOPIC_STATUS_CODES_REGEX)) {
                         Monitor.processMessageError();
                         if (deadLetterTopic != null) {
                             producer.produce("deadLetter", deadLetterTopic, record);
@@ -72,11 +70,5 @@ public class TargetRetryPolicy {
                     }
                 }
             );
-    }
-
-    private boolean matches(String value, String pattern) {
-        var r = Pattern.compile(pattern);
-        var m = r.matcher(value);
-        return m.find();
     }
 }

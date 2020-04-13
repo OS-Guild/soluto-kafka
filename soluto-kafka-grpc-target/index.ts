@@ -4,8 +4,8 @@ import {loadSync} from '@grpc/proto-loader';
 const PROTO_PATH = __dirname + '/message.proto';
 
 export type Headers = {
-    recordOffset: string;
-    recordTimestamp: string;
+    recordOffset: number;
+    recordTimestamp: number;
     topic: string;
 };
 

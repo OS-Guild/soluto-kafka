@@ -321,14 +321,6 @@ public class Monitor {
         }
     }
 
-    public static void consumerNotAssignedToAtLeastOnePartition() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "none of the consumer threads are assigned to a partition");
-
-        write(log);
-    }
-
     public static void debug(String text) {
         if (!Config.DEBUG) return;
         JSONObject log = new JSONObject().put("level", "debug").put("message", text);

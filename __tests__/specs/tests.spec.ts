@@ -69,36 +69,6 @@ describe('tests', () => {
         expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
     });
 
-    it('test retry topic - should produce and consume', async () => {
-        await mockGrpcTarget();
-        const callId = await mockHttpTarget();
-
-        await produce('http://localhost:7000/produce', 'test-retry');
-        await delay(20000);
-
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
-        expect(hasBeenMade).toBeTruthy();
-    });
-
-    it('test retry flow - should retry failed consume', async () => {
-        await mockGrpcTarget();
-        const errorCallId = await mockHttpTargetError();
-
-        await produce('http://localhost:6000/produce', 'test-retry');
-        await delay(20000);
-
-        const {hasBeenMade: errorHasBeenMade} = await fakeHttpServer.getCall(errorCallId);
-        expect(errorHasBeenMade).toBeTruthy();
-
-        await mockGrpcTarget();
-        const callId = await mockHttpTarget();
-
-        await delay(20000);
-
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
-        expect(hasBeenMade).toBeTruthy();
-    });
-
     it('producer request validation', async () => {
         const method = 'post';
         const producerUrl = 'http://localhost:6000/produce';
@@ -142,13 +112,6 @@ const mockHttpTarget = () =>
     fakeHttpServer.mock({
         method: 'post',
         url: '/consume',
-    });
-
-const mockHttpTargetError = () =>
-    fakeHttpServer.mock({
-        method: 'post',
-        url: '/consume',
-        statusCode: 500,
     });
 
 const mockGrpcTarget = () =>

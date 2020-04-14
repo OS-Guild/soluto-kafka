@@ -13,7 +13,6 @@ services:
             - TARGET=fake-http-server:2000/consume
             - MONITORING_SERVER_PORT=4000
             - RETRY_TOPIC=test-retry
-            - RETRY_PROCESSING_DELAY=10000
         depends_on:
             - kafka
             - fake-http-server
@@ -30,7 +29,6 @@ services:
             - TARGET=fake-grpc-server:4770
             - MONITORING_SERVER_PORT=5000
             - RETRY_TOPIC=test-retry
-            - RETRY_PROCESSING_DELAY=10000
         depends_on:
             - kafka
             - fake-grpc-server

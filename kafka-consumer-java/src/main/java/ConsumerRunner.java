@@ -47,7 +47,7 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                 .doOnNext(this::monitorConsumed)
                 .concatMap(processor::processBatch)
                 .toList()
-                .flatMap(
+                .concatMap(
                     x -> {
                         return Single.create(
                             emitter -> {

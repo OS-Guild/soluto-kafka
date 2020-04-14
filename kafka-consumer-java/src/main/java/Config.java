@@ -22,10 +22,8 @@ class Config {
     //Optional
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
-    public static int CONCURRENCY_PER_PARTITION;
     public static int PROCESSING_DELAY;
     public static int RETRY_PROCESSING_DELAY;
-    public static int CONCURRENT_RECORDS;
     public static int CONSUMER_POLL_TIMEOUT;
     public static boolean DEBUG;
     public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
@@ -73,12 +71,10 @@ class Config {
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
-        CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
         CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
-        CONCURRENT_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);

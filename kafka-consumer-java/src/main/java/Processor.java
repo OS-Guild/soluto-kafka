@@ -20,15 +20,13 @@ class Processor {
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    Flowable<ConsumerRecord<String, String>> processBatch(
-        Iterable<ConsumerRecord<String, String>> consumedPartitioned
-    ) {
+    Flowable<ConsumerRecord<String, String>> processBatch(Iterable<ConsumerRecord<String, String>> records) {
         return Flowable
-            .fromIterable(consumedPartitioned)
+            .fromIterable(records)
             .delay(processingDelay, TimeUnit.MILLISECONDS)
             .doOnNext(Monitor::messageLatency)
             .doOnNext(__ -> Monitor.processMessageStarted())
-            .flatMap(record -> Flowable.fromFuture(target.call(record)), Config.CONCURRENT_RECORDS)
+            .flatMap(record -> Flowable.fromFuture(target.call(record)))
             .doOnNext(
                 x -> {
                     if (x.callLatency.isPresent()) {

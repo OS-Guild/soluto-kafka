@@ -32,11 +32,15 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
             Flowable
                 .<ConsumerRecords<String, String>>create(
                     emitter -> {
-                        consumer.subscribe(topics);
-                        while (!emitter.isCancelled()) {
-                            emitter.onNext(consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT)));
+                        try {
+                            consumer.subscribe(topics);
+                            while (!emitter.isCancelled()) {
+                                emitter.onNext(consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT)));
+                            }
+                            emitter.onComplete();
+                        } catch (Exception exception) {
+                            emitter.onError(exception);
                         }
-                        emitter.onComplete();
                     },
                     BackpressureStrategy.DROP
                 )

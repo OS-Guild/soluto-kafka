@@ -30,27 +30,28 @@ class Processor {
             .doOnNext(Monitor::messageLatency)
             .doOnNext(__ -> Monitor.processMessageStarted())
             .flatMap(record -> Flowable.fromFuture(target.call(record)))
+            .flatMap(
+                targetResponse -> targetResponse.type == TargetResponseType.Error
+                    ? Flowable.error(targetResponse.exception)
+                    : Flowable.just(targetResponse)
+            )
             .doOnNext(
-                x -> {
-                    if (x.callLatency.isPresent()) {
-                        Monitor.callTargetLatency(x.callLatency.getAsLong());
+                targetResponse -> {
+                    if (targetResponse.callLatency.isPresent()) {
+                        Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                     }
-                    if (x.resultLatency.isPresent()) {
-                        Monitor.resultTargetLatency(x.resultLatency.getAsLong());
+                    if (targetResponse.resultLatency.isPresent()) {
+                        Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
                     }
                 }
             )
-            .flatMap(
-                targetResponse -> {
-                    if (targetResponse.type == TargetResponseType.Error) {
-                        if (targetResponse.exception instanceof ConnectException) {
-                            Monitor.targetConnectionUnavailable();
-                        } else {
-                            Monitor.unexpectedError(targetResponse.exception);
-                            return Flowable.error(targetResponse.exception);
-                        }
+            .doOnError(
+                exception -> {
+                    if (exception.getCause() instanceof ConnectException) {
+                        Monitor.targetConnectionUnavailable();
+                    } else {
+                        Monitor.unexpectedError(exception);
                     }
-                    return Flowable.just(targetResponse);
                 }
             )
             .toList();

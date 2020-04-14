@@ -1,10 +1,12 @@
 import java.util.Properties;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 
-class KafkaCreator {
+public class KafkaClientFactory {
 
-    private Properties getAuthProperties() {
+    private static Properties getAuthProperties() {
         var props = new Properties();
         props.put("bootstrap.servers", Config.KAFKA_BROKER);
 
@@ -42,7 +44,7 @@ class KafkaCreator {
         return props;
     }
 
-    public KafkaConsumer<String, String> createConsumer() {
+    public static Consumer<String, String> createConsumer() {
         var props = getAuthProperties();
         props.put("group.id", Config.GROUP_ID);
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -52,7 +54,7 @@ class KafkaCreator {
         return new KafkaConsumer<>(props);
     }
 
-    public KafkaProducer<String, String> createProducer() {
+    public static Producer<String, String> createProducer() {
         var props = getAuthProperties();
 
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");

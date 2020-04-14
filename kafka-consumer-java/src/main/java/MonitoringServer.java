@@ -6,15 +6,14 @@ import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
 
 public class MonitoringServer {
-    List<? extends IReady> consumerRunners;
+    IReady consumerRunner;
     HttpServer server;
     TargetIsAlive targetIsAlive;
 
-    public MonitoringServer(final List<? extends IReady> consumerRunners, TargetIsAlive targetIsAlive) {
-        this.consumerRunners = consumerRunners;
+    public MonitoringServer(IReady consumerRunner, TargetIsAlive targetIsAlive) {
+        this.consumerRunner = consumerRunner;
         this.targetIsAlive = targetIsAlive;
     }
 
@@ -55,7 +54,7 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!consumerRunnersReady(consumerRunners)) {
+                    if (!consumerRunner.ready()) {
                         writeResponse(500, exchange);
                         return;
                     }
@@ -63,14 +62,6 @@ public class MonitoringServer {
                 }
             }
         );
-    }
-
-    private static boolean consumerRunnersReady(List<? extends IReady> consumerRunners) {
-        var response = consumerRunners.stream().map(x -> x.ready()).allMatch(y -> y.equals(true));
-        if (!response) {
-            Monitor.consumerNotAssignedToAtLeastOnePartition();
-        }
-        return response;
     }
 
     private boolean targetAlive(HttpExchange exchange) throws IOException {

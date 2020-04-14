@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.List;
 
 public class Main {
-    static List<IConsumerRunnerLifecycle> consumerRunners = new ArrayList<>();
+    static List<IConsumerRunner> consumerRunners = new ArrayList<>();
     static CountDownLatch countDownLatch;
     static MonitoringServer monitoringServer;
 
@@ -23,28 +23,31 @@ public class Main {
             var kafkaCreator = new KafkaCreator();
             var producer = kafkaCreator.createProducer();
 
-            var consumer = kafkaCreator.createConsumer();
-
-            var consumerRunner = new ConsumerRunner(
-                consumer,
-                Config.TOPICS,
-                Config.PROCESSING_DELAY,
-                producer,
-                Config.RETRY_TOPIC,
-                Config.DEAD_LETTER_TOPIC
-            );
-            consumerRunner.start();
-            consumerRunners.add(consumerRunner);
+            if (Config.TOPICS != null) {
+                var consumerRunner = new ConsumerRunner(
+                    kafkaCreator.createConsumer(),
+                    Config.TOPICS,
+                    ProcessorFactory.create(
+                        new TargetRetryPolicy(
+                            new ProduceSender(producer),
+                            Config.RETRY_TOPIC,
+                            Config.DEAD_LETTER_TOPIC
+                        ),
+                        Config.PROCESSING_DELAY
+                    )
+                );
+                consumerRunner.start();
+                consumerRunners.add(consumerRunner);
+            }
 
             if (Config.RETRY_TOPIC != null) {
-                var retryConsumer = kafkaCreator.createConsumer();
                 var retryConsumerRunner = new ConsumerRunner(
-                    retryConsumer,
+                    kafkaCreator.createConsumer(),
                     Collections.singletonList(Config.RETRY_TOPIC),
-                    Config.RETRY_PROCESSING_DELAY,
-                    producer,
-                    null,
-                    Config.DEAD_LETTER_TOPIC
+                    ProcessorFactory.create(
+                        new TargetRetryPolicy(new ProduceSender(producer), null, Config.DEAD_LETTER_TOPIC),
+                        Config.RETRY_PROCESSING_DELAY
+                    )
                 );
                 retryConsumerRunner.start();
                 consumerRunners.add(retryConsumerRunner);

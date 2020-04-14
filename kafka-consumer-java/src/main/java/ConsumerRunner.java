@@ -3,39 +3,31 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import java.time.Duration;
 import java.util.List;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 
-public class ConsumerRunner implements IConsumerRunnerLifecycle {
+public class ConsumerRunner implements IConsumerRunner {
+    private final Consumer<String, String> kafkaConsumer;
+    private final List<String> topics;
     private final Processor processor;
-    private KafkaConsumer<String, String> consumer;
-    private List<String> topics;
-    private Disposable consumerFlowable;
-    private boolean assignedToPartition;
+    private Disposable consumer;
+    private boolean ready;
 
-    ConsumerRunner(
-        KafkaConsumer<String, String> consumer,
-        List<String> topics,
-        long processingDelay,
-        KafkaProducer<String, String> producer,
-        String retryTopic,
-        String deadLetterTopic
-    ) {
-        this.consumer = consumer;
+    ConsumerRunner(Consumer<String, String> kafkaConsumer, List<String> topics, Processor processor) {
+        this.kafkaConsumer = kafkaConsumer;
         this.topics = topics;
-        this.processor = new Processor(processingDelay, producer, retryTopic, deadLetterTopic);
+        this.processor = processor;
     }
 
     public void start() {
-        consumerFlowable =
+        consumer =
             Flowable
                 .<ConsumerRecords<String, String>>create(
                     emitter -> {
                         try {
-                            consumer.subscribe(topics);
+                            kafkaConsumer.subscribe(topics);
                             while (!emitter.isCancelled()) {
-                                emitter.onNext(consumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT)));
+                                emitter.onNext(kafkaConsumer.poll(Duration.ofMillis(Config.CONSUMER_POLL_TIMEOUT)));
                             }
                             emitter.onComplete();
                         } catch (Exception exception) {
@@ -45,7 +37,7 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                     BackpressureStrategy.DROP
                 )
                 .onBackpressureDrop(this::monitorDrops)
-                .filter(__ -> consumer.assignment().size() > 0)
+                .filter(__ -> kafkaConsumer.assignment().size() > 0)
                 .doOnNext(this::assignedToPartition)
                 .filter(records -> records.count() > 0)
                 .doOnNext(this::monitorConsumed)
@@ -54,7 +46,7 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                     x -> {
                         return Single.create(
                             emitter -> {
-                                consumer.commitAsync(
+                                kafkaConsumer.commitAsync(
                                     (result, throwable) -> {
                                         if (throwable != null) {
                                             Monitor.commitFailed(throwable);
@@ -69,14 +61,18 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                     }
                 )
                 .subscribeOn(Schedulers.io())
-                .doFinally(() -> consumer.close())
+                .doFinally(
+                    () -> {
+                        kafkaConsumer.close();
+                        ready = false;
+                    }
+                )
                 .subscribe();
     }
 
     public void stop() {
         try {
-            consumerFlowable.dispose();
-            assignedToPartition = false;
+            consumer.dispose();
             Thread.sleep(3 * Config.CONSUMER_POLL_TIMEOUT);
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,12 +80,12 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
     }
 
     public boolean ready() {
-        return assignedToPartition;
+        return ready;
     }
 
     private void assignedToPartition(ConsumerRecords<String, String> records) {
-        if (!assignedToPartition) {
-            assignedToPartition = true;
+        if (!ready) {
+            ready = true;
             Monitor.assignedToPartition();
         }
     }

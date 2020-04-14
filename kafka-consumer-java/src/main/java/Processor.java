@@ -1,5 +1,6 @@
 import io.reactivex.Flowable;
 import io.reactivex.Single;
+import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -40,11 +41,16 @@ class Processor {
                 }
             )
             .flatMap(
-                x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.just(x)
-            )
-            .onErrorReturn(
-                x -> {
-                    return Flowable.empty();
+                targetResponse -> {
+                    if (targetResponse.type == TargetResponseType.Error) {
+                        if (targetResponse.exception instanceof ConnectException) {
+                            Monitor.targetConnectionUnavailable();
+                        } else {
+                            Monitor.unexpectedError(targetResponse.exception);
+                            return Flowable.error(targetResponse.exception);
+                        }
+                    }
+                    return Flowable.just(targetResponse);
                 }
             )
             .toList();

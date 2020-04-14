@@ -42,18 +42,7 @@ describe('tests', () => {
         fail();
     });
 
-    it('test topic - should produce and consume', async () => {
-        await mockGrpcTarget();
-        const callId = await mockHttpTarget();
-
-        await produce('http://localhost:6000/produce', 'test');
-        await delay(5000);
-
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
-        expect(hasBeenMade).toBeTruthy();
-    });
-
-    it('should consume from multiple topics', async () => {
+    it('should produce and consume from multiple topics', async () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
 

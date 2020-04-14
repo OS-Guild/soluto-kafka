@@ -9,11 +9,11 @@ import java.net.InetSocketAddress;
 import java.util.List;
 
 public class MonitoringServer {
-    List<? extends IConsumerRunner> consumerRunners;
+    List<? extends IReady> consumerRunners;
     HttpServer server;
     TargetIsAlive targetIsAlive;
 
-    public MonitoringServer(final List<? extends IConsumerRunner> consumerRunners, TargetIsAlive targetIsAlive) {
+    public MonitoringServer(final List<? extends IReady> consumerRunners, TargetIsAlive targetIsAlive) {
         this.consumerRunners = consumerRunners;
         this.targetIsAlive = targetIsAlive;
     }
@@ -65,7 +65,7 @@ public class MonitoringServer {
         );
     }
 
-    private static boolean consumerRunnersReady(List<? extends IConsumerRunner> consumerRunners) {
+    private static boolean consumerRunnersReady(List<? extends IReady> consumerRunners) {
         var response = consumerRunners.stream().map(x -> x.ready()).allMatch(y -> y.equals(true));
         if (!response) {
             Monitor.consumerNotAssignedToAtLeastOnePartition();

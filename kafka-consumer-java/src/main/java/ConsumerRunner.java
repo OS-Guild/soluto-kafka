@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-public class ConsumerRunner implements IConsumerRunner {
+public class ConsumerRunner implements IReady {
     private final Consumer<String, String> kafkaConsumer;
     private final List<String> topics;
     private final Processor processor;

@@ -49,9 +49,8 @@ public class ConsumerRunner implements IConsumerRunnerLifecycle {
                 .doOnNext(this::assignedToPartition)
                 .filter(records -> records.count() > 0)
                 .doOnNext(this::monitorConsumed)
-                .concatMap(processor::processBatch)
-                .toList()
-                .concatMap(
+                .concatMapSingle(processor::processBatch)
+                .concatMapSingle(
                     x -> {
                         return Single.create(
                             emitter -> {

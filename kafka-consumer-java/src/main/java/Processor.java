@@ -1,6 +1,8 @@
 import io.reactivex.Flowable;
+import io.reactivex.Single;
 import java.util.concurrent.TimeUnit;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import java.util.List;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 class Processor {
@@ -20,7 +22,7 @@ class Processor {
                 : new HttpTarget(targetRetryPolicy);
     }
 
-    Flowable<ConsumerRecord<String, String>> processBatch(Iterable<ConsumerRecord<String, String>> records) {
+    Single<List<TargetResponse>> processBatch(ConsumerRecords<String, String> records) {
         return Flowable
             .fromIterable(records)
             .delay(processingDelay, TimeUnit.MILLISECONDS)
@@ -38,7 +40,13 @@ class Processor {
                 }
             )
             .flatMap(
-                x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.empty()
-            );
+                x -> x.type == TargetResponseType.Error ? Flowable.error(x.exception.getCause()) : Flowable.just(x)
+            )
+            .onErrorReturn(
+                x -> {
+                    return Flowable.empty();
+                }
+            )
+            .toList();
     }
 }

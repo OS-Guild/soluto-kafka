@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.OptionalLong;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.function.CheckedSupplier;
-import reactor.kafka.receiver.ReceiverRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class HttpTarget implements ITarget {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -21,7 +21,7 @@ public class HttpTarget implements ITarget {
         this.retryPolicy = retryPolicy;
     }
 
-    public CompletableFuture<TargetResponse> call(final ReceiverRecord<String, String> record) {
+    public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))

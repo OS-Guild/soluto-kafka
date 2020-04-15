@@ -12,13 +12,11 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.json.JSONObject;
 import reactor.kafka.receiver.ReceiverPartition;
-import reactor.kafka.receiver.ReceiverRecord;
 
 public class Monitor {
     private static Counter processMessageStarted;
     private static Counter processMessageSuccess;
     private static Counter processMessageError;
-    private static Counter consumed;
     private static Counter retryProduced;
     private static Counter deadLetterProduced;
     private static Counter produceError;
@@ -39,8 +37,6 @@ public class Monitor {
                     .mapToDouble(s -> Double.parseDouble(s))
                     .toArray();
         }
-
-        consumed = Counter.build().name("consumed").labelNames("topic", "partition").help("consumed").register();
 
         messageLatency =
             Histogram
@@ -88,18 +84,7 @@ public class Monitor {
                 .register();
     }
 
-    public static void consumed(ReceiverRecord<String, String> record) {
-        consumed.labels(record.topic(), String.valueOf(record.partition())).inc();
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", "consumed recored")
-            .put("extra", new JSONObject().put("recordsDetails", record.toString()));
-
-        write(log);
-    }
-
-    public static void receivedRecord(ReceiverRecord<String, String> record) {
+    public static void receivedRecord(ConsumerRecord<String, String> record) {
         messageLatency.labels(record.topic()).observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
         processMessageStarted.inc();
     }

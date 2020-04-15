@@ -22,8 +22,8 @@ public class Main {
             } while (!targetIsAlive.check());
             System.out.println("target is alive");
 
-            consumer = ConsumerFactory.create();
             monitoringServer = new MonitoringServer(consumer, targetIsAlive);
+            consumer = ConsumerFactory.create(monitoringServer);
 
             Runtime
                 .getRuntime()

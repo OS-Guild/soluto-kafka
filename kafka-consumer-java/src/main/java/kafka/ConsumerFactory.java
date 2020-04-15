@@ -3,6 +3,7 @@ package kafka;
 import configuration.Config;
 import io.reactivex.disposables.Disposable;
 import monitoring.Monitor;
+import monitoring.MonitoringServer;
 import reactor.adapter.rxjava.RxJava2Adapter;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
@@ -13,7 +14,7 @@ import target.TargetRetryPolicy;
 
 public class ConsumerFactory {
 
-    public static Disposable create() {
+    public static Disposable create(MonitoringServer monitoringServer) {
         var consumer = new Consumer(
             RxJava2Adapter.fluxToFlowable(
                 KafkaReceiver
@@ -24,6 +25,7 @@ public class ConsumerFactory {
                             .addAssignListener(
                                 partitions -> {
                                     Monitor.assignedToPartition(partitions);
+                                    monitoringServer.consumerAssigned();
                                 }
                             )
                             .addRevokeListener(

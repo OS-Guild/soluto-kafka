@@ -14,6 +14,7 @@ import target.TargetIsAlive;
 
 public class MonitoringServer {
     private Disposable consumer;
+    private boolean consumerAssigned;
     private final TargetIsAlive targetIsAlive;
     private HttpServer server;
 
@@ -63,6 +64,11 @@ public class MonitoringServer {
                         writeResponse(500, exchange);
                         return;
                     }
+
+                    if (!consumerAssigned) {
+                        writeResponse(500, exchange);
+                    }
+
                     writeResponse(200, exchange);
                 }
             }
@@ -86,5 +92,9 @@ public class MonitoringServer {
         exchange.sendResponseHeaders(statusCode, responseText.getBytes().length);
         os.write(responseText.getBytes());
         os.close();
+    }
+
+    public void consumerAssigned() {
+        consumerAssigned = true;
     }
 }

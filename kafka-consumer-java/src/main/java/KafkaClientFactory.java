@@ -3,6 +3,8 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
 
 public class KafkaClientFactory {
 
@@ -44,19 +46,16 @@ public class KafkaClientFactory {
         return props;
     }
 
-    public static Consumer<String, String> createConsumer() {
+    public static Properties createConsumer() {
         var props = getAuthProperties();
         props.put("group.id", Config.GROUP_ID);
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("enable.auto.commit", "false");
-
-        return new KafkaConsumer<>(props);
+        return props;
     }
 
     public static Producer<String, String> createProducer() {
         var props = getAuthProperties();
-
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 

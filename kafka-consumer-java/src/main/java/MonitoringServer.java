@@ -8,12 +8,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class MonitoringServer {
-    IReady consumerRunner;
     HttpServer server;
     TargetIsAlive targetIsAlive;
 
-    public MonitoringServer(IReady consumerRunner, TargetIsAlive targetIsAlive) {
-        this.consumerRunner = consumerRunner;
+    public MonitoringServer(TargetIsAlive targetIsAlive) {
         this.targetIsAlive = targetIsAlive;
     }
 
@@ -54,10 +52,10 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!consumerRunner.ready()) {
-                        writeResponse(500, exchange);
-                        return;
-                    }
+                    // if (!consumer.ready()) {
+                    //     writeResponse(500, exchange);
+                    //     return;
+                    // }
                     writeResponse(200, exchange);
                 }
             }

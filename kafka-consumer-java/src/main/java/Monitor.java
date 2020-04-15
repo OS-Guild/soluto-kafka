@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.json.JSONObject;
+import reactor.kafka.receiver.ReceiverRecord;
 
 public class Monitor {
     private static Counter processMessageStarted;
@@ -91,26 +90,20 @@ public class Monitor {
                 .register();
     }
 
-    public static void consumed(ConsumerRecords<String, String> records) {
-        var recordsDetails = "";
-        var recordsIterator = records.iterator();
-        while (recordsIterator.hasNext()) {
-            var recored = recordsIterator.next();
-            recordsDetails += recored.topic() + ":" + recored.partition();
-            consumed.labels(recored.topic(), String.valueOf(recored.partition())).inc();
-        }
-
+    public static void consumed(ReceiverRecord<String, String> record) {
+        consumed.labels(record.topic(), String.valueOf(record.partition())).inc();
         if (!Config.DEBUG) return;
         JSONObject log = new JSONObject()
             .put("level", "debug")
-            .put("message", "consumed messages")
-            .put("extra", new JSONObject().put("count", records.count()).put("recordsDetails", recordsDetails));
+            .put("message", "consumed recored")
+            .put("extra", new JSONObject().put("recordsDetails", record.toString()));
 
         write(log);
     }
 
-    public static void messageLatency(ConsumerRecord<String, String> record) {
+    public static void receivedRecord(ReceiverRecord<String, String> record) {
         messageLatency.labels(record.topic()).observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
+        processMessageStarted.inc();
     }
 
     public static void callTargetLatency(long latency) {
@@ -135,9 +128,7 @@ public class Monitor {
         write(log);
     }
 
-    public static void processMessageStarted() {
-        processMessageStarted.inc();
-    }
+    public static void processMessageStarted() {}
 
     public static void processMessageSuccess(long executionStart) {
         processMessageExecutionTime.observe(((double) (new Date().getTime() - executionStart)) / 1000);
@@ -211,8 +202,8 @@ public class Monitor {
         write(log);
     }
 
-    public static void monitorDroppedRecords(int droppedCount) {
-        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer dropped" + droppedCount);
+    public static void backpressureBufferOverflow() {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer backpressure overflow");
 
         write(log);
     }

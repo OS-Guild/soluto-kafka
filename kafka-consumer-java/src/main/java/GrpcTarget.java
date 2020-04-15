@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.OptionalLong;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.function.CheckedSupplier;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import reactor.kafka.receiver.ReceiverRecord;
 
 public class GrpcTarget implements ITarget {
     private Channel client;
@@ -19,7 +19,7 @@ public class GrpcTarget implements ITarget {
         this.retryPolicy = retryPolicy;
     }
 
-    public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
+    public CompletableFuture<TargetResponse> call(final ReceiverRecord<String, String> record) {
         final var json = record.value();
         final var callTargetPayloadBuilder = Message.CallTargetPayload.newBuilder();
         callTargetPayloadBuilder.setRecordOffset(record.offset());

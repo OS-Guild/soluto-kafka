@@ -37,7 +37,10 @@ dependencies {
     compile group: 'io.prometheus', name: 'simpleclient', version: '0.8.0'
     compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
     compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
+    compile group: 'io.projectreactor.kafka', name: 'reactor-kafka', version: '1.2.2.RELEASE'
+    compile group: 'io.projectreactor.addons', name: 'reactor-adapter', version: '3.3.3.RELEASE'
     testImplementation('org.junit.jupiter:junit-jupiter:5.4.2')
+    
 }
 
 test {

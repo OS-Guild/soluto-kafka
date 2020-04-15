@@ -1,7 +1,10 @@
 import java.util.concurrent.CountDownLatch;
+import reactor.adapter.rxjava.RxJava2Adapter;
+import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
 
 public class Main {
-    static ConsumerRunner consumerRunner;
+    static Consumer consumer;
     static MonitoringServer monitoringServer;
 
     public static void main(String[] args) {
@@ -16,28 +19,36 @@ public class Main {
             } while (!taretIsAlive.check());
             System.out.println("target is alive");
 
-            consumerRunner =
-                new ConsumerRunner(
-                    KafkaClientFactory.createConsumer(),
-                    Config.TOPICS,
-                    ProcessorFactory.create(
+            consumer =
+                new Consumer(
+                    RxJava2Adapter.fluxToFlowable(
+                        KafkaReceiver
+                            .create(
+                                ReceiverOptions
+                                    .<String, String>create(KafkaClientFactory.createConsumer())
+                                    .subscription(Config.TOPICS)
+                                    .addAssignListener(partitions -> Monitor.assignedToPartition())
+                            )
+                            .receive()
+                    ),
+                    TargetFactory.create(
                         new TargetRetryPolicy(
                             new ProduceSender(KafkaClientFactory.createProducer()),
                             Config.RETRY_TOPIC,
                             Config.DEAD_LETTER_TOPIC
-                        ),
-                        Config.PROCESSING_DELAY
-                    )
+                        )
+                    ),
+                    Config.PROCESSING_DELAY
                 );
 
-            monitoringServer = new MonitoringServer(consumerRunner, taretIsAlive);
+            monitoringServer = new MonitoringServer(taretIsAlive);
 
             Runtime
                 .getRuntime()
                 .addShutdownHook(
                     new Thread(
                         () -> {
-                            consumerRunner.stop();
+                            consumer.stop();
                             monitoringServer.close();
                             Monitor.serviceShutdown();
                         }
@@ -45,7 +56,7 @@ public class Main {
                 );
 
             monitoringServer.start();
-            consumerRunner.start();
+            consumer.start();
             Monitor.started();
 
             new CountDownLatch(1).await();
@@ -53,7 +64,7 @@ public class Main {
             Monitor.unexpectedError(e);
         } finally {
             monitoringServer.close();
-            consumerRunner.stop();
+            consumer.stop();
             Monitor.serviceTerminated();
         }
     }

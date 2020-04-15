@@ -37,7 +37,7 @@ public class Main {
                                     )
                                     .addRevokeListener(
                                         partitions -> {
-                                            Monitor.revokedFromPartition();
+                                            Monitor.revokedFromPartition(partitions);
                                             monitoringServer.ready(partitions.size() > 0);
                                         }
                                     )

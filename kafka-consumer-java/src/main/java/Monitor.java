@@ -15,7 +15,6 @@ public class Monitor {
     private static Counter processMessageStarted;
     private static Counter processMessageSuccess;
     private static Counter processMessageError;
-    private static Counter processBatchCompleted;
     private static Counter consumed;
     private static Counter retryProduced;
     private static Counter deadLetterProduced;
@@ -23,7 +22,6 @@ public class Monitor {
     private static Counter targetExecutionRetry;
     private static Histogram messageLatency;
     private static Histogram processMessageExecutionTime;
-    private static Histogram processExecutionTime;
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
 
@@ -55,12 +53,6 @@ public class Monitor {
 
         resultTargetLatency =
             Histogram.build().buckets(buckets).name("result_target_latency").help("result_target_latency").register();
-
-        processBatchCompleted =
-            Counter.build().name("process_batch_completed").help("process_batch_completed").register();
-
-        processExecutionTime =
-            Histogram.build().buckets(buckets).name("process_execution_time").help("process_execution_time").register();
 
         processMessageSuccess =
             Counter.build().name("process_message_success").help("process_message_success").register();
@@ -116,22 +108,6 @@ public class Monitor {
     public static void resultTargetLatency(long latency) {
         resultTargetLatency.observe((double) latency / 1000);
     }
-
-    public static void processBatchCompleted(long executionStart) {
-        processBatchCompleted.inc();
-        var executionTime = ((double) (new Date().getTime() - executionStart)) / 1000;
-        processExecutionTime.observe(executionTime);
-
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", "processBatchCompleted")
-            .put("extra", new JSONObject().put("executionTime", executionTime));
-
-        write(log);
-    }
-
-    public static void processMessageStarted() {}
 
     public static void processMessageSuccess(long executionStart) {
         processMessageExecutionTime.observe(((double) (new Date().getTime() - executionStart)) / 1000);

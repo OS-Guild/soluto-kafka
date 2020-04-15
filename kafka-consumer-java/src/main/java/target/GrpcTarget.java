@@ -1,4 +1,7 @@
+package target;
+
 import com.spotify.futures.ListenableFuturesExtra;
+import configuration.Config;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.concurrent.CompletableFuture;

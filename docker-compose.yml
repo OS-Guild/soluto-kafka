@@ -16,20 +16,20 @@ services:
             - kafka
             - fake-http-server
 
-    # kafka_consumer_grpc_target:
-    #     build: ./kafka-consumer-java/
-    #     ports:
-    #         - 5000:5000
-    #     environment:
-    #         - KAFKA_BROKER=kafka:9092
-    #         - TOPICS=test
-    #         - GROUP_ID=consumer_2
-    #         - SENDING_PROTOCOL=grpc
-    #         - TARGET=fake-grpc-server:4770
-    #         - MONITORING_SERVER_PORT=5000
-    #     depends_on:
-    #         - kafka
-    #         - fake-grpc-server
+    kafka_consumer_grpc_target:
+        build: ./kafka-consumer-java/
+        ports:
+            - 5000:5000
+        environment:
+            - KAFKA_BROKER=kafka:9092
+            - TOPICS=test
+            - GROUP_ID=consumer_2
+            - SENDING_PROTOCOL=grpc
+            - TARGET=fake-grpc-server:4770
+            - MONITORING_SERVER_PORT=5000
+        depends_on:
+            - kafka
+            - fake-grpc-server
 
     producer:
         build: ./kafka-producer-java/

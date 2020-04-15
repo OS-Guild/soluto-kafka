@@ -1,11 +1,15 @@
+package monitoring;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import configuration.Config;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import target.TargetIsAlive;
 
 public class MonitoringServer {
     private final TargetIsAlive targetIsAlive;

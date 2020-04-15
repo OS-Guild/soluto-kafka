@@ -1,4 +1,8 @@
+import configuration.*;
 import java.util.concurrent.CountDownLatch;
+import kafka.*;
+import monitoring.*;
+import target.*;
 
 public class Main {
     static Consumer consumer;
@@ -9,14 +13,14 @@ public class Main {
             Config.init();
             Monitor.init();
 
-            var taretIsAlive = new TargetIsAlive();
+            var targetIsAlive = new TargetIsAlive();
             do {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
-            } while (!taretIsAlive.check());
+            } while (!targetIsAlive.check());
             System.out.println("target is alive");
 
-            monitoringServer = new MonitoringServer(taretIsAlive);
+            monitoringServer = new MonitoringServer(targetIsAlive);
             consumer = ConsumerFactory.create(monitoringServer);
 
             Runtime

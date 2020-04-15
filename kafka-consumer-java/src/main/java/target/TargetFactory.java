@@ -1,3 +1,7 @@
+package target;
+
+import configuration.Config;
+
 public class TargetFactory {
 
     public static ITarget create(TargetRetryPolicy targetRetryPolicy) {

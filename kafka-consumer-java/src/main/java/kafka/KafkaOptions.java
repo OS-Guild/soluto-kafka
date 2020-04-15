@@ -1,3 +1,6 @@
+package kafka;
+
+import configuration.Config;
 import java.util.Properties;
 
 public class KafkaOptions {

@@ -1,3 +1,6 @@
+package monitoring;
+
+import configuration.Config;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;

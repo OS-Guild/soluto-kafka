@@ -1,3 +1,5 @@
+package configuration;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +10,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class Config {
+public class Config {
     //Constants
     public static String ORIGINAL_TOPIC = "original-topic";
 

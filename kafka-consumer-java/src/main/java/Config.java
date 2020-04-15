@@ -23,7 +23,6 @@ class Config {
     public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
-    public static int CONSUMER_POLL_TIMEOUT;
     public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
@@ -72,7 +71,6 @@ class Config {
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
 
-        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);

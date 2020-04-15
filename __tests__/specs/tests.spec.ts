@@ -46,15 +46,13 @@ describe('tests', () => {
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', 'test');
-        // await delay(5000);
-        // await produce('http://localhost:6000/produce', 'another_test');
+        await produce('http://localhost:6000/produce', 'another_test');
         await delay(5000);
 
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
-        expect(hasBeenMade).toBeTruthy();
-        // expect(madeCalls.length).toBe(2);
-        // expect(madeCalls[0].headers['x-record-topic']).toBe('test');
-        // expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
+        const {madeCalls} = await fakeHttpServer.getCall(callId);
+        expect(madeCalls.length).toBe(2);
+        expect(madeCalls[0].headers['x-record-topic']).toBe('test');
+        expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
     });
 
     it('producer request validation', async () => {

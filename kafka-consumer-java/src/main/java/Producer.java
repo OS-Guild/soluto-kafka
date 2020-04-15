@@ -1,16 +1,18 @@
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.header.internals.RecordHeaders;
+import reactor.core.publisher.Flux;
+import reactor.kafka.sender.KafkaSender;
+import reactor.kafka.sender.SenderRecord;
 
-public class ProduceSender {
-    private Producer<String, String> producer;
+public class Producer {
+    private KafkaSender<String, String> sender;
 
-    public ProduceSender(Producer<String, String> producer) {
-        this.producer = producer;
+    public Producer(KafkaSender<String, String> sender) {
+        this.sender = sender;
     }
 
     public void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
@@ -22,14 +24,17 @@ public class ProduceSender {
             headersToSend = new RecordHeaders();
             headersToSend.add(Config.ORIGINAL_TOPIC, record.topic().getBytes());
         }
-        producer.send(
-            new ProducerRecord(topic, null, record.key(), record.value(), headersToSend),
-            (metadata, err) -> {
-                if (err != null) {
-                    Monitor.produceError(topicPrefix, record, err);
-                    return;
-                }
-            }
-        );
+
+        sender
+            .send(
+                Flux.just(
+                    SenderRecord.create(
+                        new ProducerRecord<String, String>(topic, null, record.key(), record.value(), headersToSend),
+                        record.key()
+                    )
+                )
+            )
+            .doOnError(error -> Monitor.produceError(topicPrefix, record, error))
+            .subscribe(__ -> {}, __ -> {}, () -> {});
     }
 }

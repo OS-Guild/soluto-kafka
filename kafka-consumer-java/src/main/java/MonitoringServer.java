@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class MonitoringServer {
-    HttpServer server;
-    TargetIsAlive targetIsAlive;
+    private final TargetIsAlive targetIsAlive;
+    private HttpServer server;
+    private boolean ready;
 
     public MonitoringServer(TargetIsAlive targetIsAlive) {
         this.targetIsAlive = targetIsAlive;
+        this.ready = false;
     }
 
     public void start() throws IOException {
@@ -28,6 +30,10 @@ public class MonitoringServer {
         } else {
             server.start();
         }
+    }
+
+    public void ready(boolean ready) {
+        this.ready = ready;
     }
 
     public void close() {
@@ -52,10 +58,10 @@ public class MonitoringServer {
                         return;
                     }
 
-                    // if (!consumer.ready()) {
-                    //     writeResponse(500, exchange);
-                    //     return;
-                    // }
+                    if (!ready) {
+                        writeResponse(500, exchange);
+                        return;
+                    }
                     writeResponse(200, exchange);
                 }
             }

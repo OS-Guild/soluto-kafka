@@ -2,6 +2,8 @@ import java.util.concurrent.CountDownLatch;
 import reactor.adapter.rxjava.RxJava2Adapter;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
+import reactor.kafka.sender.KafkaSender;
+import reactor.kafka.sender.SenderOptions;
 
 public class Main {
     static Consumer consumer;
@@ -25,15 +27,28 @@ public class Main {
                         KafkaReceiver
                             .create(
                                 ReceiverOptions
-                                    .<String, String>create(KafkaClientFactory.createConsumer())
+                                    .<String, String>create(KafkaOptions.consumer())
                                     .subscription(Config.TOPICS)
-                                    .addAssignListener(partitions -> Monitor.assignedToPartition())
+                                    .addAssignListener(
+                                        partitions -> {
+                                            Monitor.assignedToPartition(partitions);
+                                            monitoringServer.ready(partitions.size() > 0);
+                                        }
+                                    )
+                                    .addRevokeListener(
+                                        partitions -> {
+                                            Monitor.revokedFromPartition();
+                                            monitoringServer.ready(partitions.size() > 0);
+                                        }
+                                    )
                             )
                             .receive()
                     ),
                     TargetFactory.create(
                         new TargetRetryPolicy(
-                            new ProduceSender(KafkaClientFactory.createProducer()),
+                            new Producer(
+                                KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))
+                            ),
                             Config.RETRY_TOPIC,
                             Config.DEAD_LETTER_TOPIC
                         )
@@ -56,9 +71,9 @@ public class Main {
                 );
 
             monitoringServer.start();
+
             consumer.start();
             Monitor.started();
-
             new CountDownLatch(1).await();
         } catch (Exception e) {
             Monitor.unexpectedError(e);

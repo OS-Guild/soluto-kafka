@@ -6,11 +6,11 @@ import net.jodah.failsafe.RetryPolicy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 public class TargetRetryPolicy {
-    private ProduceSender producer;
+    private Producer producer;
     private String retryTopic;
     private String deadLetterTopic;
 
-    public TargetRetryPolicy(ProduceSender producer, String retryTopic, String deadLetterTopic) {
+    public TargetRetryPolicy(Producer producer, String retryTopic, String deadLetterTopic) {
         this.producer = producer;
         this.retryTopic = retryTopic;
         this.deadLetterTopic = deadLetterTopic;

@@ -2,10 +2,13 @@ import io.prometheus.client.Counter;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.json.JSONObject;
+import reactor.kafka.receiver.ReceiverPartition;
 import reactor.kafka.receiver.ReceiverRecord;
 
 public class Monitor {
@@ -188,17 +191,25 @@ public class Monitor {
         write(log);
     }
 
-    public static void assignedToPartition() {
-        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer was assigned to partitions");
-
+    public static void assignedToPartition(Collection<ReceiverPartition> partitions) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "consumer was assigned to partitions")
+            .put(
+                "topicPartitions",
+                partitions.stream().map(x -> x.topicPartition().toString()).collect(Collectors.joining(","))
+            );
         write(log);
     }
 
-    public static void waitingForAssignment(int id) {
+    public static void revokedFromPartition(Collection<ReceiverPartition> partitions) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "consumer " + id + " is waiting for partitions assignment..");
-
+            .put("message", "consumer was revoked from partitions")
+            .put(
+                "topicPartitions",
+                partitions.stream().map(x -> x.topicPartition().toString()).collect(Collectors.joining(","))
+            );
         write(log);
     }
 
@@ -236,7 +247,7 @@ public class Monitor {
     public static void produceError(
         String topicPrefix,
         ConsumerRecord<String, String> consumerRecord,
-        Exception exception
+        Throwable exception
     ) {
         var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
         if (Config.LOG_RECORD) {

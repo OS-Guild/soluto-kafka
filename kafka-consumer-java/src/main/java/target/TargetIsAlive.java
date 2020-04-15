@@ -28,7 +28,6 @@ public class TargetIsAlive {
                 Monitor.targetAlive(targetIsAliveResponse.statusCode());
                 return true;
             } catch (Exception e) {
-                Monitor.unexpectedError(e);
                 return false;
             }
         }

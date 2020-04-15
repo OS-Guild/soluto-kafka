@@ -1,12 +1,14 @@
 import configuration.*;
+import io.reactivex.disposables.Disposable;
 import java.util.concurrent.CountDownLatch;
 import kafka.*;
 import monitoring.*;
 import target.*;
 
 public class Main {
-    static Consumer consumer;
+    static Disposable consumer;
     static MonitoringServer monitoringServer;
+    static CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) {
         try {
@@ -20,32 +22,25 @@ public class Main {
             } while (!targetIsAlive.check());
             System.out.println("target is alive");
 
-            monitoringServer = new MonitoringServer(targetIsAlive);
-            consumer = ConsumerFactory.create(monitoringServer);
+            consumer = ConsumerFactory.create();
+            monitoringServer = new MonitoringServer(consumer, targetIsAlive);
 
             Runtime
                 .getRuntime()
                 .addShutdownHook(
                     new Thread(
                         () -> {
-                            consumer.stop();
+                            consumer.dispose();
                             monitoringServer.close();
-                            Monitor.serviceShutdown();
+                            latch.countDown();
                         }
                     )
                 );
 
             monitoringServer.start();
-
-            consumer.start();
             Monitor.started();
-            new CountDownLatch(1).await();
-        } catch (Exception e) {
-            Monitor.unexpectedError(e);
-        } finally {
-            monitoringServer.close();
-            consumer.stop();
+            latch.await();
             Monitor.serviceTerminated();
-        }
+        } catch (Exception e) {}
     }
 }

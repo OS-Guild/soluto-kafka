@@ -147,10 +147,10 @@ public class Monitor {
         deadLetterProduced.inc();
     }
 
-    public static void unexpectedError(Throwable exception) {
+    public static void unexpectedConsumerError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
-            .put("message", "unexpected error")
+            .put("message", "consumer stream was termineated due to unexpected error")
             .put(
                 "err",
                 new JSONObject()
@@ -194,7 +194,6 @@ public class Monitor {
 
     public static void backpressureBufferOverflow() {
         JSONObject log = new JSONObject().put("level", "info").put("message", "consumer backpressure overflow");
-
         write(log);
     }
 
@@ -274,10 +273,8 @@ public class Monitor {
         targetExecutionRetry.labels(String.valueOf(attempt)).inc();
     }
 
-    public static void targetConnectionUnavailable() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "target connection unavailable, terminating consumer");
+    public static void consumerStreamCompleted() {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer stream completed");
 
         write(log);
     }

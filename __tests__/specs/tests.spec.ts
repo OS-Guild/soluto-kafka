@@ -27,8 +27,9 @@ describe('tests', () => {
             try {
                 const consumer1 = await fetch('http://localhost:4000/isAlive');
                 const consumer2 = await fetch('http://localhost:5000/isAlive');
+                const errorConsumer = await fetch('http://localhost:8000/isAlive');
                 const producer = await fetch('http://localhost:6000/isAlive');
-                if (consumer1.ok && consumer2.ok && producer.ok) {
+                if (consumer1.ok && consumer2.ok && errorConsumer.ok && producer.ok) {
                     return;
                 }
                 attempts--;
@@ -41,7 +42,7 @@ describe('tests', () => {
         fail();
     });
 
-    it('should produce and consume from multiple topics', async () => {
+    it('should produce and consume', async () => {
         await mockGrpcTarget();
         const callId = await mockHttpTarget();
 
@@ -53,6 +54,9 @@ describe('tests', () => {
         expect(madeCalls.length).toBe(2);
         expect(madeCalls[0].headers['x-record-topic']).toBe('test');
         expect(madeCalls[1].headers['x-record-topic']).toBe('another_test');
+
+        const consumerWithUnresponsiveTarget = await fetch('http://localhost:8000/isAlive');
+        expect(consumerWithUnresponsiveTarget.status).toBe(500);
     });
 
     it('producer request validation', async () => {

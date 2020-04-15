@@ -7,18 +7,19 @@ import configuration.Config;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
+import io.reactivex.disposables.Disposable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import target.TargetIsAlive;
 
 public class MonitoringServer {
+    private Disposable consumer;
     private final TargetIsAlive targetIsAlive;
     private HttpServer server;
-    private boolean ready;
 
-    public MonitoringServer(TargetIsAlive targetIsAlive) {
+    public MonitoringServer(Disposable consumer, TargetIsAlive targetIsAlive) {
         this.targetIsAlive = targetIsAlive;
-        this.ready = false;
+        this.consumer = consumer;
     }
 
     public void start() throws IOException {
@@ -34,10 +35,6 @@ public class MonitoringServer {
         } else {
             server.start();
         }
-    }
-
-    public void ready(boolean ready) {
-        this.ready = ready;
     }
 
     public void close() {
@@ -62,7 +59,7 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!ready) {
+                    if (consumer.isDisposed()) {
                         writeResponse(500, exchange);
                         return;
                     }
@@ -77,7 +74,6 @@ public class MonitoringServer {
             try {
                 return this.targetIsAlive.check();
             } catch (Exception e) {
-                Monitor.unexpectedError(e);
                 return false;
             }
         }

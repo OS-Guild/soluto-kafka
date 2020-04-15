@@ -1,9 +1,4 @@
 import java.util.concurrent.CountDownLatch;
-import reactor.adapter.rxjava.RxJava2Adapter;
-import reactor.kafka.receiver.KafkaReceiver;
-import reactor.kafka.receiver.ReceiverOptions;
-import reactor.kafka.sender.KafkaSender;
-import reactor.kafka.sender.SenderOptions;
 
 public class Main {
     static Consumer consumer;
@@ -21,42 +16,8 @@ public class Main {
             } while (!taretIsAlive.check());
             System.out.println("target is alive");
 
-            consumer =
-                new Consumer(
-                    RxJava2Adapter.fluxToFlowable(
-                        KafkaReceiver
-                            .create(
-                                ReceiverOptions
-                                    .<String, String>create(KafkaOptions.consumer())
-                                    .subscription(Config.TOPICS)
-                                    .addAssignListener(
-                                        partitions -> {
-                                            Monitor.assignedToPartition(partitions);
-                                            monitoringServer.ready(partitions.size() > 0);
-                                        }
-                                    )
-                                    .addRevokeListener(
-                                        partitions -> {
-                                            Monitor.revokedFromPartition(partitions);
-                                            monitoringServer.ready(partitions.size() > 0);
-                                        }
-                                    )
-                            )
-                            .receive()
-                    ),
-                    TargetFactory.create(
-                        new TargetRetryPolicy(
-                            new Producer(
-                                KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))
-                            ),
-                            Config.RETRY_TOPIC,
-                            Config.DEAD_LETTER_TOPIC
-                        )
-                    ),
-                    Config.PROCESSING_DELAY
-                );
-
             monitoringServer = new MonitoringServer(taretIsAlive);
+            consumer = ConsumerFactory.create(monitoringServer);
 
             Runtime
                 .getRuntime()

@@ -153,10 +153,7 @@ public class Monitor {
             .put("message", "consumer stream was termineated due to unexpected error")
             .put(
                 "err",
-                new JSONObject()
-                    .put("errorMessages", getErrorMessages(exception))
-                    .put("class", exception.getClass())
-                    .put("stacktrace", exception.getStackTrace())
+                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
             );
 
         write(log);

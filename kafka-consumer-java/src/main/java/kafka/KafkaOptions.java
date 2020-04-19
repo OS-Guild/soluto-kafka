@@ -10,6 +10,7 @@ public class KafkaOptions {
         props.put("group.id", Config.GROUP_ID);
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("enable.auto.commit", "false");
         return props;
     }
 

@@ -2,6 +2,7 @@ package kafka;
 
 import configuration.Config;
 import io.reactivex.disposables.Disposable;
+import java.time.Duration;
 import monitoring.Monitor;
 import monitoring.MonitoringServer;
 import reactor.adapter.rxjava.RxJava2Adapter;
@@ -22,6 +23,7 @@ public class ConsumerFactory {
                         ReceiverOptions
                             .<String, String>create(KafkaOptions.consumer())
                             .subscription(Config.TOPICS)
+                            .commitInterval(Duration.ZERO)
                             .addAssignListener(
                                 partitions -> {
                                     Monitor.assignedToPartition(partitions);

@@ -23,7 +23,6 @@ public class ConsumerFactory {
                         ReceiverOptions
                             .<String, String>create(KafkaOptions.consumer())
                             .subscription(Config.TOPICS)
-                            .commitInterval(Duration.ZERO)
                             .addAssignListener(
                                 partitions -> {
                                     Monitor.assignedToPartition(partitions);

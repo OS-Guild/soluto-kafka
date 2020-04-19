@@ -48,7 +48,7 @@ describe('tests', () => {
         const callId = await mockHttpTarget();
 
         const recordsCount = 1000;
-        const records = range(1000).map((i: number) => ({topic: 'test', key: i % 10, value: {data: i}}));
+        const records = range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}));
         await produce('http://localhost:6000/produce', records);
         await delay(5000);
 

@@ -19,7 +19,7 @@ public class Consumer {
         this.processingDelay = processingDelay;
     }
 
-    public Flowable<Void> stream() {
+    public Flowable<?> stream() {
         return receiver
             .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
             .doOnNext(record -> Monitor.receivedRecord(record))
@@ -32,7 +32,12 @@ public class Consumer {
                             .fromFuture(target.call(record))
                             .doOnNext(
                                 targetResponse -> {
-                                    System.out.println("partition is " + record.partition());
+                                    System.out.println(
+                                        "partition is " +
+                                            record.partition() +
+                                            " and thread is " +
+                                            Thread.currentThread().getName()
+                                    );
                                     if (targetResponse.callLatency.isPresent()) {
                                         Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                     }
@@ -43,7 +48,14 @@ public class Consumer {
                             )
                             .map(__ -> record)
                     )
-                    .concatMapSingle(record -> Single.<Void>create(__ -> record.receiverOffset().acknowledge()))
+                    .concatMap(
+                        record -> Flowable.fromCallable(
+                            () -> {
+                                record.receiverOffset().acknowledge();
+                                return 0;
+                            }
+                        )
+                    )
             )
             .subscribeOn(Schedulers.io());
     }

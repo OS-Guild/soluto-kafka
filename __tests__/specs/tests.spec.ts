@@ -4,6 +4,7 @@ import Server from 'simple-fake-server-server-client';
 import {range} from 'lodash';
 
 import readinessCheck from '../readinessCheck';
+import * as uuid from 'uuid';
 
 jest.setTimeout(180000);
 
@@ -18,7 +19,7 @@ describe('tests', () => {
     });
 
     beforeEach(async () => {
-        await fetch('http://localhost:4771/clear');
+        //await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });
 
@@ -47,7 +48,7 @@ describe('tests', () => {
         const callId = await mockHttpTarget();
 
         const recordsCount = 1000;
-        const records = range(1000).map((i: number) => ({topic: 'test', key: 'key', value: {data: i}}));
+        const records = range(1000).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}));
         await produce('http://localhost:6000/produce', records);
         await delay(5000);
 

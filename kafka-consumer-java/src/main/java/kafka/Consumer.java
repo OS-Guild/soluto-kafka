@@ -1,5 +1,6 @@
 package kafka;
 
+import configuration.Config;
 import io.reactivex.*;
 import io.reactivex.schedulers.Schedulers;
 import java.time.Duration;
@@ -21,11 +22,7 @@ public class Consumer {
 
     public Flowable<Void> stream() {
         return receiver
-            .onBackpressureBuffer(
-                2000,
-                () -> Monitor.backpressureBufferOverflow(),
-                BackpressureOverflowStrategy.DROP_LATEST
-            )
+            .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
             .doOnNext(record -> Monitor.receivedRecord(record))
             .delay(processingDelay, TimeUnit.MILLISECONDS)
             .groupBy(record -> record.partition())
@@ -36,6 +33,7 @@ public class Consumer {
                             .fromFuture(target.call(record))
                             .doOnNext(
                                 targetResponse -> {
+                                    System.out.println("partition is " + record.partition());
                                     if (targetResponse.callLatency.isPresent()) {
                                         Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                     }

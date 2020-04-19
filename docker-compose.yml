@@ -7,14 +7,11 @@ services:
             - 4000:4000
         environment:
             - KAFKA_BROKER=kafka:9092
-            - TOPICS=test,another_test
+            - TOPICS=bar,another_test
             - GROUP_ID=consumer_1
             - SENDING_PROTOCOL=http
             - TARGET=fake-http-server:2000/consume
             - MONITORING_SERVER_PORT=4000
-        depends_on:
-            - kafka
-            - fake-http-server
 
     # kafka_consumer_for_errors:
     #     build: ./kafka-consumer-java/
@@ -27,9 +24,6 @@ services:
     #         - SENDING_PROTOCOL=http
     #         - TARGET=non_existent_target
     #         - MONITORING_SERVER_PORT=8000
-    #     depends_on:
-    #         - kafka
-    #         - fake-http-server            
 
     # kafka_consumer_grpc_target:
     #     build: ./kafka-consumer-java/
@@ -42,9 +36,6 @@ services:
     #         - SENDING_PROTOCOL=grpc
     #         - TARGET=fake-grpc-server:4770
     #         - MONITORING_SERVER_PORT=5000
-    #     depends_on:
-    #         - kafka
-    #         - fake-grpc-server
 
     producer:
         build: ./kafka-producer-java/
@@ -53,10 +44,6 @@ services:
         environment:
             - PORT=6000
             - KAFKA_BROKER=kafka:9092
-
-        depends_on:
-            - kafka
-            - fake-http-server
 
     fake-http-server:
         image: soluto/simple-fake-server
@@ -84,12 +71,8 @@ services:
             - '9092:9092'
         environment:
             - KAFKA_ADVERTISED_HOST_NAME=kafka
-            - KAFKA_CREATE_TOPICS=test:10:1,another_test:1:1
+            - KAFKA_CREATE_TOPICS=bar:10:1,another_test:1:1
             - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
             - LOG4J_LOGGER_KAFKA=WARN
         depends_on:
             - zookeeper
-        healthcheck:
-            test: 'exit 0'
-            interval: 15s
-            retries: 3

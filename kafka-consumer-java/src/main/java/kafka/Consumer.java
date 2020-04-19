@@ -3,7 +3,6 @@ package kafka;
 import configuration.Config;
 import io.reactivex.*;
 import io.reactivex.schedulers.Schedulers;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import reactor.kafka.receiver.ReceiverRecord;

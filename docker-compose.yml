@@ -93,5 +93,3 @@ services:
             test: 'exit 0'
             interval: 15s
             retries: 3
-        logging:
-            driver: none

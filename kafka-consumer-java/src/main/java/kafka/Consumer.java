@@ -43,8 +43,7 @@ public class Consumer {
                             )
                             .map(__ -> record)
                     )
-                    .sample(500, TimeUnit.MILLISECONDS)
-                    .concatMap(record -> record.receiverOffset().commit())
+                    .concatMapSingle(record -> Single.<Void>create(__ -> record.receiverOffset().acknowledge()))
             )
             .subscribeOn(Schedulers.io());
     }

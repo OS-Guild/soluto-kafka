@@ -50,7 +50,6 @@ public class Consumer {
                             }
                         )
                     )
-            )
-            .subscribeOn(Schedulers.io());
+            );
     }
 }

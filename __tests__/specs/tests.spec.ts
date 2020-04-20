@@ -52,7 +52,7 @@ describe('tests', () => {
             range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}))
         );
         await produce('http://localhost:6000/produce', records);
-        await delay(5000);
+        await delay(recordsCount * 10);
 
         const {madeCalls} = await fakeHttpServer.getCall(callId);
         expect(madeCalls.length).toBe(recordsCount);

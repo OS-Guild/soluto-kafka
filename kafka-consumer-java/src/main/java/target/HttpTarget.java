@@ -22,6 +22,16 @@ public class HttpTarget implements ITarget {
     }
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
+        System.out.println(
+            String.format(
+                "1111111111 topic=%1$s key=%2$s, partitaion=%3$s, thread=%4$s, time=%5$s",
+                record.topic(),
+                record.key(),
+                record.partition(),
+                Thread.currentThread().getName(),
+                System.currentTimeMillis()
+            )
+        );
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))

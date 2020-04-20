@@ -32,12 +32,6 @@ public class Consumer {
                             .fromFuture(target.call(record))
                             .doOnNext(
                                 targetResponse -> {
-                                    System.out.println(
-                                        "partition is " +
-                                            record.partition() +
-                                            " and thread is " +
-                                            Thread.currentThread().getName()
-                                    );
                                     if (targetResponse.callLatency.isPresent()) {
                                         Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                     }

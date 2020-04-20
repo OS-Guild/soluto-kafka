@@ -1,7 +1,7 @@
 import delay from 'delay';
 import fetch from 'node-fetch';
 import Server from 'simple-fake-server-server-client';
-import {range} from 'lodash';
+import {range, shuffle} from 'lodash';
 
 import readinessCheck from '../readinessCheck';
 import * as uuid from 'uuid';
@@ -48,7 +48,9 @@ describe('tests', () => {
         const callId = await mockHttpTarget();
 
         const recordsCount = 1000;
-        const records = range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}));
+        const records = shuffle(
+            range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}))
+        );
         await produce('http://localhost:6000/produce', records);
         await delay(5000);
 

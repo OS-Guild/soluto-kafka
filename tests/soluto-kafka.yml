@@ -2,7 +2,7 @@ version: '2.3'
 
 services:
     kafka_consumer_http_target:
-        build: ./kafka-consumer-java/
+        build: ../kafka-consumer-java/
         ports:
             - 4000:4000
         environment:
@@ -38,7 +38,7 @@ services:
     #         - MONITORING_SERVER_PORT=5000
 
     producer:
-        build: ./kafka-producer-java/
+        build: ../kafka-producer-java/
         ports:
             - 6000:6000
         environment:

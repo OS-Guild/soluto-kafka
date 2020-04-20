@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "test:teardown": "docker-compose -f kafka.yml down --remove-orphans && docker-compose -f soluto-kafka.yml down --remove-orphans",
-    "test:setup": " docker-compose -f kafka.yml up -d && sleep 30 &&  docker-compose -f soluto-kafka.yml up --build -d",
-    "test:start": "jest --runInBand --forceExit --config jest.config.local.js --testResultsProcessor jest-teamcity-reporter",
+    "test:teardown": "docker-compose -f tests/kafka.yml down --remove-orphans && docker-compose -f tests/soluto-kafka.yml down --remove-orphans",
+    "test:setup": " docker-compose -f tests/kafka.yml up -d && sleep 30 &&  docker-compose -f tests/soluto-kafka.yml up --build -d",
+    "test:start": "jest --runInBand --forceExit --config tests/jest.config.local.js --testResultsProcessor jest-teamcity-reporter",
     "test": "yarn test:teardown && yarn test:setup && yarn test:start && yarn test:teardown",
     "format": "prettier --write '**/*.{ts,js,json,java}'"
   },

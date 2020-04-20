@@ -1,7 +1,7 @@
 import delay from 'delay';
 import fetch from 'node-fetch';
 import Server from 'simple-fake-server-server-client';
-import {range, shuffle} from 'lodash';
+import {range} from 'lodash';
 
 import readinessCheck from '../readinessCheck';
 import * as uuid from 'uuid';
@@ -19,46 +19,30 @@ describe('tests', () => {
     });
 
     beforeEach(async () => {
-        //await fetch('http://localhost:4771/clear');
         await fakeHttpServer.clear();
     });
 
-    it('services are alive', async () => {
-        let attempts = 10;
-        while (attempts > 0) {
-            try {
-                const consumer1 = await fetch('http://localhost:4000/isAlive');
-                const consumer2 = await fetch('http://localhost:5000/isAlive');
-                const errorConsumer = await fetch('http://localhost:8000/isAlive');
-                const producer = await fetch('http://localhost:6000/isAlive');
-                if (consumer1.ok && consumer2.ok && errorConsumer.ok && producer.ok) {
-                    return;
-                }
-                attempts--;
-            } catch (e) {
-                console.log('not alive');
-                attempts--;
-            }
-            await delay(10000);
-        }
-        fail();
+    it('should produce and consume', async () => {
+        const callId = await mockHttpTarget();
+
+        await produce('http://localhost:6000/produce', [{topic: 'test', key: uuid(), value: {data: 'test'}}]);
+        await delay(1000);
+
+        const {madeCalls} = await fakeHttpServer.getCall(callId);
+        expect(madeCalls.length).toBe(1);
     });
 
-    it.only('should produce and consume', async () => {
+    it.only('should handle high load', async () => {
         const callId = await mockHttpTarget();
 
         const recordsCount = 1000;
-        const records = shuffle(
-            range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}))
-        );
+        const records = range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}));
+
         await produce('http://localhost:6000/produce', records);
         await delay(recordsCount * 10);
 
         const {madeCalls} = await fakeHttpServer.getCall(callId);
         expect(madeCalls.length).toBe(recordsCount);
-
-        // const consumerWithUnresponsiveTarget = await fetch('http://localhost:8000/isAlive');
-        // expect(consumerWithUnresponsiveTarget.status).toBe(500);
     });
 
     it('producer request validation', async () => {
@@ -104,20 +88,4 @@ const mockHttpTarget = () =>
     fakeHttpServer.mock({
         method: 'post',
         url: '/consume',
-    });
-
-const mockGrpcTarget = () =>
-    fetch('http://localhost:4771/add', {
-        method: 'post',
-        headers: {'content-type': 'application-json'},
-        body: JSON.stringify({
-            service: 'CallTarget',
-            method: 'callTarget',
-            input: {matches: {msgJson: '{"data":1}'}, recordTimestamp: '(.*)'},
-            output: {
-                data: {
-                    message: 'assertion',
-                },
-            },
-        }),
     });

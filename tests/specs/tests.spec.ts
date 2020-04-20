@@ -22,17 +22,37 @@ describe('tests', () => {
         await fakeHttpServer.clear();
     });
 
+    it('liveliness', async () => {
+        await delay(10000);
+        const producer = await fetch('http://localhost:6000/isAlive');
+        if (!producer.ok) {
+            fail('producer not alive');
+        }
+
+        // const consumer = await fetch('http://localhost:4000/isAlive');
+        // if (!consumer.ok) {
+        //     fail('consumer not alive');
+        // }
+    });
+
     it('should produce and consume', async () => {
         const callId = await mockHttpTarget();
 
         await produce('http://localhost:6000/produce', [{topic: 'test', key: uuid(), value: {data: 'test'}}]);
-        await delay(1000);
+        await produce('http://localhost:6000/produce', [
+            {topic: 'another-test', key: uuid(), value: {data: 'another-test'}},
+        ]);
 
-        const {madeCalls} = await fakeHttpServer.getCall(callId);
-        expect(madeCalls.length).toBe(1);
+        await delay(5000);
+
+        const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
+        expect(hasBeenMade).toBeTruthy();
+        expect(madeCalls.length).toBe(2);
+        expect(madeCalls[0].headers['x-record-topic']).toBe('test');
+        expect(madeCalls[1].headers['x-record-topic']).toBe('another-test');
     });
 
-    it.only('should handle high load', async () => {
+    it('should support backpressure', async () => {
         const callId = await mockHttpTarget();
 
         const recordsCount = 1000;

@@ -13,30 +13,6 @@ services:
             - TARGET=fake-http-server:2000/consume
             - MONITORING_SERVER_PORT=4000
 
-    # kafka_consumer_for_errors:
-    #     build: ./kafka-consumer-java/
-    #     ports:
-    #         - 8000:8000
-    #     environment:
-    #         - KAFKA_BROKER=kafka:9092
-    #         - TOPICS=test,another_test
-    #         - GROUP_ID=consumer_for_errors
-    #         - SENDING_PROTOCOL=http
-    #         - TARGET=non_existent_target
-    #         - MONITORING_SERVER_PORT=8000
-
-    # kafka_consumer_grpc_target:
-    #     build: ./kafka-consumer-java/
-    #     ports:
-    #         - 5000:5000
-    #     environment:
-    #         - KAFKA_BROKER=kafka:9092
-    #         - TOPICS=test
-    #         - GROUP_ID=consumer_2
-    #         - SENDING_PROTOCOL=grpc
-    #         - TARGET=fake-grpc-server:4770
-    #         - MONITORING_SERVER_PORT=5000
-
     producer:
         build: ../kafka-producer-java/
         ports:
@@ -49,11 +25,3 @@ services:
         image: soluto/simple-fake-server
         ports:
             - 3000:3000
-
-    fake-grpc-server:
-        image: tkpd/gripmock
-        ports:
-            - 4771:4771
-        volumes:
-            - ${PWD}/soluto-kafka-grpc-target:/proto
-        command: /proto/message.proto

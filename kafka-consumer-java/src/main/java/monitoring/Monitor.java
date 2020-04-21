@@ -135,7 +135,7 @@ public class Monitor {
     public static void unexpectedConsumerError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
-            .put("message", "consumer stream was termineated due to unexpected error")
+            .put("message", "consumer stream was terminated due to unexpected error")
             .put(
                 "err",
                 new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
@@ -189,7 +189,7 @@ public class Monitor {
     public static void serviceTerminated() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + " termindated");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " terminated");
 
         write(log);
     }

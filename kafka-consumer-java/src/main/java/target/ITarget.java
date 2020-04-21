@@ -12,7 +12,7 @@ public interface ITarget {
     default String getOriginalTopic(ConsumerRecord<String, String> record) {
         Iterator<Header> headers = record.headers().headers(Config.ORIGINAL_TOPIC).iterator();
         if (headers.hasNext()) {
-            return String.valueOf(headers.next().value());
+            return new String(headers.next().value());
         }
         return record.topic();
     }

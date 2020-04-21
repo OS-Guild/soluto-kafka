@@ -65,8 +65,9 @@ describe('tests', () => {
         await produce('http://localhost:6000/produce', [{topic: 'foo', key: uuid(), value: {data: 'foo'}}]);
         await delay(5000);
 
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
+        const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
+        expect(madeCalls[0].headers['x-record-original-topic']).toEqual('foo');
     });
 
     it('consumer should produce to retry topic when target response is 500', async () => {
@@ -76,8 +77,9 @@ describe('tests', () => {
         await produce('http://localhost:6000/produce', [{topic: 'foo', key: uuid(), value: {data: 'foo'}}]);
         await delay(5000);
 
-        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
+        const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
+        expect(madeCalls[0].headers['x-record-original-topic']).toEqual('foo');
     });
 
     it('consumer should terminate on an unexpected error', async () => {

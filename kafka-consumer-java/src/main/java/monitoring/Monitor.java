@@ -144,6 +144,18 @@ public class Monitor {
         write(log);
     }
 
+    public static void initializationError(Throwable exception) {
+        JSONObject log = new JSONObject()
+            .put("level", "error")
+            .put("message", "Unexpected error while initializing")
+            .put(
+                "err",
+                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
+            );
+
+        write(log);
+    }
+
     public static void started() {
         JSONObject log = new JSONObject()
             .put("level", "info")
@@ -191,15 +203,6 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "kafka-consumer-" + Config.GROUP_ID + " termindated");
-
-        write(log);
-    }
-
-    public static void commitFailed(Throwable throwable) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "commit failed")
-            .put("err", new JSONObject().put("errorMessages", getErrorMessages(throwable)));
 
         write(log);
     }
@@ -275,13 +278,6 @@ public class Monitor {
 
             write(log);
         }
-    }
-
-    public static void debug(String text) {
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject().put("level", "debug").put("message", text);
-
-        write(log);
     }
 
     private static void write(JSONObject log) {

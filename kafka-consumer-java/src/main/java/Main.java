@@ -73,6 +73,8 @@ public class Main {
             Monitor.started();
             latch.await();
             Monitor.serviceTerminated();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            Monitor.initializationError(e);
+        }
     }
 }

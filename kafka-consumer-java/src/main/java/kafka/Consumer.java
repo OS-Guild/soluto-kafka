@@ -32,14 +32,6 @@ public class Consumer {
                     .concatMap(
                         record -> Flowable
                             .fromFuture(target.call(record))
-                            .flatMap(
-                                targetResponse -> {
-                                    if (targetResponse.exception != null) {
-                                        return Flowable.error(targetResponse.exception);
-                                    }
-                                    return Flowable.just(targetResponse);
-                                }
-                            )
                             .doOnNext(
                                 targetResponse -> {
                                     if (targetResponse.callLatency.isPresent()) {

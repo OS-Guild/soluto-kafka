@@ -90,7 +90,7 @@ describe('tests', () => {
         await produce('http://localhost:6000/produce', [
             {topic: 'unexpected', key: uuid(), value: {data: 'unexpected'}},
         ]);
-        await delay(5000);
+        await delay(10000);
 
         consumerLiveliness = await fetch('http://localhost:4002/isAlive');
         expect(consumerLiveliness.ok).toBeFalsy();

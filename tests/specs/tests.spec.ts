@@ -34,8 +34,9 @@ describe('tests', () => {
         const callId = await mockHttpTarget('/consume', 200);
 
         await produce('http://localhost:6000/produce', [{topic: 'foo', key: 'thekey', value: {data: 'foo'}}]);
+        await delay(1000);
         await produce('http://localhost:6000/produce', [{topic: 'bar', key: 'thekey', value: {data: 'bar'}}]);
-        await delay(5000);
+        await delay(1000);
 
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();

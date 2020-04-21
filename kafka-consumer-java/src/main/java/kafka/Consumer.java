@@ -27,6 +27,7 @@ public class Consumer {
             .groupBy(record -> record.partition())
             .flatMap(
                 partition -> partition
+                    .observeOn(Schedulers.io())
                     .concatMap(
                         record -> Flowable
                             .fromFuture(target.call(record))

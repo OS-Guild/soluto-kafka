@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import Server from 'simple-fake-server-server-client';
 import {range} from 'lodash';
 
-import readinessCheck from '../readinessCheck';
+import checkReadiness from '../checkReadiness';
 import * as uuid from 'uuid';
 
 jest.setTimeout(180000);
@@ -15,7 +15,7 @@ const fakeHttpServer = new Server({
 
 describe('tests', () => {
     beforeAll(async () => {
-        await expect(readinessCheck()).resolves.toBeTruthy();
+        await expect(checkReadiness(['foo', 'bar', 'retry', 'dead-letter', 'unexpected'])).resolves.toBeTruthy();
     });
 
     beforeEach(async () => {

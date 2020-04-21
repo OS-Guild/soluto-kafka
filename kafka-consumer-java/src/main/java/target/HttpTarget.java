@@ -55,9 +55,8 @@ public class HttpTarget implements ITarget {
                         (new Date()).getTime() -
                             response.headers().firstValueAsLong("x-completed-timestamp").getAsLong()
                     );
-                    return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
+                    return new TargetResponse(callLatency, resultLatency);
                 }
-            )
-            .exceptionally(TargetResponse::Error);
+            );
     }
 }

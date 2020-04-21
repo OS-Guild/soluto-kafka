@@ -4,7 +4,8 @@
     "test:setup": " docker-compose -f tests/kafka.yml up -d && sleep 30 &&  docker-compose -f tests/soluto-kafka.yml up --build -d",
     "test:start": "jest --runInBand --forceExit --config tests/jest.config.local.js --testResultsProcessor jest-teamcity-reporter",
     "test": "npm run test:teardown && npm run test:setup && npm run test:start && npm run test:teardown",
-    "format": "prettier --write '**/*.{ts,js,json,java}'"
+    "format": "prettier --write '**/*.{ts,js,json,java}'",
+    "logs": "docker-compose -f tests/soluto-kafka.yml logs"
   },
   "dependencies": {
     "@types/jest": "^24.0.12",

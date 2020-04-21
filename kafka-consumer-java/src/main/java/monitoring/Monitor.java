@@ -186,19 +186,6 @@ public class Monitor {
         write(log);
     }
 
-    public static void backpressureBufferOverflow() {
-        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer backpressure overflow");
-        write(log);
-    }
-
-    public static void serviceShutdown() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + " shutdown");
-
-        write(log);
-    }
-
     public static void serviceTerminated() {
         JSONObject log = new JSONObject()
             .put("level", "info")
@@ -252,12 +239,6 @@ public class Monitor {
         write(log);
 
         targetExecutionRetry.labels(String.valueOf(attempt)).inc();
-    }
-
-    public static void consumerStreamCompleted() {
-        JSONObject log = new JSONObject().put("level", "info").put("message", "consumer stream completed");
-
-        write(log);
     }
 
     public static void targetNotAlive(int targetIsAliveStatusCode) {

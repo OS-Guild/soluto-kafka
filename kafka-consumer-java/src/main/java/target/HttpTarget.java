@@ -44,6 +44,7 @@ public class HttpTarget implements ITarget {
             .getStageAsync(completionStageCheckedSupplier)
             .thenApplyAsync(
                 response -> {
+                    System.out.println("222222222");
                     var callLatency = !response.headers().firstValueAsLong("x-received-timestamp").isPresent()
                         ? OptionalLong.empty()
                         : OptionalLong.of(

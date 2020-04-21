@@ -204,18 +204,14 @@ public class Monitor {
         write(log);
     }
 
-    public static void produceError(
-        String topicPrefix,
-        ConsumerRecord<String, String> consumerRecord,
-        Throwable exception
-    ) {
+    public static void produceError(String topic, ConsumerRecord<String, String> consumerRecord, Throwable exception) {
         var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
         if (Config.LOG_RECORD) {
             extra.put("value", consumerRecord.value());
         }
         JSONObject log = new JSONObject()
             .put("level", "error")
-            .put("message", String.format("failed producing message to %s topic", topicPrefix))
+            .put("message", String.format("failed producing message to %s topic", topic))
             .put("extra", extra)
             .put("err", new JSONObject().put("message", exception.getMessage()));
 

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
+import target.TargetResponse;
 
 public class Consumer {
     private Flowable<ReceiverRecord<String, String>> receiver;
@@ -31,6 +32,14 @@ public class Consumer {
                     .concatMap(
                         record -> Flowable
                             .fromFuture(target.call(record))
+                            .flatMap(
+                                targetResponse -> {
+                                    if (targetResponse.exception != null) {
+                                        return Flowable.error(targetResponse.exception);
+                                    }
+                                    return Flowable.just(targetResponse);
+                                }
+                            )
                             .doOnNext(
                                 targetResponse -> {
                                     if (targetResponse.callLatency.isPresent()) {

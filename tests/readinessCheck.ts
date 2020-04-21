@@ -45,7 +45,7 @@ const checkReadiness = async (): Promise<boolean> => {
 
         if (!metadata) return checkReadiness();
 
-        if (metadata['test'] && metadata['another-test']) {
+        if (metadata['foo'] && metadata['bar']) {
             client.close();
             return true;
         }

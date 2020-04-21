@@ -25,44 +25,72 @@ describe('tests', () => {
     it('liveliness', async () => {
         await delay(1000);
         const producer = await fetch('http://localhost:6000/isAlive');
-        if (!producer.ok) {
-            fail('producer not alive');
-        }
-
-        const consumer = await fetch('http://localhost:4000/isAlive');
-        if (!consumer.ok) {
-            fail('consumer not alive');
-        }
+        const consumer = await fetch('http://localhost:4001/isAlive');
+        expect(producer.ok).toBeTruthy();
+        expect(consumer.ok).toBeTruthy();
     });
 
     it('should produce and consume', async () => {
-        const callId = await mockHttpTarget();
+        const callId = await mockHttpTarget('/consume', 200);
 
-        await produce('http://localhost:6000/produce', [{topic: 'test', key: uuid(), value: {data: 'test'}}]);
-        await produce('http://localhost:6000/produce', [
-            {topic: 'another-test', key: uuid(), value: {data: 'another-test'}},
-        ]);
-
+        await produce('http://localhost:6000/produce', [{topic: 'foo', key: 'thekey', value: {data: 'foo'}}]);
+        await produce('http://localhost:6000/produce', [{topic: 'bar', key: 'thekey', value: {data: 'bar'}}]);
         await delay(5000);
 
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
-        expect(madeCalls[0].headers['x-record-topic']).toBe('test');
-        expect(madeCalls[1].headers['x-record-topic']).toBe('another-test');
+        expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
+        expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
     });
 
     it('should support backpressure', async () => {
-        const callId = await mockHttpTarget();
+        const callId = await mockHttpTarget('/consume', 200);
 
         const recordsCount = 1000;
-        const records = range(recordsCount).map((i: number) => ({topic: 'test', key: uuid(), value: {data: i}}));
+        const records = range(recordsCount).map(() => ({topic: 'foo', key: uuid(), value: {data: 'foo'}}));
 
         await produce('http://localhost:6000/produce', records);
         await delay(recordsCount * 10);
 
         const {madeCalls} = await fakeHttpServer.getCall(callId);
         expect(madeCalls.length).toBe(recordsCount);
+    });
+
+    it('consumer should produce to dead letter topic when target response is 400', async () => {
+        await mockHttpTarget('/consume', 400);
+        const callId = await mockHttpTarget('/deadLetter', 200);
+
+        await produce('http://localhost:6000/produce', [{topic: 'foo', key: uuid(), value: {data: 'foo'}}]);
+        await delay(5000);
+
+        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
+        expect(hasBeenMade).toBeTruthy();
+    });
+
+    it('consumer should produce to retry topic when target response is 500', async () => {
+        await mockHttpTarget('/consume', 500);
+        const callId = await mockHttpTarget('/retry', 200);
+
+        await produce('http://localhost:6000/produce', [{topic: 'foo', key: uuid(), value: {data: 'foo'}}]);
+        await delay(5000);
+
+        const {hasBeenMade} = await fakeHttpServer.getCall(callId);
+        expect(hasBeenMade).toBeTruthy();
+    });
+
+    it('consumer should terminate on an unexpected error', async () => {
+        await delay(1000);
+        let consumerLiveliness = await fetch('http://localhost:4002/isAlive');
+        expect(consumerLiveliness.ok).toBeTruthy();
+
+        await produce('http://localhost:6000/produce', [
+            {topic: 'unexpected', key: uuid(), value: {data: 'unexpected'}},
+        ]);
+        await delay(5000);
+
+        consumerLiveliness = await fetch('http://localhost:4002/isAlive');
+        expect(consumerLiveliness.ok).toBeFalsy();
     });
 
     it('producer request validation', async () => {
@@ -81,7 +109,7 @@ describe('tests', () => {
 
         response = await fetch(producerUrl, {
             method,
-            body: JSON.stringify([{topic: 'test', value: {data: 1}}]),
+            body: JSON.stringify([{topic: 'bar', value: {data: 1}}]),
             headers,
         });
         expect(response.status).toBe(400);
@@ -89,7 +117,7 @@ describe('tests', () => {
 
         response = await fetch(producerUrl, {
             method,
-            body: JSON.stringify([{topic: 'test', key: 'key'}]),
+            body: JSON.stringify([{topic: 'bar', key: 'key'}]),
             headers,
         });
         expect(response.status).toBe(400);
@@ -104,8 +132,9 @@ const produce = (url: string, batch: any[]) =>
         headers: {'Content-Type': 'application/json'},
     });
 
-const mockHttpTarget = () =>
+const mockHttpTarget = (route: string, statusCode: number) =>
     fakeHttpServer.mock({
         method: 'post',
-        url: '/consume',
+        url: route,
+        statusCode,
     });

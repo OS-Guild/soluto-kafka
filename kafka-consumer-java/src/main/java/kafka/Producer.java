@@ -19,7 +19,7 @@ public class Producer {
         this.sender = sender;
     }
 
-    public void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
+    public void produce(String topic, ConsumerRecord<String, String> record) {
         Iterator<Header> headers = record.headers().headers(Config.ORIGINAL_TOPIC).iterator();
         Headers headersToSend;
         if (headers.hasNext()) {
@@ -38,7 +38,7 @@ public class Producer {
                     )
                 )
             )
-            .doOnError(error -> Monitor.produceError(topicPrefix, record, error))
+            .doOnError(error -> Monitor.produceError(topic, record, error))
             .subscribe(__ -> {}, __ -> {}, () -> {});
     }
 }

@@ -7,20 +7,18 @@ import configuration.Config;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
-import io.reactivex.disposables.Disposable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import target.TargetIsAlive;
 
 public class MonitoringServer {
-    private Disposable consumer;
-    private boolean consumerAssigned;
     private final TargetIsAlive targetIsAlive;
+    private boolean consumerAssigned;
+    private boolean consumerTerminated;
     private HttpServer server;
 
-    public MonitoringServer(Disposable consumer, TargetIsAlive targetIsAlive) {
+    public MonitoringServer(TargetIsAlive targetIsAlive) {
         this.targetIsAlive = targetIsAlive;
-        this.consumer = consumer;
     }
 
     public void start() throws IOException {
@@ -36,6 +34,14 @@ public class MonitoringServer {
         } else {
             server.start();
         }
+    }
+
+    public void consumerAssigned() {
+        consumerAssigned = true;
+    }
+
+    public void consumerTerminated() {
+        consumerTerminated = true;
     }
 
     public void close() {
@@ -55,18 +61,19 @@ public class MonitoringServer {
                         return;
                     }
 
+                    if (!consumerAssigned) {
+                        writeResponse(500, exchange);
+                        return;
+                    }
+
+                    if (consumerTerminated) {
+                        writeResponse(500, exchange);
+                        return;
+                    }
+
                     if (!targetAlive(exchange)) {
                         writeResponse(500, exchange);
                         return;
-                    }
-
-                    if (consumer.isDisposed()) {
-                        writeResponse(500, exchange);
-                        return;
-                    }
-
-                    if (!consumerAssigned) {
-                        writeResponse(500, exchange);
                     }
 
                     writeResponse(200, exchange);
@@ -92,9 +99,5 @@ public class MonitoringServer {
         exchange.sendResponseHeaders(statusCode, responseText.getBytes().length);
         os.write(responseText.getBytes());
         os.close();
-    }
-
-    public void consumerAssigned() {
-        consumerAssigned = true;
     }
 }

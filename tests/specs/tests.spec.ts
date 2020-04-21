@@ -23,16 +23,16 @@ describe('tests', () => {
     });
 
     it('liveliness', async () => {
-        await delay(10000);
+        await delay(1000);
         const producer = await fetch('http://localhost:6000/isAlive');
         if (!producer.ok) {
             fail('producer not alive');
         }
 
-        // const consumer = await fetch('http://localhost:4000/isAlive');
-        // if (!consumer.ok) {
-        //     fail('consumer not alive');
-        // }
+        const consumer = await fetch('http://localhost:4000/isAlive');
+        if (!consumer.ok) {
+            fail('consumer not alive');
+        }
     });
 
     it('should produce and consume', async () => {

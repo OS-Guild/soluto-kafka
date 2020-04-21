@@ -1,8 +1,11 @@
 import configuration.*;
 import io.reactivex.disposables.Disposable;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import kafka.*;
 import monitoring.*;
+import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
 import target.*;
 
 public class Main {
@@ -22,8 +25,37 @@ public class Main {
             } while (!targetIsAlive.check());
             System.out.println("target is alive");
 
-            monitoringServer = new MonitoringServer(consumer, targetIsAlive);
-            consumer = ConsumerFactory.create(monitoringServer);
+            monitoringServer = new MonitoringServer(targetIsAlive);
+
+            consumer =
+                ConsumerFactory
+                    .create(
+                        KafkaReceiver.create(
+                            ReceiverOptions
+                                .<String, String>create(KafkaOptions.consumer())
+                                .subscription(Config.TOPICS)
+                                .commitInterval(Duration.ofMillis(500))
+                                .addAssignListener(
+                                    partitions -> {
+                                        monitoringServer.consumerAssigned();
+                                        Monitor.assignedToPartition(partitions);
+                                    }
+                                )
+                                .addRevokeListener(
+                                    partitions -> {
+                                        Monitor.revokedFromPartition(partitions);
+                                    }
+                                )
+                        )
+                    )
+                    .stream()
+                    .subscribe(
+                        __ -> {},
+                        exception -> {
+                            monitoringServer.consumerTerminated();
+                            Monitor.unexpectedConsumerError(exception);
+                        }
+                    );
 
             Runtime
                 .getRuntime()

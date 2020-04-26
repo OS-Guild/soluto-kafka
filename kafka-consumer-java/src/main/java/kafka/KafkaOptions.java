@@ -11,6 +11,7 @@ public class KafkaOptions {
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("enable.auto.commit", "false");
+        props.put("max.poll.records", Config.BUFFER_SIZE);
         return props;
     }
 

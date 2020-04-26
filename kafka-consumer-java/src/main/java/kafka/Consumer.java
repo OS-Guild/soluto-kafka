@@ -23,9 +23,19 @@ public class Consumer {
     public Flowable<?> stream() {
         return receiver
             .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
-            .doOnNext(record -> Monitor.receivedRecord(record))
+            .doOnNext(
+                record -> {
+                    System.out.println("On Next: " + Thread.currentThread().getName());
+                    Monitor.receivedRecord(record);
+                }
+            )
             .delay(processingDelay, TimeUnit.MILLISECONDS)
-            .groupBy(record -> record.partition())
+            .groupBy(
+                record -> {
+                    System.out.println("Group by: " + Thread.currentThread().getName());
+                    return record.partition();
+                }
+            )
             .flatMap(
                 partition -> partition
                     .observeOn(Schedulers.io())

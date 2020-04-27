@@ -61,7 +61,7 @@ public class Consumer {
                             )
                             .map(__ -> record)
                     )
-                    .sample(500, TimeUnit.MILLISECONDS)
+                    .sample(1000, TimeUnit.MILLISECONDS)
                     .concatMap(record -> record.receiverOffset().commit())
             );
     }

@@ -53,12 +53,12 @@ public class Main {
                     .subscribe(
                         __ -> {},
                         exception -> {
-                            monitoringServer.consumerTerminated();
+                            monitoringServer.consumerDisposed();
                             Monitor.unexpectedConsumerError(exception);
                         },
                         () -> {
-                            monitoringServer.consumerTerminated();
-                            System.out.println("onCompleted");
+                            monitoringServer.consumerDisposed();
+                            Monitor.consumerCompleted();
                         }
                     );
 

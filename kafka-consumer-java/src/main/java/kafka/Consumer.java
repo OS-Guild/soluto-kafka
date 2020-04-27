@@ -25,6 +25,14 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
+            .onErrorResumeNext(
+                x -> {
+                    if (x instanceof CommitFailedException) {
+                        return Flowable.empty();
+                    }
+                    return Flowable.error(x);
+                }
+            )
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
@@ -69,9 +77,6 @@ public class Consumer {
                                 return 0;
                             }
                         )
-                    )
-                    .onErrorResumeNext(
-                        error -> error instanceof CommitFailedException ? Flowable.just(0) : Flowable.error(error)
                     )
             );
     }

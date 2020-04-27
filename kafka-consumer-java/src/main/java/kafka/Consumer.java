@@ -4,6 +4,7 @@ import configuration.Config;
 import io.reactivex.*;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
@@ -25,14 +26,6 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
-            .onErrorResumeNext(
-                x -> {
-                    if (x instanceof CommitFailedException) {
-                        return Flowable.empty();
-                    }
-                    return Flowable.error(x);
-                }
-            )
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
@@ -68,16 +61,8 @@ public class Consumer {
                             )
                             .map(__ -> record)
                     )
-                    .concatMap(
-                        record -> Flowable.fromCallable(
-                            () -> {
-                                System.out.println("Commit " + Thread.currentThread().getName());
-
-                                record.receiverOffset().acknowledge();
-                                return 0;
-                            }
-                        )
-                    )
+                    .sample(500, TimeUnit.MILLISECONDS)
+                    .concatMap(record -> record.receiverOffset().commit())
             );
     }
 }

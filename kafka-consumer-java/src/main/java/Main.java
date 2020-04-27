@@ -34,7 +34,6 @@ public class Main {
                             ReceiverOptions
                                 .<String, String>create(KafkaOptions.consumer())
                                 .subscription(Config.TOPICS)
-                                .commitInterval(Duration.ofMillis(500))
                                 .addAssignListener(
                                     partitions -> {
                                         monitoringServer.consumerAssigned();

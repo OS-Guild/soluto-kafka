@@ -61,17 +61,22 @@ public class Consumer {
                             )
                             .map(__ -> record)
                     )
-                    .sample(1000, TimeUnit.MILLISECONDS)
                     .concatMap(
-                        record -> {
-                            try {
-                                System.out.println("Committing " + Thread.currentThread().getName());
-                                return record.receiverOffset().commit();
-                            } catch (CommitFailedException e) {
-                                System.out.println("Commit failed excpetion caught ");
-                            }
-                            return Flowable.empty();
-                        }
+                        record -> Flowable
+                            .fromCallable(
+                                () -> {
+                                    System.out.println("Commit " + Thread.currentThread().getName());
+
+                                    record.receiverOffset().acknowledge();
+                                    return 0;
+                                }
+                            )
+                            .onErrorResumeNext(
+                                error -> {
+                                    System.out.println("Commit failure!!!! " + Thread.currentThread().getName());
+                                    return Flowable.empty();
+                                }
+                            )
                     )
             );
     }

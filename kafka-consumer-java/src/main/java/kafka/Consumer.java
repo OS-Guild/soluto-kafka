@@ -23,7 +23,13 @@ public class Consumer {
     public Flowable<?> stream() {
         return receiver
             .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
-            .doOnNext(record -> Monitor.receivedRecord(record))
+            .doOnNext(
+                record -> {
+                    System.out.println("New Record " + Thread.currentThread().getName());
+
+                    Monitor.receivedRecord(record);
+                }
+            )
             .delay(processingDelay, TimeUnit.MILLISECONDS)
             .groupBy(record -> record.partition())
             .flatMap(
@@ -34,6 +40,8 @@ public class Consumer {
                             .fromFuture(target.call(record))
                             .doOnNext(
                                 targetResponse -> {
+                                    System.out.println("Http response: " + Thread.currentThread().getName());
+
                                     if (targetResponse.callLatency.isPresent()) {
                                         Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                     }

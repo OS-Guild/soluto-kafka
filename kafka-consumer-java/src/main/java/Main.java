@@ -47,6 +47,7 @@ public class Main {
                                         Monitor.revokedFromPartition(partitions);
                                     }
                                 )
+                                .pollTimeout(Duration.ofMillis(1000))
                         )
                     )
                     .stream()

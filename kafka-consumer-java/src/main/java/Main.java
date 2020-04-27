@@ -68,7 +68,6 @@ public class Main {
                     new Thread(
                         () -> {
                             System.out.println("Shutting down");
-
                             consumer.dispose();
                             monitoringServer.close();
                             latch.countDown();

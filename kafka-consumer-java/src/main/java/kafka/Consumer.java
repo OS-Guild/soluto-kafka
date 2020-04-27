@@ -5,7 +5,6 @@ import io.reactivex.*;
 import io.reactivex.schedulers.Schedulers;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
-import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
 
@@ -69,12 +68,21 @@ public class Consumer {
             )
             .onErrorResumeNext(
                 error -> {
-                    if (error instanceof CommitFailedException) {
-                        System.out.println("CommitFailedException!!!!!" + Thread.currentThread().getName());
-                        return Flowable.error(error);
+                    if (errorChainConatinsType(error, "CommitFailedException")) {
+                        return Flowable.just(true);
                     }
-                    return Flowable.just(true);
+                    return Flowable.error(error);
                 }
             );
+    }
+
+    private boolean errorChainConatinsType(Throwable error, String className) {
+        while (error.getClass().getSimpleName() != className) {
+            error = error.getCause();
+            if (error == null) {
+                return false;
+            }
+        }
+        return true;
     }
 }

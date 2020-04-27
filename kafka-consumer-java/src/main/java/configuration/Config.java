@@ -60,7 +60,7 @@ public class Config {
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
-        BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 500);
+        BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 5);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

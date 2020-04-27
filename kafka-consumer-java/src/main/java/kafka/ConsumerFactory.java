@@ -4,6 +4,7 @@ import configuration.Config;
 import io.reactivex.disposables.Disposable;
 import java.time.Duration;
 import reactor.adapter.rxjava.RxJava2Adapter;
+import reactor.core.publisher.Flux;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
@@ -14,7 +15,7 @@ public class ConsumerFactory {
 
     public static Consumer create(KafkaReceiver<String, String> kafkaReceiver) {
         return new Consumer(
-            RxJava2Adapter.fluxToFlowable(kafkaReceiver.receive()),
+            RxJava2Adapter.fluxToFlowable(Flux.defer(kafkaReceiver::receive).retry()),
             TargetFactory.create(
                 new TargetRetryPolicy(
                     new Producer(KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))),

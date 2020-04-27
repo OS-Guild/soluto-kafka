@@ -54,6 +54,9 @@ public class Main {
                         exception -> {
                             monitoringServer.consumerTerminated();
                             Monitor.unexpectedConsumerError(exception);
+                        },
+                        () -> {
+                            System.out.println("onCompleted");
                         }
                     );
 

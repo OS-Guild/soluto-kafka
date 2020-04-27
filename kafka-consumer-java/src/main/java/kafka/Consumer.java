@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
-import target.TargetResponse;
 
 public class Consumer {
     private Flowable<ReceiverRecord<String, String>> receiver;

@@ -2,10 +2,13 @@ package kafka;
 
 import configuration.Config;
 import io.reactivex.*;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.reactivestreams.Publisher;
+import reactor.kafka.receiver.internals.DefaultKafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
 
@@ -22,9 +25,6 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
-            .publish()
-            .refCount(1)
-            .retry(t -> t instanceof CommitFailedException)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
@@ -69,6 +69,9 @@ public class Consumer {
                                 return 0;
                             }
                         )
+                    )
+                    .onErrorResumeNext(
+                        error -> error instanceof CommitFailedException ? Flowable.just(1) : Flowable.error(error)
                     )
             );
     }

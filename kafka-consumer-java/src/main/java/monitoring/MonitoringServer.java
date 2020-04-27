@@ -14,7 +14,7 @@ import target.TargetIsAlive;
 public class MonitoringServer {
     private final TargetIsAlive targetIsAlive;
     private boolean consumerAssigned;
-    private boolean consumerTerminated;
+    private boolean consumerDisposed;
     private HttpServer server;
 
     public MonitoringServer(TargetIsAlive targetIsAlive) {
@@ -40,8 +40,8 @@ public class MonitoringServer {
         consumerAssigned = true;
     }
 
-    public void consumerTerminated() {
-        consumerTerminated = true;
+    public void consumerDisposed() {
+        consumerDisposed = true;
     }
 
     public void close() {
@@ -66,7 +66,7 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (consumerTerminated) {
+                    if (consumerDisposed) {
                         writeResponse(500, exchange);
                         return;
                     }

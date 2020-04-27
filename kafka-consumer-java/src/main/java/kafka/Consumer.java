@@ -2,14 +2,10 @@ package kafka;
 
 import configuration.Config;
 import io.reactivex.*;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
-import org.reactivestreams.Publisher;
-import reactor.kafka.receiver.internals.DefaultKafkaReceiver;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
 
@@ -62,22 +58,23 @@ public class Consumer {
                             .map(__ -> record)
                     )
                     .concatMap(
-                        record -> Flowable
-                            .fromCallable(
-                                () -> {
-                                    System.out.println("Commit " + Thread.currentThread().getName());
-
-                                    record.receiverOffset().acknowledge();
-                                    return 0;
-                                }
-                            )
-                            .onErrorResumeNext(
-                                error -> {
-                                    System.out.println("Commit failure!!!! " + Thread.currentThread().getName());
-                                    return Flowable.empty();
-                                }
-                            )
+                        record -> Flowable.fromCallable(
+                            () -> {
+                                System.out.println("Commit " + Thread.currentThread().getName());
+                                record.receiverOffset().acknowledge();
+                                return true;
+                            }
+                        )
                     )
+            )
+            .onErrorResumeNext(
+                error -> {
+                    if (error instanceof CommitFailedException) {
+                        System.out.println("CommitFailedException!!!!!" + Thread.currentThread().getName());
+                        return Flowable.error(error);
+                    }
+                    return Flowable.just(true);
+                }
             );
     }
 }

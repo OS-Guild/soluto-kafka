@@ -14,6 +14,7 @@ public class Main {
     static CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) {
+        System.out.println("222222");
         try {
             Config.init();
             Monitor.init();
@@ -56,6 +57,7 @@ public class Main {
                             Monitor.unexpectedConsumerError(exception);
                         },
                         () -> {
+                            monitoringServer.consumerTerminated();
                             System.out.println("onCompleted");
                         }
                     );

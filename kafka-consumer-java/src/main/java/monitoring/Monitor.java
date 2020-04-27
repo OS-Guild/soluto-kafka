@@ -144,6 +144,12 @@ public class Monitor {
         write(log);
     }
 
+    public static void consumerCompleted() {
+        JSONObject log = new JSONObject().put("level", "error").put("message", "consumer stream was completed");
+
+        write(log);
+    }
+
     public static void initializationError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")

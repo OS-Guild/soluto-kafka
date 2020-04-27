@@ -71,7 +71,7 @@ public class Consumer {
                         )
                     )
                     .onErrorResumeNext(
-                        error -> error instanceof CommitFailedException ? Flowable.just(1) : Flowable.error(error)
+                        error -> error instanceof CommitFailedException ? Flowable.just(0) : Flowable.error(error)
                     )
             );
     }

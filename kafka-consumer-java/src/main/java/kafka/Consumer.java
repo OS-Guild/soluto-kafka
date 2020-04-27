@@ -5,6 +5,7 @@ import io.reactivex.*;
 import io.reactivex.schedulers.Schedulers;
 import java.util.concurrent.TimeUnit;
 import monitoring.Monitor;
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.kafka.receiver.ReceiverRecord;
 import target.ITarget;
 
@@ -21,6 +22,7 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
+            .retry(x -> x instanceof CommitFailedException)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);

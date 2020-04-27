@@ -22,7 +22,9 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
-            .onErrorResumeNext(t -> t instanceof CommitFailedException ? receiver : Flowable.error(t))
+            .publish()
+            .refCount(1)
+            .retry(t -> t instanceof CommitFailedException)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);

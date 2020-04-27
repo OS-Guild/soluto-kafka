@@ -22,6 +22,11 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
+            .doOnRequest(
+                requested -> {
+                    System.out.println("Requested " + requested);
+                }
+            )
             .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
             .doOnNext(
                 record -> {

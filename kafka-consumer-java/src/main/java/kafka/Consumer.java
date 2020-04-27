@@ -60,6 +60,8 @@ public class Consumer {
                     .concatMap(
                         record -> Flowable.fromCallable(
                             () -> {
+                                System.out.println("Commit " + Thread.currentThread().getName());
+
                                 record.receiverOffset().acknowledge();
                                 return 0;
                             }

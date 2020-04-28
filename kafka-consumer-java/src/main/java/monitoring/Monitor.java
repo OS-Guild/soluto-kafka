@@ -132,7 +132,7 @@ public class Monitor {
         deadLetterProduced.inc();
     }
 
-    public static void unexpectedConsumerError(Throwable exception) {
+    public static void consumerError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "consumer stream was terminated due to unexpected error")
@@ -195,6 +195,18 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "kafka-consumer-" + Config.GROUP_ID + " terminated");
+
+        write(log);
+    }
+
+    public static void unexpectedError(Throwable exception) {
+        JSONObject log = new JSONObject()
+            .put("level", "error")
+            .put("message", "unexpected error")
+            .put(
+                "err",
+                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
+            );
 
         write(log);
     }

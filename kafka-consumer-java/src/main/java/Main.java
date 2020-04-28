@@ -1,5 +1,7 @@
 import configuration.*;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.exceptions.UndeliverableException;
+import io.reactivex.plugins.RxJavaPlugins;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import kafka.*;
@@ -14,7 +16,6 @@ public class Main {
     static CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) {
-        System.out.println("222222");
         try {
             Config.init();
             Monitor.init();
@@ -27,7 +28,6 @@ public class Main {
             System.out.println("target is alive");
 
             monitoringServer = new MonitoringServer(targetIsAlive);
-
             consumer =
                 ConsumerFactory
                     .create(
@@ -55,7 +55,7 @@ public class Main {
                         __ -> {},
                         exception -> {
                             monitoringServer.consumerDisposed();
-                            Monitor.unexpectedConsumerError(exception);
+                            Monitor.consumerError(exception);
                         },
                         () -> {
                             monitoringServer.consumerDisposed();
@@ -75,13 +75,14 @@ public class Main {
                         }
                     )
                 );
+            RxJavaPlugins.setErrorHandler(e -> Monitor.unexpectedError(e));
 
             monitoringServer.start();
             Monitor.started();
             latch.await();
-            Monitor.serviceTerminated();
         } catch (Exception e) {
             Monitor.initializationError(e);
         }
+        Monitor.serviceTerminated();
     }
 }

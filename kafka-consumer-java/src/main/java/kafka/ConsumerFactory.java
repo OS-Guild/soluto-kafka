@@ -1,8 +1,6 @@
 package kafka;
 
 import configuration.Config;
-import io.reactivex.disposables.Disposable;
-import java.time.Duration;
 import reactor.adapter.rxjava.RxJava2Adapter;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.sender.KafkaSender;

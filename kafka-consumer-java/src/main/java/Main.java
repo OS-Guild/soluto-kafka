@@ -1,6 +1,5 @@
 import configuration.*;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.exceptions.UndeliverableException;
 import io.reactivex.plugins.RxJavaPlugins;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;

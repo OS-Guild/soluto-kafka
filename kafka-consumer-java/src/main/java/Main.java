@@ -34,7 +34,7 @@ public class Main {
                             ReceiverOptions
                                 .<String, String>create(KafkaOptions.consumer())
                                 .subscription(Config.TOPICS)
-                                .commitInterval(Duration.ofMillis(500))
+                                .commitInterval(Duration.ofMillis(Config.COMMIT_INTERVAL))
                                 .addAssignListener(
                                     partitions -> {
                                         monitoringServer.consumerAssigned();
@@ -46,7 +46,7 @@ public class Main {
                                         Monitor.revokedFromPartition(partitions);
                                     }
                                 )
-                                .pollTimeout(Duration.ofMillis(1000))
+                                .pollTimeout(Duration.ofMillis(Config.POLL_TIMEOUT))
                         )
                     )
                     .stream()

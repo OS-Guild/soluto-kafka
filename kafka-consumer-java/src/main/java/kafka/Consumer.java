@@ -21,12 +21,14 @@ public class Consumer {
 
     public Flowable<?> stream() {
         return receiver
+            .doOnError(error -> Monitor.unexpectedError(error))
+            .retry()
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
                 }
             )
-            .observeOn(Schedulers.io(), false, Config.BUFFER_SIZE)
+            .observeOn(Schedulers.computation(), false, Config.BUFFER_SIZE)
             .doOnNext(
                 record -> {
                     System.out.println("New Record " + Thread.currentThread().getName());
@@ -38,7 +40,7 @@ public class Consumer {
             .groupBy(record -> record.partition())
             .flatMap(
                 partition -> partition
-                    .observeOn(Schedulers.io())
+                    .observeOn(Schedulers.computation())
                     .concatMap(
                         record -> Flowable
                             .fromFuture(target.call(record))

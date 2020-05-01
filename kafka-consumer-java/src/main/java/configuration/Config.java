@@ -23,6 +23,8 @@ public class Config {
 
     //Optional
     public static int BUFFER_SIZE;
+    public static int COMMIT_INTERVAL;
+    public static int POLL_TIMEOUT;
     public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
@@ -61,6 +63,8 @@ public class Config {
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
         BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 5);
+        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 500);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

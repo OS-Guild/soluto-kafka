@@ -9,7 +9,6 @@ services:
             - KAFKA_BROKER=kafka:9092
             - TOPICS=foo,bar
             - RETRY_TOPIC=retry
-            - BUFFER_SIZE=8
             - DEAD_LETTER_TOPIC=dead-letter
             - GROUP_ID=consumer_1
             - SENDING_PROTOCOL=http

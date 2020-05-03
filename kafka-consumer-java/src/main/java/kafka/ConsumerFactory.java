@@ -1,7 +1,7 @@
 package kafka;
 
 import configuration.Config;
-import reactor.adapter.rxjava.RxJava2Adapter;
+import reactor.core.publisher.Flux;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.sender.KafkaSender;
 import reactor.kafka.sender.SenderOptions;
@@ -12,7 +12,7 @@ public class ConsumerFactory {
 
     public static Consumer create(KafkaReceiver<String, String> kafkaReceiver) {
         return new Consumer(
-            RxJava2Adapter.fluxToFlowable(kafkaReceiver.receive()),
+            Flux.defer(kafkaReceiver::receive),
             TargetFactory.create(
                 new TargetRetryPolicy(
                     new Producer(KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))),

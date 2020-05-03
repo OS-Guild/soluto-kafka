@@ -199,18 +199,6 @@ public class Monitor {
         write(log);
     }
 
-    public static void unexpectedError(Throwable exception) {
-        JSONObject log = new JSONObject()
-            .put("level", "error")
-            .put("message", "unexpected error")
-            .put(
-                "err",
-                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
-            );
-
-        write(log);
-    }
-
     public static void produceError(String topic, ConsumerRecord<String, String> consumerRecord, Throwable exception) {
         var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
         if (Config.LOG_RECORD) {

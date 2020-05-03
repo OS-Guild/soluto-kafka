@@ -40,6 +40,10 @@ public class MonitoringServer {
         consumerAssigned = true;
     }
 
+    public void consumerRevoked() {
+        consumerAssigned = false;
+    }
+
     public void consumerDisposed() {
         consumerDisposed = true;
     }

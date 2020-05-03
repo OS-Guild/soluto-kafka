@@ -1,10 +1,9 @@
 import configuration.*;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.plugins.RxJavaPlugins;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import kafka.*;
 import monitoring.*;
+import reactor.core.Disposable;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 import target.*;
@@ -24,7 +23,7 @@ public class Main {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
             } while (!targetIsAlive.check());
-            System.out.println("target is alive");
+            System.out.println("target is alive 5555555");
 
             monitoringServer = new MonitoringServer(targetIsAlive);
             consumer =
@@ -35,6 +34,7 @@ public class Main {
                                 .<String, String>create(KafkaOptions.consumer())
                                 .subscription(Config.TOPICS)
                                 .commitInterval(Duration.ofMillis(Config.COMMIT_INTERVAL))
+                                .commitBatchSize(Config.COMMIT_BATCH_SIZE)
                                 .addAssignListener(
                                     partitions -> {
                                         monitoringServer.consumerAssigned();
@@ -43,6 +43,7 @@ public class Main {
                                 )
                                 .addRevokeListener(
                                     partitions -> {
+                                        monitoringServer.consumerRevoked();
                                         Monitor.revokedFromPartition(partitions);
                                     }
                                 )
@@ -74,7 +75,6 @@ public class Main {
                         }
                     )
                 );
-            RxJavaPlugins.setErrorHandler(e -> Monitor.unexpectedError(e));
 
             monitoringServer.start();
             Monitor.started();

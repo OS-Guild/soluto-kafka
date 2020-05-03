@@ -43,6 +43,17 @@ public class Consumer {
                     .concatMap(
                         record -> Mono
                             .fromFuture(target.call(record))
+                            .doOnNext(
+                                targetResponse -> {
+                                    System.out.println("Http response: " + Thread.currentThread().getName());
+                                    if (targetResponse.callLatency.isPresent()) {
+                                        Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                                    }
+                                    if (targetResponse.resultLatency.isPresent()) {
+                                        Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
+                                    }
+                                }
+                            )
                             .thenEmpty(
                                 record
                                     .receiverOffset()
@@ -54,28 +65,7 @@ public class Consumer {
                                         }
                                     )
                             )
-                    // .doOnNext(
-                    //     targetResponse -> {
-                    //         System.out.println("Http response: " + Thread.currentThread().getName());
-                    //         if (targetResponse.callLatency.isPresent()) {
-                    //             Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
-                    //         }
-                    //         if (targetResponse.resultLatency.isPresent()) {
-                    //             Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                    //         }
-                    //     }
-                    // )
-                    // .map(__ -> record)
                     )
-            // .concatMap(
-            //     record -> Mono.fromCallable(
-            //         () -> {
-            //             System.out.println("Commit " + Thread.currentThread().getName());
-            //             record.receiverOffset().acknowledge();
-            //             return true;
-            //         }
-            //     )
-            // )
             );
     }
 }

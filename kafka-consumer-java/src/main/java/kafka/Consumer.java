@@ -1,5 +1,6 @@
 package kafka;
 
+import configuration.Config;
 import java.time.Duration;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
@@ -7,6 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
+import reactor.util.retry.Retry;
 import target.ITarget;
 
 public class Consumer {
@@ -21,9 +23,9 @@ public class Consumer {
     }
 
     public Flux<?> stream() {
+        var scheduler = Schedulers.boundedElastic();
         return receiver
-            .doOnError(error -> System.out.println("receiver_error!!!!!! " + error.toString()))
-            .retry(x -> x instanceof CommitFailedException)
+            .publishOn(scheduler, 1)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
@@ -31,7 +33,7 @@ public class Consumer {
             )
             .doOnNext(
                 record -> {
-                    System.out.println("New Record " + Thread.currentThread().getName());
+                    System.out.println("New Record " + record.partition() + Thread.currentThread().getName());
                     Monitor.receivedRecord(record);
                 }
             )
@@ -39,7 +41,7 @@ public class Consumer {
             .groupBy(record -> record.receiverOffset().topicPartition())
             .flatMap(
                 partitionKey -> partitionKey
-                    .publishOn(Schedulers.boundedElastic())
+                    .publishOn(scheduler)
                     .concatMap(
                         record -> Mono
                             .fromFuture(target.call(record))
@@ -54,18 +56,14 @@ public class Consumer {
                                     }
                                 }
                             )
-                            .thenEmpty(
-                                record
-                                    .receiverOffset()
-                                    .commit()
-                                    .onErrorContinue(
-                                        CommitFailedException.class,
-                                        (t, __) -> {
-                                            System.out.println("onErrorContinue");
-                                        }
-                                    )
-                            )
+                            .thenEmpty(record.receiverOffset().commit())
                     )
+            )
+            .onErrorContinue(
+                a -> a instanceof CommitFailedException,
+                (a, v) -> {
+                    System.out.println("commit_failed");
+                }
             );
     }
 }

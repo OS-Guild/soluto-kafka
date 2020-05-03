@@ -12,7 +12,7 @@ public class ConsumerFactory {
 
     public static Consumer create(KafkaReceiver<String, String> kafkaReceiver) {
         return new Consumer(
-            Flux.defer(kafkaReceiver::receive),
+            kafkaReceiver.receive(),
             TargetFactory.create(
                 new TargetRetryPolicy(
                     new Producer(KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))),

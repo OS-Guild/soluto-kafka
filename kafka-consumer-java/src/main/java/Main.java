@@ -23,7 +23,7 @@ public class Main {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
             } while (!targetIsAlive.check());
-            System.out.println("target is alive 5555555");
+            System.out.println("target is alive 88888");
 
             monitoringServer = new MonitoringServer(targetIsAlive);
             consumer =

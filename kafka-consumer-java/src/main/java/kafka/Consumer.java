@@ -23,7 +23,7 @@ public class Consumer {
     public Flux<?> stream() {
         return receiver
             .doOnError(error -> System.out.println("receiver_error!!!!!! " + error.toString()))
-            .retry()
+            .retry(x -> x instanceof CommitFailedException)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);

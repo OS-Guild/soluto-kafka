@@ -5,8 +5,10 @@ import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
+import reactor.util.retry.Retry;
 import target.ITarget;
 
 public class Consumer {
@@ -21,9 +23,27 @@ public class Consumer {
     }
 
     public Flux<?> stream() {
+        Scheduler scheduler = Schedulers.boundedElastic();
         return receiver
-            .doOnError(error -> System.out.println("receiver_error!!!!!! " + error.toString()))
-            .retry()
+            .publishOn(scheduler)
+            .doOnError(
+                error -> {
+                    System.out.println("receiver_error!!!!!! " + error.toString());
+                    try {
+                        Thread.sleep(1000); // Make it configurable
+                    } catch (InterruptedException e) {
+                        // Causes the restart
+                        e.printStackTrace();
+                    }
+                }
+            )
+            //                .onErrorContinue(
+            //                        CommitFailedException.class,
+            //                        (t, __) -> {
+            //                            System.out.println("onErrorContinue");
+            //                        }
+            //                )
+            .retryWhen(Retry.indefinitely().filter(e -> e instanceof CommitFailedException))
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
@@ -39,21 +59,9 @@ public class Consumer {
             .groupBy(record -> record.receiverOffset().topicPartition())
             .flatMap(
                 partitionKey -> partitionKey
-                    .publishOn(Schedulers.boundedElastic())
+                    .publishOn(scheduler)
                     .concatMap(
-                        record -> Mono
-                            .fromFuture(target.call(record))
-                            .thenEmpty(
-                                record
-                                    .receiverOffset()
-                                    .commit()
-                                    .onErrorContinue(
-                                        CommitFailedException.class,
-                                        (t, __) -> {
-                                            System.out.println("onErrorContinue");
-                                        }
-                                    )
-                            )
+                        record -> Mono.fromFuture(target.call(record)).thenEmpty(record.receiverOffset().commit())
                     // .doOnNext(
                     //     targetResponse -> {
                     //         System.out.println("Http response: " + Thread.currentThread().getName());

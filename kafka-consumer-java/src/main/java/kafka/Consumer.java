@@ -8,6 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
+import reactor.util.retry.Retry;
 import target.ITarget;
 
 public class Consumer {
@@ -22,30 +23,28 @@ public class Consumer {
     }
 
     public Flux<?> stream() {
-        var scheduler = Schedulers.boundedElastic();
         return receiver
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
                 }
             )
-            .publishOn(scheduler, false, Config.BUFFER_SIZE)
+            .publishOn(Schedulers.boundedElastic(), false, Config.BUFFER_SIZE)
             .doOnNext(
                 record -> {
-                    System.out.println("New Record " + record.partition() + Thread.currentThread().getName());
+                    System.out.println("New Record " + record.partition() + " " + Thread.currentThread().getName());
                     Monitor.receivedRecord(record);
                 }
             )
             .delayElements(Duration.ofMillis(processingDelay))
-            .groupBy(record -> record.receiverOffset().topicPartition() + "_" + record.key()) //is this a problem?
-            .publishOn(scheduler)
+            .groupBy(record -> record.receiverOffset().topicPartition())
             .flatMap(
                 topicPartition -> topicPartition
-                    .publishOn(scheduler)
-                    .concatMap(
+                    .publishOn(Schedulers.boundedElastic())
+                    .flatMap(
                         record -> Mono
                             .fromFuture(target.call(record))
-                            .doOnNext(
+                            .doOnSuccess(
                                 targetResponse -> {
                                     System.out.println("Http response: " + Thread.currentThread().getName());
                                     if (targetResponse.callLatency.isPresent()) {
@@ -57,13 +56,23 @@ public class Consumer {
                                 }
                             )
                             .thenEmpty(record.receiverOffset().commit())
-                    )
+                    ),
+                Config.TARGET_CONCURRENCY
             )
-            .onErrorContinue(
-                a -> a instanceof CommitFailedException,
-                (a, v) -> {
-                    System.out.println("commit_failed");
-                }
+            .retryWhen(
+                Retry
+                    .indefinitely()
+                    .filter(e -> e instanceof CommitFailedException)
+                    .doBeforeRetry(
+                        x -> {
+                            System.out.println("retry????? " + x.failure().getClass());
+                        }
+                    )
+                    .doAfterRetry(
+                        x -> {
+                            System.out.println("after_retry????? " + x.failure().getClass());
+                        }
+                    )
             );
     }
 }

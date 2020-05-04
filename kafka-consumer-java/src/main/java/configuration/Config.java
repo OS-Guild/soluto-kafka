@@ -22,6 +22,7 @@ public class Config {
     public static String TARGET;
 
     //Optional
+    public static int TARGET_CONCURRENCY;
     public static int COMMIT_INTERVAL;
     public static int COMMIT_BATCH_SIZE;
     public static int POLL_TIMEOUT;
@@ -66,9 +67,10 @@ public class Config {
         TARGET = getString(dotenv, "TARGET");
         COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 0);
         COMMIT_BATCH_SIZE = getOptionalInt(dotenv, "COMMIT_BATCH_SIZE", 0);
-        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 100);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
         BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 50);
+        TARGET_CONCURRENCY = getOptionalInt(dotenv, "TARGET_CONCURRENCY", 1);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

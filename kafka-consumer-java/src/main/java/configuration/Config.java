@@ -26,6 +26,7 @@ public class Config {
     public static int COMMIT_BATCH_SIZE;
     public static int POLL_TIMEOUT;
     public static int POLL_RECORDS;
+    public static int BUFFER_SIZE;
     public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
@@ -67,6 +68,7 @@ public class Config {
         COMMIT_BATCH_SIZE = getOptionalInt(dotenv, "COMMIT_BATCH_SIZE", 0);
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
         POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
+        BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 50);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

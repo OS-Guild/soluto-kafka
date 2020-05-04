@@ -8,7 +8,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.kafka.receiver.ReceiverRecord;
-import reactor.util.retry.Retry;
 import target.ITarget;
 
 public class Consumer {
@@ -25,12 +24,12 @@ public class Consumer {
     public Flux<?> stream() {
         var scheduler = Schedulers.boundedElastic();
         return receiver
-            .publishOn(scheduler, 1)
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
                 }
             )
+            .publishOn(scheduler, false, Config.BUFFER_SIZE)
             .doOnNext(
                 record -> {
                     System.out.println("New Record " + record.partition() + Thread.currentThread().getName());
@@ -38,9 +37,10 @@ public class Consumer {
                 }
             )
             .delayElements(Duration.ofMillis(processingDelay))
-            .groupBy(record -> record.receiverOffset().topicPartition())
+            .groupBy(record -> record.receiverOffset().topicPartition() + "_" + record.key()) //is this a problem?
+            .publishOn(scheduler)
             .flatMap(
-                partitionKey -> partitionKey
+                topicPartition -> topicPartition
                     .publishOn(scheduler)
                     .concatMap(
                         record -> Mono

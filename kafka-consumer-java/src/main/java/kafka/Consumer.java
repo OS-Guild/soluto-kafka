@@ -28,7 +28,6 @@ public class Consumer {
             .onBackpressureBuffer()
             // .publishOn(Schedulers.single(Schedulers.parallel()))
             .doFinally(__ -> receiver.dispose())
-            .doOnRequest(receiver::handleRequest)
             .doOnNext(x -> System.out.println("batch size is " + x.count()))
             .delayElements(Duration.ofMillis(processingDelay))
             .flatMapIterable(records -> new Partitioner().partition(records))
@@ -66,7 +65,8 @@ public class Consumer {
                 (a, v) -> {
                     System.out.println("commit_failed");
                 }
-            );
+            )
+            .doOnRequest(() -> {});
     }
 }
 

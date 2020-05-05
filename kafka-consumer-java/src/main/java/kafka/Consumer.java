@@ -1,5 +1,6 @@
 package kafka;
 
+import configuration.Config;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
@@ -10,8 +11,6 @@ import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
 public class Consumer {
@@ -29,18 +28,18 @@ public class Consumer {
         return receiver
             .onBackpressureBuffer()
             .doFinally(__ -> receiver.dispose())
-            .publishOn(Schedulers.single())
+            //.publishOn(Schedulers.single())
+            .flatMapIterable(records -> records)
+            // .delayElements(Duration.ofMillis(processingDelay))
+            // .groupBy(x -> x.partition() % 10)
+            //.publishOn(Schedulers.boundedElastic())
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
                     receiver.handleRequest(requested);
                 }
             )
-            .flatMapIterable(records -> records)
-            // .delayElements(Duration.ofMillis(processingDelay))
-            // .groupBy(x -> x.partition() % 10)
-            .publishOn(Schedulers.boundedElastic())
-            .concatMap(
+            .flatMap(
                 record -> Mono
                     .fromFuture(target.call(record))
                     .doOnSuccess(
@@ -53,9 +52,11 @@ public class Consumer {
                                 Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
                             }
                         }
-                    )
-                    .thenEmpty(receiver.commit())
+                    ),
+                Config.POLL_RECORDS
             )
+            .sample(Duration.ofMillis(5000))
+            .concatMap(__ -> receiver.commit())
             .onErrorContinue(
                 a -> a instanceof CommitFailedException,
                 (a, v) -> {

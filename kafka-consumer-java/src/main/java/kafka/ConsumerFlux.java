@@ -185,12 +185,18 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
             }
             try {
                 inProgress.incrementAndGet();
-                System.out.println(("commitSync started"));
-                consumer.commitSync();
+                consumer.commitAsync(
+                    (__, error) -> {
+                        if (error != null) {
+                            actual.onError(error);
+                            return;
+                        }
+                        System.out.println(("commitAsync completed"));
+                    }
+                );
                 inProgress.decrementAndGet();
-            // System.out.println("pollEvent after commit");
-            // pollEvent.scheduleIfRequired();
             } catch (Exception e) {
+                System.out.println(("commitSync failed " + e));
                 inProgress.decrementAndGet();
                 actual.onError(e);
             }
@@ -241,6 +247,7 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                     System.out.println("consumer.poll records is " + records.count());
 
                     if (isActive.get()) {
+                        //scheduleIfRequired();
                         int count = records.count();
                         if (requestsPending.addAndGet(0 - count) > 0) {
                             System.out.println("pollEvent:: there are still requestsPending " + requestsPending.get());

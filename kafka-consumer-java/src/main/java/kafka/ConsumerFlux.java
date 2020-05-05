@@ -229,29 +229,32 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                     pendingCount.decrementAndGet();
                     if (requestsPending.get() > 0) {
                         if (partitionsPaused.getAndSet(false)) {
-                            System.out.println("consumer.resume");
-                            consumer.resume(consumer.assignment());
+                            System.out.println("consumer.resume (disabled)");
+                        //consumer.resume(consumer.assignment());
                         }
                     } else {
                         if (!partitionsPaused.getAndSet(true)) {
-                            System.out.println("consumer.pause");
-                            consumer.pause(consumer.assignment());
+                            System.out.println("consumer.pause (disabled)");
+                        //consumer.pause(consumer.assignment());
                         }
                     }
 
                     ConsumerRecords<K, V> records = consumer.poll(pollTimeout);
+                    System.out.println("consumer.poll records is " + records.count());
+
                     if (isActive.get()) {
-                        int count = records.count();
-                        if (
-                            requestsPending.get() == Long.MAX_VALUE ||
-                            requestsPending.addAndGet(0 - count) > 0 ||
-                            commitEvent.inProgress.get() > 0
-                        ) {
-                            System.out.println(
-                                "pollEvent - self trigger, current requestsPending is " + requestsPending.get()
-                            );
-                            scheduleIfRequired();
-                        }
+                        scheduleIfRequired();
+                    // int count = records.count();
+                    // if (
+                    //     requestsPending.get() == Long.MAX_VALUE ||
+                    //     requestsPending.addAndGet(0 - count) > 0 ||
+                    //     commitEvent.inProgress.get() > 0
+                    // ) {
+                    //     System.out.println(
+                    //         "pollEvent - self trigger, current requestsPending is " + requestsPending.get()
+                    //     );
+                    //     scheduleIfRequired();
+                    // }
                     }
                     if (records.count() > 0) {
                         actual.onNext(records);

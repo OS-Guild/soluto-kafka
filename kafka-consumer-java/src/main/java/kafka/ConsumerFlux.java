@@ -188,8 +188,8 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                 System.out.println(("commitSync started"));
                 consumer.commitSync();
                 inProgress.decrementAndGet();
-                System.out.println("pollEvent after commit");
-                pollEvent.scheduleIfRequired();
+            // System.out.println("pollEvent after commit");
+            // pollEvent.scheduleIfRequired();
             } catch (Exception e) {
                 inProgress.decrementAndGet();
                 actual.onError(e);

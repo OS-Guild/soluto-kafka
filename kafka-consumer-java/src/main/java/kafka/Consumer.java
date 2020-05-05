@@ -10,6 +10,8 @@ import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
 public class Consumer {
@@ -27,33 +29,32 @@ public class Consumer {
         return receiver
             .onBackpressureBuffer()
             .doFinally(__ -> receiver.dispose())
-            .doOnNext(x -> System.out.println("batch size is " + x.count()))
+            .publishOn(Schedulers.single())
             .doOnRequest(
                 requested -> {
                     System.out.println("Requested " + requested);
                     receiver.handleRequest(requested);
                 }
             )
-            .flatMapIterable(records -> records, 10)
+            .flatMapIterable(records -> records)
             // .delayElements(Duration.ofMillis(processingDelay))
-            .groupBy(x -> x.partition() % 10)
-            .flatMap(
-                partition -> partition.concatMap(
-                    record -> Mono
-                        .fromFuture(target.call(record))
-                        .doOnSuccess(
-                            targetResponse -> {
-                                // System.out.println("Http response: " + Thread.currentThread().getName());
-                                if (targetResponse.callLatency.isPresent()) {
-                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
-                                }
-                                if (targetResponse.resultLatency.isPresent()) {
-                                    Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                                }
+            // .groupBy(x -> x.partition() % 10)
+            .publishOn(Schedulers.boundedElastic())
+            .concatMap(
+                record -> Mono
+                    .fromFuture(target.call(record))
+                    .doOnSuccess(
+                        targetResponse -> {
+                            // System.out.println("Http response: " + Thread.currentThread().getName());
+                            if (targetResponse.callLatency.isPresent()) {
+                                Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                             }
-                        )
-                        .thenEmpty(receiver.commit())
-                )
+                            if (targetResponse.resultLatency.isPresent()) {
+                                Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
+                            }
+                        }
+                    )
+                    .thenEmpty(receiver.commit())
             )
             .onErrorContinue(
                 a -> a instanceof CommitFailedException,

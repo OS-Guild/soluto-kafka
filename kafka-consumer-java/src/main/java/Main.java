@@ -1,91 +1,67 @@
-import java.util.ArrayList;
-import java.util.Collections;
+import configuration.*;
+import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.List;
+import kafka.*;
+import monitoring.*;
+import reactor.core.Disposable;
+import reactor.kafka.receiver.KafkaReceiver;
+import reactor.kafka.receiver.ReceiverOptions;
+import target.*;
 
 public class Main {
-    static List<ConsumerLoopWrapper> consumerLoops = new ArrayList<>();
-    static CountDownLatch countDownLatch;
+    static Disposable consumer;
     static MonitoringServer monitoringServer;
+    static CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) {
         try {
             Config.init();
             Monitor.init();
 
-            var taretIsAlive = new TargetIsAlive();
+            var targetIsAlive = new TargetIsAlive();
             do {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
-            } while (!taretIsAlive.check());
-            System.out.println("target is alive");
+            } while (!targetIsAlive.check());
+            System.out.println("target is alive 88888");
 
-            var kafkaCreator = new KafkaCreator();
-            var producer = kafkaCreator.createProducer();
+            monitoringServer = new MonitoringServer(targetIsAlive);
 
-            for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
-                var consumer = kafkaCreator.createConsumer();
-                var consumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        i,
-                        consumer,
-                        Config.TOPICS,
-                        Config.PROCESSING_DELAY,
-                        producer,
-                        Config.RETRY_TOPIC,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
-                );
-                new Thread(consumerLoop, "consumer " + i).start();
-                consumerLoops.add(consumerLoop);
-            }
-
-            if (Config.RETRY_TOPIC != null) {
-                var retryConsumer = kafkaCreator.createConsumer();
-                var retryConsumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        0,
-                        retryConsumer,
-                        Collections.singletonList(Config.RETRY_TOPIC),
-                        Config.RETRY_PROCESSING_DELAY,
-                        producer,
-                        null,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
-                );
-                new Thread(retryConsumerLoop, "retry consumer").start();
-                consumerLoops.add(retryConsumerLoop);
-            }
+            consumer =
+                ConsumerFactory
+                    .create(monitoringServer)
+                    .stream()
+                    .subscribe(
+                        __ -> {},
+                        exception -> {
+                            monitoringServer.consumerDisposed();
+                            Monitor.consumerError(exception);
+                        },
+                        () -> {
+                            monitoringServer.consumerDisposed();
+                            Monitor.consumerCompleted();
+                        }
+                    );
 
             Runtime
                 .getRuntime()
                 .addShutdownHook(
                     new Thread(
                         () -> {
-                            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
+                            System.out.println("Shutting down");
+                            consumer.dispose();
                             monitoringServer.close();
-                            Monitor.serviceShutdown();
+                            latch.countDown();
                         }
                     )
                 );
 
-            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
             monitoringServer.start();
             Monitor.started();
-
-            countDownLatch = new CountDownLatch(consumerLoops.size());
-            countDownLatch.await();
+            latch.await();
         } catch (Exception e) {
-            Monitor.unexpectedError(e);
-            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
-        } finally {
-            if (monitoringServer != null) {
-                monitoringServer.close();
-            }
-            Monitor.serviceTerminated();
-            System.exit(0);
+            Monitor.initializationError(e);
         }
+        Monitor.serviceTerminated();
     }
 }

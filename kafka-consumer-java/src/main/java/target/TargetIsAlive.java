@@ -1,8 +1,12 @@
+package target;
+
+import configuration.Config;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.URI;
+import monitoring.Monitor;
 
 public class TargetIsAlive {
     private static final HttpClient client = HttpClient.newHttpClient();
@@ -24,7 +28,6 @@ public class TargetIsAlive {
                 Monitor.targetAlive(targetIsAliveResponse.statusCode());
                 return true;
             } catch (Exception e) {
-                Monitor.unexpectedError(e);
                 return false;
             }
         }

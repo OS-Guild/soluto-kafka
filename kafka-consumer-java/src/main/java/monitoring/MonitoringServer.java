@@ -1,23 +1,23 @@
+package monitoring;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import configuration.Config;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.List;
+import target.TargetIsAlive;
 
 public class MonitoringServer {
-    List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles;
-    HttpServer server;
-    TargetIsAlive targetIsAlive;
+    private final TargetIsAlive targetIsAlive;
+    private boolean consumerAssigned;
+    private boolean consumerDisposed;
+    private HttpServer server;
 
-    public MonitoringServer(
-        final List<? extends IConsumerLoopLifecycle> consumerLoopLifecycles,
-        TargetIsAlive targetIsAlive
-    ) {
-        this.consumerLoopLifecycles = consumerLoopLifecycles;
+    public MonitoringServer(TargetIsAlive targetIsAlive) {
         this.targetIsAlive = targetIsAlive;
     }
 
@@ -34,6 +34,18 @@ public class MonitoringServer {
         } else {
             server.start();
         }
+    }
+
+    public void consumerAssigned() {
+        consumerAssigned = true;
+    }
+
+    public void consumerRevoked() {
+        consumerAssigned = false;
+    }
+
+    public void consumerDisposed() {
+        consumerDisposed = true;
     }
 
     public void close() {
@@ -53,12 +65,17 @@ public class MonitoringServer {
                         return;
                     }
 
-                    if (!targetAlive(exchange)) {
+                    if (!consumerAssigned) {
                         writeResponse(500, exchange);
                         return;
                     }
 
-                    if (!consumerAssignedToAtLeastOnePartition(consumerLoopLifecycles)) {
+                    if (consumerDisposed) {
+                        writeResponse(500, exchange);
+                        return;
+                    }
+
+                    if (!targetAlive(exchange)) {
                         writeResponse(500, exchange);
                         return;
                     }
@@ -69,20 +86,11 @@ public class MonitoringServer {
         );
     }
 
-    private static boolean consumerAssignedToAtLeastOnePartition(List<? extends IConsumerLoopLifecycle> consumerLoops) {
-        var response = consumerLoops.stream().map(x -> x.assignedToPartition()).anyMatch(y -> y.equals(true));
-        if (!response) {
-            Monitor.consumerNotAssignedToAtLeastOnePartition();
-        }
-        return response;
-    }
-
     private boolean targetAlive(HttpExchange exchange) throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {
                 return this.targetIsAlive.check();
             } catch (Exception e) {
-                Monitor.unexpectedError(e);
                 return false;
             }
         }

@@ -1,7 +1,12 @@
+package target;
+
+import configuration.Config;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.function.ToIntFunction;
 import java.util.Optional;
+import kafka.Producer;
+import monitoring.Monitor;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -34,7 +39,7 @@ public class TargetRetryPolicy {
                     if (statusCode.matches(Config.PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (retryTopic != null) {
-                            producer.produce("retry", retryTopic, record);
+                            producer.produce(retryTopic, record);
                             Monitor.retryProduced(record);
                             return;
                         }
@@ -43,7 +48,7 @@ public class TargetRetryPolicy {
                     if (statusCode.matches(Config.PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH)) {
                         Monitor.processMessageError();
                         if (deadLetterTopic != null) {
-                            producer.produce("deadLetter", deadLetterTopic, record);
+                            producer.produce(deadLetterTopic, record);
                             Monitor.deadLetterProcdued(record);
                         }
                         return;
@@ -63,7 +68,7 @@ public class TargetRetryPolicy {
             .onRetriesExceeded(
                 __ -> {
                     if (retryTopic != null) {
-                        producer.produce("retry", retryTopic, record);
+                        producer.produce(retryTopic, record);
                         Monitor.retryProduced(record);
                     }
                 }

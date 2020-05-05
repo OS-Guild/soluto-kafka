@@ -1,3 +1,5 @@
+package configuration;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +10,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class Config {
+public class Config {
     //Constants
     public static String ORIGINAL_TOPIC = "original-topic";
 
@@ -20,21 +22,20 @@ class Config {
     public static String TARGET;
 
     //Optional
+    public static int TARGET_CONCURRENCY;
+    public static int COMMIT_INTERVAL;
+    public static int COMMIT_BATCH_SIZE;
+    public static int POLL_TIMEOUT;
+    public static int POLL_RECORDS;
+    public static int BUFFER_SIZE;
+    public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
-    public static boolean DEDUP_PARTITION_BY_KEY;
-    public static int CONCURRENCY;
-    public static int CONCURRENCY_PER_PARTITION;
-    public static int PROCESSING_DELAY;
-    public static int RETRY_PROCESSING_DELAY;
-    public static int POLL_RECORDS;
-    public static int CONSUMER_POLL_TIMEOUT;
-    public static int CONSUMER_THREADS;
-    public static boolean DEBUG;
     public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
+    public static boolean DEBUG;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -64,6 +65,12 @@ class Config {
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
+        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 0);
+        COMMIT_BATCH_SIZE = getOptionalInt(dotenv, "COMMIT_BATCH_SIZE", 0);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
+        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 500);
+        BUFFER_SIZE = getOptionalInt(dotenv, "BUFFER_SIZE", 50);
+        TARGET_CONCURRENCY = getOptionalInt(dotenv, "TARGET_CONCURRENCY", 100);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
@@ -76,15 +83,8 @@ class Config {
 
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
-        CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
-        CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
-        DEDUP_PARTITION_BY_KEY = getOptionalBool(dotenv, "DEDUP_PARTITION_BY_KEY", false);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
-        RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
-        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);

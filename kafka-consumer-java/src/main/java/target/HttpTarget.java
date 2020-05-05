@@ -1,3 +1,6 @@
+package target;
+
+import configuration.Config;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -19,6 +22,7 @@ public class HttpTarget implements ITarget {
     }
 
     public CompletableFuture<TargetResponse> call(final ConsumerRecord<String, String> record) {
+        // System.out.println("Call http: " + Thread.currentThread().getName() + " " + System.currentTimeMillis());
         final var request = HttpRequest
             .newBuilder()
             .uri(URI.create(Config.SENDING_PROTOCOL + "://" + Config.TARGET))
@@ -52,9 +56,8 @@ public class HttpTarget implements ITarget {
                         (new Date()).getTime() -
                             response.headers().firstValueAsLong("x-completed-timestamp").getAsLong()
                     );
-                    return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
+                    return new TargetResponse(callLatency, resultLatency);
                 }
-            )
-            .exceptionally(TargetResponse::Error);
+            );
     }
 }

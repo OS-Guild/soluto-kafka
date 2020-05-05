@@ -26,47 +26,41 @@ public class Consumer {
     public Flux<?> stream() {
         return receiver
             .onBackpressureBuffer()
-            // .publishOn(Schedulers.single(Schedulers.parallel()))
             .doFinally(__ -> receiver.dispose())
             .doOnNext(x -> System.out.println("batch size is " + x.count()))
-            .delayElements(Duration.ofMillis(processingDelay))
-            .flatMapIterable(records -> new Partitioner().partition(records))
-            // .publishOn(Schedulers.boundedElastic())
+            .doOnRequest(
+                requested -> {
+                    System.out.println("Requested " + requested);
+                    receiver.handleRequest(requested);
+                }
+            )
+            .flatMapIterable(records -> records, 10)
+            // .delayElements(Duration.ofMillis(processingDelay))
+            .groupBy(x -> x.partition() % 10)
             .flatMap(
-                partition -> Flux
-                    .fromIterable(partition)
-                    .doOnNext(
-                        record -> {
-                            //System.out.println("New Record " + record.topic() + " " + Thread.currentThread().getName());
-                            Monitor.receivedRecord(record);
-                        }
-                    )
-                    .concatMap(
-                        record -> Mono
-                            .fromFuture(target.call(record))
-                            .doOnSuccess(
-                                targetResponse -> {
-                                    // System.out.println("Http response: " + Thread.currentThread().getName());
-                                    if (targetResponse.callLatency.isPresent()) {
-                                        Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
-                                    }
-                                    if (targetResponse.resultLatency.isPresent()) {
-                                        Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                                    }
+                partition -> partition.concatMap(
+                    record -> Mono
+                        .fromFuture(target.call(record))
+                        .doOnSuccess(
+                            targetResponse -> {
+                                // System.out.println("Http response: " + Thread.currentThread().getName());
+                                if (targetResponse.callLatency.isPresent()) {
+                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                 }
-                            )
-                    )
-                    .collectList()
-                    .thenEmpty(receiver.commit())
-            // .doOnSuccess(__ -> System.out.println("commit!!!!!"))
+                                if (targetResponse.resultLatency.isPresent()) {
+                                    Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
+                                }
+                            }
+                        )
+                        .thenEmpty(receiver.commit())
+                )
             )
             .onErrorContinue(
                 a -> a instanceof CommitFailedException,
                 (a, v) -> {
                     System.out.println("commit_failed");
                 }
-            )
-            .doOnRequest(() -> {});
+            );
     }
 }
 

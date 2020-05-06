@@ -14,29 +14,22 @@ import reactor.core.publisher.Mono;
 import target.ITarget;
 
 public class Consumer {
-    private ConsumerFlux<String, String> receiver;
+    private ReactiveKafkaConsumer<String, String> kafkaConsumer;
     private final ITarget target;
     private final long processingDelay;
 
-    Consumer(ConsumerFlux<String, String> receiver, ITarget target, long processingDelay) {
-        this.receiver = receiver;
+    Consumer(ReactiveKafkaConsumer<String, String> kafkaConsumer, ITarget target, long processingDelay) {
+        this.kafkaConsumer = kafkaConsumer;
         this.target = target;
         this.processingDelay = processingDelay;
     }
 
     public Flux<?> stream() {
-        return receiver
+        return kafkaConsumer
             .onBackpressureBuffer()
-            .doFinally(__ -> receiver.dispose())
             .flatMapIterable(records -> records)
-            // .delayElements(Duration.ofMillis(processingDelay))
-            //.publishOn(Schedulers.boundedElastic())
-            .doOnRequest(
-                requested -> {
-                    System.out.println("Requested " + requested);
-                    receiver.handleRequest(requested);
-                }
-            )
+            .doOnRequest(kafkaConsumer::poll)
+            .delayElements(Duration.ofMillis(processingDelay))
             .groupBy(x -> x.partition(), __ -> __, Config.POLL_RECORDS)
             .flatMap(
                 partition -> partition.concatMap(
@@ -44,7 +37,6 @@ public class Consumer {
                         .fromFuture(target.call(record))
                         .doOnSuccess(
                             targetResponse -> {
-                                // System.out.println("Http response: " + Thread.currentThread().getName());
                                 if (targetResponse.callLatency.isPresent()) {
                                     Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
                                 }
@@ -56,7 +48,12 @@ public class Consumer {
                 )
             )
             .sample(Duration.ofMillis(5000))
-            .concatMap(__ -> receiver.commit())
+            .concatMap(
+                __ -> {
+                    kafkaConsumer.commit();
+                    return Mono.empty();
+                }
+            )
             .onErrorContinue(
                 a -> a instanceof CommitFailedException,
                 (a, v) -> {

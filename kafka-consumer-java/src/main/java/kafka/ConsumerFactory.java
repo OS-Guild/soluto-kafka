@@ -6,8 +6,6 @@ import monitoring.Monitor;
 import monitoring.MonitoringServer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.common.TopicPartition;
-import reactor.kafka.sender.KafkaSender;
-import reactor.kafka.sender.SenderOptions;
 import target.TargetFactory;
 import target.TargetRetryPolicy;
 
@@ -15,8 +13,8 @@ public class ConsumerFactory {
 
     public static Consumer create(MonitoringServer monitoringServer) {
         return new Consumer(
-            new ConsumerFlux<String, String>(
-                new KafkaCreator(),
+            new ReactiveKafkaConsumer<String, String>(
+                new KafkaClientFactory().createConsumer(),
                 Config.TOPICS,
                 new ConsumerRebalanceListener() {
 
@@ -35,7 +33,7 @@ public class ConsumerFactory {
             ),
             TargetFactory.create(
                 new TargetRetryPolicy(
-                    new Producer(KafkaSender.<String, String>create(SenderOptions.create(KafkaOptions.producer()))),
+                    new Producer(new KafkaClientFactory().createProducer()),
                     Config.RETRY_TOPIC,
                     Config.DEAD_LETTER_TOPIC
                 )

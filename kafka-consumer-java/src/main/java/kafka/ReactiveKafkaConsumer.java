@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
@@ -15,44 +16,36 @@ import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Scheduler;
+import utils.OperatorUtils;
 
-public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
+public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
+    final Collection<String> topics;
+    final ConsumerRebalanceListener consumerRebalanceListener;
+
     final AtomicBoolean isActive = new AtomicBoolean();
-
     final AtomicBoolean isClosed = new AtomicBoolean();
 
+    final Scheduler scheduler;
     final PollEvent pollEvent;
+    final CommitEvent commitEvent;
 
-    CommitEvent commitEvent;
-
-    final Scheduler eventScheduler;
-
-    final KafkaCreator consumerFactory;
-
-    org.apache.kafka.clients.consumer.Consumer<K, V> consumer;
-
-    org.apache.kafka.clients.consumer.Consumer<K, V> consumerProxy;
-
+    Consumer<K, V> consumer;
     CoreSubscriber<? super ConsumerRecords<K, V>> actual;
 
-    final Collection<String> topics;
-
-    ConsumerRebalanceListener consumerRebalanceListener;
-
-    public ConsumerFlux(
-        KafkaCreator consumerFactory,
+    public ReactiveKafkaConsumer(
+        Consumer<K, V> consumer,
         Collection<String> topics,
-        ConsumerRebalanceListener consumerRebalanceListener2
+        ConsumerRebalanceListener consumerRebalanceListener
     ) {
         this.topics = topics;
-        this.consumerFactory = consumerFactory;
-        this.consumerRebalanceListener = consumerRebalanceListener2;
+        this.consumer = consumer;
+        this.consumerRebalanceListener = consumerRebalanceListener;
+
         pollEvent = new PollEvent();
         commitEvent = new CommitEvent();
-        eventScheduler = KafkaSchedulers.newEvent(Config.GROUP_ID);
+        scheduler = KafkaSchedulers.newEvent(Config.GROUP_ID);
     }
 
     @Override
@@ -70,8 +63,7 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
         isClosed.set(false);
 
         try {
-            consumer = consumerFactory.createConsumer();
-            eventScheduler.schedule(new SubscribeEvent());
+            scheduler.schedule(new SubscribeEvent());
 
             actual.onSubscribe(
                 new Subscription() {
@@ -79,7 +71,6 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                     @Override
                     public void request(long n) {
                         if (pollEvent.requestsPending.get() > 0) {
-                            System.out.println("pollEvent - initial");
                             pollEvent.scheduleIfRequired();
                         }
                     }
@@ -89,16 +80,22 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                 }
             );
 
-            eventScheduler.start();
+            scheduler.start();
         } catch (Exception e) {
             Operators.error(actual, e);
             return;
         }
     }
 
-    Mono<Void> commit() {
+    void poll(Long toAdd) {
+        if (OperatorUtils.safeAddAndGet(pollEvent.requestsPending, toAdd) > 0) {
+            System.out.println(("request " + toAdd));
+            pollEvent.scheduleIfRequired();
+        }
+    }
+
+    void commit() {
         commitEvent.scheduleIfRequired();
-        return Mono.empty();
     }
 
     @Override
@@ -122,19 +119,16 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                 return;
             }
 
-            if (eventScheduler.isDisposed()) {
+            if (scheduler.isDisposed()) {
                 closeEvent.run();
                 return;
             }
 
-            eventScheduler.schedule(closeEvent);
+            scheduler.schedule(closeEvent);
             isConsumerClosed = closeEvent.await();
         } finally {
-            eventScheduler.dispose();
+            scheduler.dispose();
 
-            // If the consumer was not closed within the specified timeout
-            // try to close again. This is not safe, so ignore exceptions and
-            // retry.
             int maxRetries = 10;
             for (int i = 0; i < maxRetries && !isConsumerClosed; i++) {
                 try {
@@ -148,28 +142,67 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
         }
     }
 
-    void handleRequest(Long toAdd) {
-        System.out.println("handleReqest started " + toAdd);
-        var x = OperatorUtils.safeAddAndGet(pollEvent.requestsPending, toAdd);
-        System.out.println("pollEvent.requestsPending " + x);
-
-        if (x > 0) {
-            System.out.println(("poll after handleRequest " + toAdd));
-            pollEvent.scheduleIfRequired();
-        }
-    }
-
     class SubscribeEvent implements Runnable {
 
         @Override
         public void run() {
             try {
                 consumer.subscribe(topics, consumerRebalanceListener);
-                System.out.println("consumer.subscribe");
             } catch (Exception e) {
                 if (isActive.get()) {
                     actual.onError(e);
                 }
+            }
+        }
+    }
+
+    class PollEvent implements Runnable {
+        private final AtomicInteger pendingCount = new AtomicInteger();
+        private final Duration pollTimeout = Duration.ofMillis(Config.POLL_TIMEOUT);
+
+        private final AtomicBoolean partitionsPaused = new AtomicBoolean();
+        final AtomicLong requestsPending = new AtomicLong();
+
+        @Override
+        public void run() {
+            try {
+                if (isActive.get()) {
+                    pendingCount.decrementAndGet();
+
+                    // if (requestsPending.get() > 0) {
+                    //     if (partitionsPaused.getAndSet(false)) {
+                    //         consumer.resume(consumer.assignment());
+                    //     }
+                    // } else {
+                    //     if (!partitionsPaused.getAndSet(true)) {
+                    //         consumer.pause(consumer.assignment());
+                    //     }
+                    // }
+                    var records = consumer.poll(pollTimeout);
+                    System.out.println("consumer.poll records is " + records.count());
+
+                    if (isActive.get()) {
+                        int count = records.count();
+                        if (requestsPending.addAndGet(0 - count) > 0) {
+                            System.out.println("pollEvent:: there are still requestsPending " + requestsPending.get());
+                            scheduleIfRequired();
+                        }
+                    }
+                    if (records.count() > 0) {
+                        actual.onNext(records);
+                    }
+                }
+            } catch (Exception e) {
+                if (isActive.get()) {
+                    actual.onError(e);
+                }
+            }
+        }
+
+        void scheduleIfRequired() {
+            if (pendingCount.get() <= 0) {
+                scheduler.schedule(this);
+                pendingCount.incrementAndGet();
             }
         }
     }
@@ -191,12 +224,10 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                             actual.onError(error);
                             return;
                         }
-                        System.out.println(("commitAsync completed"));
                     }
                 );
                 inProgress.decrementAndGet();
             } catch (Exception e) {
-                System.out.println(("commitSync failed " + e));
                 inProgress.decrementAndGet();
                 actual.onError(e);
             }
@@ -209,66 +240,13 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
 
         void scheduleIfRequired() {
             if (isActive.get() && isPending.compareAndSet(false, true)) {
-                eventScheduler.schedule(this);
+                scheduler.schedule(this);
             }
         }
 
         private void waitFor(long endTimeNanos) {
             while (inProgress.get() > 0 && endTimeNanos - System.nanoTime() > 0) {
                 consumer.poll(Duration.ofMillis(1));
-            }
-        }
-    }
-
-    class PollEvent implements Runnable {
-        private final AtomicInteger pendingCount = new AtomicInteger();
-        private final Duration pollTimeout = Duration.ofMillis(Config.POLL_TIMEOUT);
-
-        private final AtomicBoolean partitionsPaused = new AtomicBoolean();
-        final AtomicLong requestsPending = new AtomicLong();
-
-        @Override
-        public void run() {
-            try {
-                if (isActive.get()) {
-                    commitEvent.runIfRequired(false);
-                    pendingCount.decrementAndGet();
-
-                    // if (requestsPending.get() > 0) {
-                    //     if (partitionsPaused.getAndSet(false)) {
-                    //         consumer.resume(consumer.assignment());
-                    //     }
-                    // } else {
-                    //     if (!partitionsPaused.getAndSet(true)) {
-                    //         consumer.pause(consumer.assignment());
-                    //     }
-                    // }
-                    ConsumerRecords<K, V> records = consumer.poll(pollTimeout);
-                    System.out.println("consumer.poll records is " + records.count());
-
-                    if (isActive.get()) {
-                        //scheduleIfRequired();
-                        int count = records.count();
-                        if (requestsPending.addAndGet(0 - count) > 0) {
-                            System.out.println("pollEvent:: there are still requestsPending " + requestsPending.get());
-                            scheduleIfRequired();
-                        }
-                    }
-                    if (records.count() > 0) {
-                        actual.onNext(records);
-                    }
-                }
-            } catch (Exception e) {
-                if (isActive.get()) {
-                    actual.onError(e);
-                }
-            }
-        }
-
-        void scheduleIfRequired() {
-            if (pendingCount.get() <= 0) {
-                eventScheduler.schedule(this);
-                pendingCount.incrementAndGet();
             }
         }
     }
@@ -292,7 +270,6 @@ public class ConsumerFlux<K, V> extends Flux<ConsumerRecords<K, V>> implements D
                             commitEvent.waitFor(closeEndTimeNanos);
                             long timeoutNanos = closeEndTimeNanos - System.nanoTime();
                             if (timeoutNanos < 0) timeoutNanos = 0;
-                            System.out.println("closing consumer!!!!!!");
                             consumer.close(Duration.ofNanos(timeoutNanos));
                             break;
                         } catch (WakeupException e) {

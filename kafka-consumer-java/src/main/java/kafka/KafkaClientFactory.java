@@ -3,8 +3,9 @@ package kafka;
 import configuration.Config;
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
-public class KafkaCreator {
+public class KafkaClientFactory {
 
     private Properties getAuthProperties() {
         var props = new Properties();
@@ -53,5 +54,14 @@ public class KafkaCreator {
         props.put("max.poll.records", String.valueOf(Config.POLL_RECORDS));
 
         return new KafkaConsumer<>(props);
+    }
+
+    public <K, V> KafkaProducer<K, V> createProducer() {
+        var props = getAuthProperties();
+
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        return new KafkaProducer<>(props);
     }
 }

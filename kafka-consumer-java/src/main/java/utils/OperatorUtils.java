@@ -1,13 +1,13 @@
-package kafka;
+package utils;
 
 import java.util.concurrent.atomic.AtomicLong;
 import reactor.core.publisher.Operators;
 
-final class OperatorUtils {
+public final class OperatorUtils {
 
     private OperatorUtils() {}
 
-    static long safeAddAndGet(AtomicLong atomicLong, long toAdd) {
+    public static long safeAddAndGet(AtomicLong atomicLong, long toAdd) {
         long r, u;
         for (;;) {
             r = atomicLong.get();

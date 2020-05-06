@@ -28,10 +28,8 @@ public class Consumer {
         return receiver
             .onBackpressureBuffer()
             .doFinally(__ -> receiver.dispose())
-            //.publishOn(Schedulers.single())
             .flatMapIterable(records -> records)
             // .delayElements(Duration.ofMillis(processingDelay))
-            // .groupBy(x -> x.partition() % 10)
             //.publishOn(Schedulers.boundedElastic())
             .doOnRequest(
                 requested -> {
@@ -39,21 +37,23 @@ public class Consumer {
                     receiver.handleRequest(requested);
                 }
             )
+            .groupBy(x -> x.partition(), __ -> __, Config.POLL_RECORDS)
             .flatMap(
-                record -> Mono
-                    .fromFuture(target.call(record))
-                    .doOnSuccess(
-                        targetResponse -> {
-                            // System.out.println("Http response: " + Thread.currentThread().getName());
-                            if (targetResponse.callLatency.isPresent()) {
-                                Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                partition -> partition.concatMap(
+                    record -> Mono
+                        .fromFuture(target.call(record))
+                        .doOnSuccess(
+                            targetResponse -> {
+                                // System.out.println("Http response: " + Thread.currentThread().getName());
+                                if (targetResponse.callLatency.isPresent()) {
+                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                                }
+                                if (targetResponse.resultLatency.isPresent()) {
+                                    Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
+                                }
                             }
-                            if (targetResponse.resultLatency.isPresent()) {
-                                Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                            }
-                        }
-                    ),
-                Config.POLL_RECORDS
+                        )
+                )
             )
             .sample(Duration.ofMillis(5000))
             .concatMap(__ -> receiver.commit())

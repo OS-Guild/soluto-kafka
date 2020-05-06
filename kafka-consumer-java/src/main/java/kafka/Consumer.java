@@ -6,6 +6,8 @@ import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
 public class Consumer {
@@ -22,8 +24,9 @@ public class Consumer {
             .onBackpressureBuffer()
             .flatMapIterable(records -> records)
             .doOnRequest(kafkaConsumer::poll)
-            .groupBy(x -> x.partition(), __ -> __, Config.MAX_POLL_RECORDS)
+            .groupBy(x -> x.partition(), __ -> __, 1000)
             .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
+            .publishOn(Schedulers.parallel())
             .flatMap(
                 partition -> partition.concatMap(
                     record -> Mono

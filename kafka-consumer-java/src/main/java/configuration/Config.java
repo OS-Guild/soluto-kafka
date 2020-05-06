@@ -55,44 +55,42 @@ public class Config {
     public static String TARGET_IS_ALIVE_HTTP_ENDPOINT;
 
     public static void init() throws Exception {
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", DEBUG ? "trace" : "warn");
-
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
+
         TOPICS = getStringList(dotenv, "TOPICS");
         GROUP_ID = getString(dotenv, "GROUP_ID");
-
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
+
         TARGET = getString(dotenv, "TARGET");
-        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 500);
+        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 5000);
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
         MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 100);
-
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
+
         PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH", "408");
         PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "4[0-9][0-79]");
         RETRY_POLICY_EXPONENTIAL_BACKOFF =
             getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
-
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
+
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
         PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
-
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
+
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
-
         BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
+
         if (BASE64_TRUSTSTORE_FILE_PATH != null) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             writeToFile(TRUSTSTORE_LOCATION, readFile(getString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH")));
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
-
         SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
 
         if (SECURITY_PROTOCOL.equals("SSL")) {
@@ -110,8 +108,8 @@ public class Config {
         }
 
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
-        PROMETHEUS_BUCKETS = getOptionalString(dotenv, "PROMETHEUS_BUCKETS", "0.003,0.03,0.1,0.3,1.5,10");
 
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, "PROMETHEUS_BUCKETS", "0.003,0.03,0.1,0.3,1.5,10");
         LOG_RECORD = getOptionalBool(dotenv, "LOG_RECORD", false);
     }
 

@@ -9,10 +9,10 @@ import reactor.core.publisher.Mono;
 import target.ITarget;
 
 public class Consumer {
-    private ReactiveKafkaConsumer<String, String> kafkaConsumer;
+    private ReactiveKafkaClient<String, String> kafkaConsumer;
     private final ITarget target;
 
-    Consumer(ReactiveKafkaConsumer<String, String> kafkaConsumer, ITarget target) {
+    public Consumer(ReactiveKafkaClient<String, String> kafkaConsumer, ITarget target) {
         this.kafkaConsumer = kafkaConsumer;
         this.target = target;
     }

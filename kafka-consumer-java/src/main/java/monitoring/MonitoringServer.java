@@ -21,9 +21,9 @@ public class MonitoringServer {
         this.targetIsAlive = targetIsAlive;
     }
 
-    public void start() throws IOException {
+    public MonitoringServer start() throws IOException {
         if (Config.MONITORING_SERVER_PORT == 0) {
-            return;
+            return this;
         }
 
         server = HttpServer.create(new InetSocketAddress(Config.MONITORING_SERVER_PORT), 0);
@@ -34,6 +34,7 @@ public class MonitoringServer {
         } else {
             server.start();
         }
+        return this;
     }
 
     public void consumerAssigned() {

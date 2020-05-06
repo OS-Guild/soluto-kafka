@@ -24,8 +24,8 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import utils.OperatorUtils;
 
-public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
-    private static final Logger logger = LoggerFactory.getLogger(ReactiveKafkaConsumer.class);
+public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
+    private static final Logger logger = LoggerFactory.getLogger(ReactiveKafkaClient.class);
 
     final Collection<String> topics;
     final ConsumerRebalanceListener consumerRebalanceListener;
@@ -40,7 +40,7 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
     Consumer<K, V> consumer;
     CoreSubscriber<? super ConsumerRecords<K, V>> actual;
 
-    public ReactiveKafkaConsumer(
+    public ReactiveKafkaClient(
         Consumer<K, V> consumer,
         Collection<String> topics,
         ConsumerRebalanceListener consumerRebalanceListener

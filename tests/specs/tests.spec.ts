@@ -30,7 +30,7 @@ describe('tests', () => {
         expect(consumer.ok).toBeTruthy();
     });
 
-    it.only('should produce and consume', async () => {
+    it('should produce and consume', async () => {
         const callId = await mockHttpTarget('/consume', 200);
 
         await produce('http://localhost:6000/produce', [{topic: 'foo', key: 'thekey', value: {data: 'foo'}}]);

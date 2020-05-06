@@ -27,7 +27,6 @@ public class ConsumerFactory {
                     @Override
                     public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
                         Monitor.revokedFromPartition(partitions);
-                        monitoringServer.consumerRevoked();
                     }
                 }
             ),

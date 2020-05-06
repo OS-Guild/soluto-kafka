@@ -16,12 +16,10 @@ import target.ITarget;
 public class Consumer {
     private ReactiveKafkaConsumer<String, String> kafkaConsumer;
     private final ITarget target;
-    private final long processingDelay;
 
-    Consumer(ReactiveKafkaConsumer<String, String> kafkaConsumer, ITarget target, long processingDelay) {
+    Consumer(ReactiveKafkaConsumer<String, String> kafkaConsumer, ITarget target) {
         this.kafkaConsumer = kafkaConsumer;
         this.target = target;
-        this.processingDelay = processingDelay;
     }
 
     public Flux<?> stream() {
@@ -29,8 +27,8 @@ public class Consumer {
             .onBackpressureBuffer()
             .flatMapIterable(records -> records)
             .doOnRequest(kafkaConsumer::poll)
-            .delayElements(Duration.ofMillis(processingDelay))
-            .groupBy(x -> x.partition(), __ -> __, Config.POLL_RECORDS)
+            .groupBy(x -> x.partition(), __ -> __, Config.MAX_POLL_RECORDS)
+            .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
             .flatMap(
                 partition -> partition.concatMap(
                     record -> Mono
@@ -47,19 +45,14 @@ public class Consumer {
                         )
                 )
             )
-            .sample(Duration.ofMillis(5000))
+            .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
             .concatMap(
                 __ -> {
                     kafkaConsumer.commit();
                     return Mono.empty();
                 }
             )
-            .onErrorContinue(
-                a -> a instanceof CommitFailedException,
-                (a, v) -> {
-                    System.out.println("commit_failed");
-                }
-            );
+            .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
     }
 }
 

@@ -2,7 +2,9 @@ package kafka;
 
 import configuration.Config;
 import java.util.Properties;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.StickyAssignor;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 public class KafkaClientFactory {
@@ -47,21 +49,25 @@ public class KafkaClientFactory {
 
     public <K, V> org.apache.kafka.clients.consumer.Consumer<K, V> createConsumer() {
         var props = getAuthProperties();
-        props.put("group.id", Config.GROUP_ID);
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("enable.auto.commit", "false");
-        props.put("max.poll.records", String.valueOf(Config.POLL_RECORDS));
-
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, Config.GROUP_ID);
+        props.put(
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            "org.apache.kafka.common.serialization.StringDeserializer"
+        );
+        props.put(
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+            "org.apache.kafka.common.serialization.StringDeserializer"
+        );
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, Config.MAX_POLL_RECORDS);
+        props.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, StickyAssignor.class.getName());
         return new KafkaConsumer<>(props);
     }
 
     public <K, V> KafkaProducer<K, V> createProducer() {
         var props = getAuthProperties();
-
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
         return new KafkaProducer<>(props);
     }
 }

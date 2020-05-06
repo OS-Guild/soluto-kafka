@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -18,6 +19,7 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 import utils.OperatorUtils;
 
 public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
@@ -89,7 +91,6 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
 
     void poll(Long toAdd) {
         if (OperatorUtils.safeAddAndGet(pollEvent.requestsPending, toAdd) > 0) {
-            System.out.println(("request " + toAdd));
             pollEvent.scheduleIfRequired();
         }
     }
@@ -159,8 +160,6 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
     class PollEvent implements Runnable {
         private final AtomicInteger pendingCount = new AtomicInteger();
         private final Duration pollTimeout = Duration.ofMillis(Config.POLL_TIMEOUT);
-
-        private final AtomicBoolean partitionsPaused = new AtomicBoolean();
         final AtomicLong requestsPending = new AtomicLong();
 
         @Override
@@ -168,23 +167,10 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
             try {
                 if (isActive.get()) {
                     pendingCount.decrementAndGet();
-
-                    // if (requestsPending.get() > 0) {
-                    //     if (partitionsPaused.getAndSet(false)) {
-                    //         consumer.resume(consumer.assignment());
-                    //     }
-                    // } else {
-                    //     if (!partitionsPaused.getAndSet(true)) {
-                    //         consumer.pause(consumer.assignment());
-                    //     }
-                    // }
                     var records = consumer.poll(pollTimeout);
-                    System.out.println("consumer.poll records is " + records.count());
-
                     if (isActive.get()) {
                         int count = records.count();
                         if (requestsPending.addAndGet(0 - count) > 0) {
-                            System.out.println("pollEvent:: there are still requestsPending " + requestsPending.get());
                             scheduleIfRequired();
                         }
                     }
@@ -298,6 +284,45 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
                 }
             }
             return closed;
+        }
+    }
+}
+
+class KafkaSchedulers {
+
+    static void defaultUncaughtException(Thread t, Throwable e) {}
+
+    static Scheduler newEvent(String groupId) {
+        return Schedulers.newSingle(new EventThreadFactory(groupId));
+    }
+
+    static boolean isCurrentThreadFromScheduler() {
+        return Thread.currentThread() instanceof EventThreadFactory.EmitterThread;
+    }
+
+    static final class EventThreadFactory implements ThreadFactory {
+        static final String PREFIX = "reactive-kafka-";
+        static final AtomicLong COUNTER_REFERENCE = new AtomicLong();
+
+        private final String groupId;
+
+        EventThreadFactory(String groupId) {
+            this.groupId = groupId;
+        }
+
+        @Override
+        public final Thread newThread(Runnable runnable) {
+            String newThreadName = PREFIX + groupId + "-" + COUNTER_REFERENCE.incrementAndGet();
+            Thread t = new EmitterThread(runnable, newThreadName);
+            t.setUncaughtExceptionHandler(KafkaSchedulers::defaultUncaughtException);
+            return t;
+        }
+
+        static final class EmitterThread extends Thread {
+
+            EmitterThread(Runnable target, String name) {
+                super(target, name);
+            }
         }
     }
 }

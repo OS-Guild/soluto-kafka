@@ -23,9 +23,8 @@ public class Config {
 
     //Optional
     public static int COMMIT_INTERVAL;
-    public static int COMMIT_BATCH_SIZE;
     public static int POLL_TIMEOUT;
-    public static int POLL_RECORDS;
+    public static int MAX_POLL_RECORDS;
     public static int BUFFER_SIZE;
     public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
@@ -64,10 +63,9 @@ public class Config {
 
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
         TARGET = getString(dotenv, "TARGET");
-        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 0);
-        COMMIT_BATCH_SIZE = getOptionalInt(dotenv, "COMMIT_BATCH_SIZE", 0);
+        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 500);
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 100);
+        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 100);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

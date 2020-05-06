@@ -20,7 +20,7 @@ public class Main {
                 System.out.println("waiting for target to be alive");
                 Thread.sleep(1000);
             } while (!targetIsAlive.check());
-            System.out.println("target is alive 88888");
+            System.out.println("target is alive");
 
             monitoringServer = new MonitoringServer(targetIsAlive);
 
@@ -45,7 +45,6 @@ public class Main {
                 .addShutdownHook(
                     new Thread(
                         () -> {
-                            System.out.println("Shutting down");
                             consumer.dispose();
                             monitoringServer.close();
                             latch.countDown();

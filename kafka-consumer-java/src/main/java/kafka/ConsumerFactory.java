@@ -37,8 +37,7 @@ public class ConsumerFactory {
                     Config.RETRY_TOPIC,
                     Config.DEAD_LETTER_TOPIC
                 )
-            ),
-            Config.PROCESSING_DELAY
+            )
         );
     }
 }

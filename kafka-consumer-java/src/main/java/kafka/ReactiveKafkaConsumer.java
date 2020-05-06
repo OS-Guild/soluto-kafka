@@ -14,6 +14,8 @@ import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
 import org.reactivestreams.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -23,6 +25,8 @@ import reactor.core.scheduler.Schedulers;
 import utils.OperatorUtils;
 
 public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
+    private static final Logger logger = LoggerFactory.getLogger(ReactiveKafkaConsumer.class);
+
     final Collection<String> topics;
     final ConsumerRebalanceListener consumerRebalanceListener;
 
@@ -90,6 +94,7 @@ public class ReactiveKafkaConsumer<K, V> extends Flux<ConsumerRecords<K, V>> imp
     }
 
     void poll(Long toAdd) {
+        logger.debug("poll " + toAdd);
         if (OperatorUtils.safeAddAndGet(pollEvent.requestsPending, toAdd) > 0) {
             pollEvent.scheduleIfRequired();
         }

@@ -55,6 +55,8 @@ public class Config {
     public static String TARGET_IS_ALIVE_HTTP_ENDPOINT;
 
     public static void init() throws Exception {
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", DEBUG ? "trace" : "warn");
+
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");

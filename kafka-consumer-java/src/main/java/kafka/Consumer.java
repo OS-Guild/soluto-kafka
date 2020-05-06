@@ -2,13 +2,8 @@ package kafka;
 
 import configuration.Config;
 import java.time.Duration;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import target.ITarget;
@@ -53,28 +48,5 @@ public class Consumer {
                 }
             )
             .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
-    }
-}
-
-class Partitioner {
-
-    Iterable<Iterable<ConsumerRecord<String, String>>> partition(Iterable<ConsumerRecord<String, String>> records) {
-        return StreamSupport
-            .stream(records.spliterator(), false)
-            .collect(Collectors.groupingBy(ConsumerRecord::key))
-            .values()
-            .stream()
-            .map(this::createPartition)
-            .collect(Collectors.toList());
-    }
-
-    private List<ConsumerRecord<String, String>> createPartition(List<ConsumerRecord<String, String>> consumerRecords) {
-        List<ConsumerRecord<String, String>> sorted = consumerRecords
-            .stream()
-            .sorted(Comparator.comparingLong(ConsumerRecord::offset))
-            .collect(Collectors.toList());
-
-        // return Config.DEDUP_PARTITION_BY_KEY ? Collections.singletonList(sorted.get(0)) : sorted;
-        return sorted;
     }
 }

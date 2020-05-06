@@ -37,6 +37,7 @@ dependencies {
     compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
     compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
     compile group: 'io.projectreactor.addons', name: 'reactor-extra', version: '3.3.3.RELEASE'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
     testImplementation('org.junit.jupiter:junit-jupiter:5.4.2')
 }
 

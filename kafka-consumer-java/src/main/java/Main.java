@@ -1,11 +1,8 @@
 import configuration.*;
-import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import kafka.*;
 import monitoring.*;
 import reactor.core.Disposable;
-import reactor.kafka.receiver.KafkaReceiver;
-import reactor.kafka.receiver.ReceiverOptions;
 import target.*;
 
 public class Main {

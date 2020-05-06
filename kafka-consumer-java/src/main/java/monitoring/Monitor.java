@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.json.JSONObject;
-import reactor.kafka.receiver.ReceiverPartition;
 
 public class Monitor {
     private static Counter processMessageStarted;

@@ -24,7 +24,7 @@ public class Consumer {
             .onBackpressureBuffer()
             .flatMapIterable(records -> records)
             .doOnRequest(kafkaConsumer::poll)
-            .groupBy(x -> x.partition(), __ -> __, 1000)
+            .groupBy(x -> x.partition(), __ -> __, Config.BUFFER_SIZE)
             .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
             .publishOn(Schedulers.parallel())
             .flatMap(

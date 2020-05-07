@@ -6,6 +6,7 @@ import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
@@ -39,12 +40,18 @@ public class Consumer {
                                 }
                             }
                         )
-                        .thenEmpty(__ -> kafkaConsumer.commit())
                 )
             )
             .onBackpressureBuffer()
             .doOnRequest(kafkaConsumer::poll)
             .limitRate(Config.TARGET_CONCURRENCY)
+            .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
+            .concatMap(
+                __ -> {
+                    kafkaConsumer.commit();
+                    return Mono.empty();
+                }
+            )
             .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
     }
 }

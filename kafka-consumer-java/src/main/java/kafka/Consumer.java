@@ -25,7 +25,7 @@ public class Consumer {
             .flatMapIterable(records -> records)
             .doOnNext(record -> Monitor.receivedRecord(record))
             .doOnRequest(kafkaConsumer::poll)
-            .groupBy(x -> x.partition(), __ -> __, Config.BUFFER_SIZE)
+            .groupBy(x -> x.partition(), __ -> __, Config.TARGET_CONCURRENCY)
             .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
             .publishOn(Schedulers.parallel())
             .flatMap(

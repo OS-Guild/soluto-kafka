@@ -6,7 +6,6 @@ import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
@@ -21,11 +20,9 @@ public class Consumer {
 
     public Flux<?> stream() {
         return kafkaConsumer
-            .onBackpressureBuffer()
             .flatMapIterable(records -> records)
             .doOnNext(record -> Monitor.receivedRecord(record))
-            .doOnRequest(kafkaConsumer::poll)
-            .groupBy(x -> x.partition(), __ -> __, Config.TARGET_CONCURRENCY)
+            .groupBy(x -> x.partition())
             .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
             .publishOn(Schedulers.parallel())
             .flatMap(
@@ -42,15 +39,12 @@ public class Consumer {
                                 }
                             }
                         )
+                        .thenEmpty(__ -> kafkaConsumer.commit())
                 )
             )
-            .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
-            .concatMap(
-                __ -> {
-                    kafkaConsumer.commit();
-                    return Mono.empty();
-                }
-            )
+            .onBackpressureBuffer()
+            .doOnRequest(kafkaConsumer::poll)
+            .limitRate(Config.TARGET_CONCURRENCY)
             .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
     }
 }

@@ -23,6 +23,7 @@ public class Consumer {
         return kafkaConsumer
             .onBackpressureBuffer()
             .flatMapIterable(records -> records)
+            .doOnNext(record -> Monitor.receivedRecord(record))
             .doOnRequest(kafkaConsumer::poll)
             .groupBy(x -> x.partition(), __ -> __, Config.BUFFER_SIZE)
             .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))

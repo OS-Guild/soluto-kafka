@@ -25,7 +25,6 @@ public class Config {
     public static int COMMIT_INTERVAL;
     public static int POLL_TIMEOUT;
     public static int MAX_POLL_RECORDS;
-    public static int TARGET_CONCURRENCY;
     public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
@@ -67,7 +66,6 @@ public class Config {
         COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 5000);
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
         MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 500);
-        TARGET_CONCURRENCY = getOptionalInt(dotenv, "TARGET_CONCURRENCY", 1000);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");

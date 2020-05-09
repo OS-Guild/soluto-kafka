@@ -6,7 +6,6 @@ import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import target.ITarget;
 
@@ -44,7 +43,7 @@ public class Consumer {
             )
             .onBackpressureBuffer()
             .doOnRequest(kafkaConsumer::poll)
-            .limitRate(Config.TARGET_CONCURRENCY)
+            .limitRate(Config.MAX_POLL_RECORDS)
             .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
             .concatMap(
                 __ -> {

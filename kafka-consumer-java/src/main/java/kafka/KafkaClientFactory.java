@@ -61,10 +61,6 @@ public class KafkaClientFactory {
         );
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, Config.MAX_POLL_RECORDS);
-        props.put(
-            ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
-            String.format("%s,%s", StickyAssignor.class.getName(), RangeAssignor.class.getName())
-        );
         return new KafkaConsumer<>(props);
     }
 

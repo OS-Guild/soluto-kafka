@@ -2,6 +2,7 @@ package monitoring;
 
 import configuration.Config;
 import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +26,7 @@ public class Monitor {
     private static Histogram processMessageExecutionTime;
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
+    private static Gauge assignedPartitions;
 
     private static double[] buckets = new double[0];
 
@@ -37,6 +39,8 @@ public class Monitor {
                     .mapToDouble(s -> Double.parseDouble(s))
                     .toArray();
         }
+
+        assignedPartitions = Gauge.build().name("assigned_partitions").help("assigned_partitions").register();
 
         messageLatency =
             Histogram
@@ -173,16 +177,22 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "consumer was assigned to partitions")
-            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")));
+            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
+            .put("topicPartitionsCount", partitions.size());
+
         write(log);
+        assignedPartitions.inc(partitions.size());
     }
 
     public static void revokedFromPartition(Collection<TopicPartition> partitions) {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "consumer was revoked from partitions")
-            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")));
+            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
+            .put("topicPartitionsCount", partitions.size());
+
         write(log);
+        assignedPartitions.dec(partitions.size());
     }
 
     public static void serviceTerminated() {

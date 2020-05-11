@@ -169,6 +169,7 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                 if (isActive.get()) {
                     pendingCount.decrementAndGet();
                     var records = consumer.poll(pollTimeout);
+                    System.out.println("poll " + records.count());
                     if (isActive.get()) {
                         int count = records.count();
                         if (requestsPending.addAndGet(0 - count) > 0) {

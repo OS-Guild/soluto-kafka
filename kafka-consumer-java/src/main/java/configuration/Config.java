@@ -64,7 +64,7 @@ public class Config {
 
         TARGET = getString(dotenv, "TARGET");
         COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 5000);
-        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 5000);
         MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 500);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =

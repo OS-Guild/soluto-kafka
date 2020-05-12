@@ -2,6 +2,7 @@ package kafka;
 
 import configuration.Config;
 import java.time.Duration;
+import java.util.Date;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import reactor.core.publisher.Flux;
@@ -20,35 +21,56 @@ public class Consumer {
 
     public Flux<?> stream() {
         return kafkaConsumer
-            .flatMapIterable(records -> records)
-            .doOnNext(record -> Monitor.receivedRecord(record))
-            .groupBy(x -> x.partition())
-            .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
-            .publishOn(Schedulers.parallel())
-            .flatMap(
-                partition -> partition.concatMap(
-                    record -> Mono
-                        .fromFuture(target.call(record))
-                        .doOnSuccess(
-                            targetResponse -> {
-                                if (targetResponse.callLatency.isPresent()) {
-                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
-                                }
-                                if (targetResponse.resultLatency.isPresent()) {
-                                    Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                                }
-                            }
-                        )
-                )
-            )
-            .onBackpressureBuffer()
-            .doOnRequest(kafkaConsumer::poll)
-            .limitRate(Config.MAX_POLL_RECORDS)
-            .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
+            .doOnNext(records -> System.out.println("start batch"))
             .concatMap(
+                records -> {
+                    var batchStartTimestamp = new Date().getTime();
+                    return Flux
+                        .fromIterable(records)
+                        .groupBy(x -> x.partition())
+                        .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
+                        .publishOn(Schedulers.parallel())
+                        .flatMap(
+                            partition -> partition
+                                .doOnNext(record -> Monitor.receivedRecord(record))
+                                .concatMap(
+                                    record -> Mono
+                                        .fromFuture(target.call(record))
+                                        .doOnSuccess(
+                                            targetResponse -> {
+                                                if (targetResponse.callLatency.isPresent()) {
+                                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                                                }
+                                                if (targetResponse.resultLatency.isPresent()) {
+                                                    Monitor.resultTargetLatency(
+                                                        targetResponse.resultLatency.getAsLong()
+                                                    );
+                                                }
+                                            }
+                                        )
+                                )
+                        )
+                        .collectList()
+                        .map(__ -> new Date().getTime() - batchStartTimestamp);
+                }
+            )
+            .doOnNext(__ -> System.out.println("batch completed"))
+            .map(
                 __ -> {
                     kafkaConsumer.commit();
-                    return Mono.empty();
+                    System.out.println("commit completed!!!");
+                    return 0;
+                }
+            )
+            .doOnNext(
+                __ -> {
+                    System.out.println("polling again!!!");
+                    kafkaConsumer.poll(Long.valueOf(Config.MAX_POLL_RECORDS));
+                }
+            )
+            .doOnSubscribe(
+                __ -> {
+                    kafkaConsumer.poll(Long.valueOf(Config.MAX_POLL_RECORDS));
                 }
             )
             .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});

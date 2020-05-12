@@ -1,3 +1,5 @@
+package configuration;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +10,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class Config {
+public class Config {
     //Constants
     public static String ORIGINAL_TOPIC = "original-topic";
 
@@ -20,21 +22,17 @@ class Config {
     public static String TARGET;
 
     //Optional
+    public static int COMMIT_INTERVAL;
+    public static int POLL_TIMEOUT;
+    public static int MAX_POLL_RECORDS;
+    public static int PROCESSING_DELAY;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
-    public static boolean DEDUP_PARTITION_BY_KEY;
-    public static int CONCURRENCY;
-    public static int CONCURRENCY_PER_PARTITION;
-    public static int PROCESSING_DELAY;
-    public static int RETRY_PROCESSING_DELAY;
-    public static int POLL_RECORDS;
-    public static int CONSUMER_POLL_TIMEOUT;
-    public static int CONSUMER_THREADS;
-    public static boolean DEBUG;
     public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
+    public static boolean DEBUG;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -59,43 +57,40 @@ class Config {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         KAFKA_BROKER = getString(dotenv, "KAFKA_BROKER");
+
         TOPICS = getStringList(dotenv, "TOPICS");
         GROUP_ID = getString(dotenv, "GROUP_ID");
-
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
+
         TARGET = getString(dotenv, "TARGET");
+        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 5000);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 5000);
+        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 500);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
+
         PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH", "408");
         PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "4[0-9][0-79]");
         RETRY_POLICY_EXPONENTIAL_BACKOFF =
             getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
-
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
-        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
-        CONCURRENCY = getOptionalInt(dotenv, "CONCURRENCY", 1);
-        CONCURRENCY_PER_PARTITION = getOptionalInt(dotenv, "CONCURRENCY_PER_PARTITION", 1);
-        DEDUP_PARTITION_BY_KEY = getOptionalBool(dotenv, "DEDUP_PARTITION_BY_KEY", false);
-        PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
-        RETRY_PROCESSING_DELAY = getOptionalInt(dotenv, "RETRY_PROCESSING_DELAY", 60000);
 
-        CONSUMER_POLL_TIMEOUT = getOptionalInt(dotenv, "CONSUMER_POLL_TIMEOUT", 1000);
-        CONSUMER_THREADS = getOptionalInt(dotenv, "CONSUMER_THREADS", 1);
-        POLL_RECORDS = getOptionalInt(dotenv, "POLL_RECORDS", 50);
+        DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);
+        PROCESSING_DELAY = getOptionalInt(dotenv, "PROCESSING_DELAY", 0);
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
+
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
         DEBUG = getOptionalBool(dotenv, "DEBUG", false);
-
         BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
+
         if (BASE64_TRUSTSTORE_FILE_PATH != null) {
             TRUSTSTORE_LOCATION = "client.truststore.jks";
             writeToFile(TRUSTSTORE_LOCATION, readFile(getString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH")));
             TRUSTSTORE_PASSWORD = readFile(getString(dotenv, "TRUSTSTORE_PASSWORD_FILE_PATH"));
         }
-
         SECURITY_PROTOCOL = getOptionalString(dotenv, "SECURITY_PROTOCOL", "");
 
         if (SECURITY_PROTOCOL.equals("SSL")) {
@@ -113,8 +108,8 @@ class Config {
         }
 
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
-        PROMETHEUS_BUCKETS = getOptionalString(dotenv, "PROMETHEUS_BUCKETS", "0.003,0.03,0.1,0.3,1.5,10");
 
+        PROMETHEUS_BUCKETS = getOptionalString(dotenv, "PROMETHEUS_BUCKETS", "0.003,0.03,0.1,0.3,1.5,10");
         LOG_RECORD = getOptionalBool(dotenv, "LOG_RECORD", false);
     }
 

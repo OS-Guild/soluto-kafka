@@ -1,91 +1,98 @@
-import java.util.ArrayList;
-import java.util.Collections;
+import configuration.*;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
-import java.util.List;
+import kafka.*;
+import monitoring.*;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.common.TopicPartition;
+import reactor.core.Disposable;
+import target.*;
 
 public class Main {
-    static List<ConsumerLoopWrapper> consumerLoops = new ArrayList<>();
-    static CountDownLatch countDownLatch;
+    static Disposable consumer;
     static MonitoringServer monitoringServer;
+    static CountDownLatch latch = new CountDownLatch(1);
 
     public static void main(String[] args) {
         try {
             Config.init();
             Monitor.init();
 
-            var taretIsAlive = new TargetIsAlive();
-            do {
-                System.out.println("waiting for target to be alive");
-                Thread.sleep(1000);
-            } while (!taretIsAlive.check());
-            System.out.println("target is alive");
+            monitoringServer = new MonitoringServer(waitForTargetToBeAlive()).start();
+            consumer = createConsumer(monitoringServer);
+            onShutdown(consumer, monitoringServer);
 
-            var kafkaCreator = new KafkaCreator();
-            var producer = kafkaCreator.createProducer();
-
-            for (var i = 0; i < Config.CONSUMER_THREADS; i++) {
-                var consumer = kafkaCreator.createConsumer();
-                var consumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        i,
-                        consumer,
-                        Config.TOPICS,
-                        Config.PROCESSING_DELAY,
-                        producer,
-                        Config.RETRY_TOPIC,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
-                );
-                new Thread(consumerLoop, "consumer " + i).start();
-                consumerLoops.add(consumerLoop);
-            }
-
-            if (Config.RETRY_TOPIC != null) {
-                var retryConsumer = kafkaCreator.createConsumer();
-                var retryConsumerLoop = new ConsumerLoopWrapper(
-                    new ConsumerLoop(
-                        0,
-                        retryConsumer,
-                        Collections.singletonList(Config.RETRY_TOPIC),
-                        Config.RETRY_PROCESSING_DELAY,
-                        producer,
-                        null,
-                        Config.DEAD_LETTER_TOPIC
-                    ),
-                    countDownLatch
-                );
-                new Thread(retryConsumerLoop, "retry consumer").start();
-                consumerLoops.add(retryConsumerLoop);
-            }
-
-            Runtime
-                .getRuntime()
-                .addShutdownHook(
-                    new Thread(
-                        () -> {
-                            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
-                            monitoringServer.close();
-                            Monitor.serviceShutdown();
-                        }
-                    )
-                );
-
-            monitoringServer = new MonitoringServer(consumerLoops, taretIsAlive);
-            monitoringServer.start();
             Monitor.started();
-
-            countDownLatch = new CountDownLatch(consumerLoops.size());
-            countDownLatch.await();
+            latch.await();
         } catch (Exception e) {
-            Monitor.unexpectedError(e);
-            consumerLoops.forEach(consumerLoop -> consumerLoop.stop());
-        } finally {
-            if (monitoringServer != null) {
-                monitoringServer.close();
-            }
-            Monitor.serviceTerminated();
-            System.exit(0);
+            Monitor.initializationError(e);
         }
+        Monitor.serviceTerminated();
+    }
+
+    private static TargetIsAlive waitForTargetToBeAlive() throws InterruptedException, IOException {
+        var targetIsAlive = new TargetIsAlive();
+        do {
+            System.out.println("waiting for target to be alive");
+            Thread.sleep(1000);
+        } while (!targetIsAlive.check());
+        System.out.println("target is alive");
+        return targetIsAlive;
+    }
+
+    private static Disposable createConsumer(MonitoringServer monitoringServer) {
+        return new Consumer(
+            new ReactiveKafkaClient<String, String>(
+                new KafkaClientFactory().createConsumer(),
+                Config.TOPICS,
+                new ConsumerRebalanceListener() {
+
+                    @Override
+                    public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                        Monitor.assignedToPartition(partitions);
+                        monitoringServer.consumerAssigned();
+                    }
+
+                    @Override
+                    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                        Monitor.revokedFromPartition(partitions);
+                    }
+                }
+            ),
+            TargetFactory.create(
+                new TargetRetryPolicy(
+                    new Producer(new KafkaClientFactory().createProducer()),
+                    Config.RETRY_TOPIC,
+                    Config.DEAD_LETTER_TOPIC
+                )
+            )
+        )
+            .stream()
+            .subscribe(
+                __ -> {},
+                exception -> {
+                    monitoringServer.consumerDisposed();
+                    Monitor.consumerError(exception);
+                },
+                () -> {
+                    monitoringServer.consumerDisposed();
+                    Monitor.consumerCompleted();
+                }
+            );
+    }
+
+    private static void onShutdown(Disposable consumer, MonitoringServer monitoringServer) {
+        Runtime
+            .getRuntime()
+            .addShutdownHook(
+                new Thread(
+                    () -> {
+                        consumer.dispose();
+                        monitoringServer.close();
+                        latch.countDown();
+                    }
+                )
+            );
     }
 }

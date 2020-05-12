@@ -1,4 +1,7 @@
+package target;
+
 import com.spotify.futures.ListenableFuturesExtra;
+import configuration.Config;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.concurrent.CompletableFuture;
@@ -41,9 +44,8 @@ public class GrpcTarget implements ITarget {
                         : OptionalLong.of(response.getReceivedTimestamp() - startTime);
                     var resultLatency = response.getCompletedTimestamp() == 0L ? OptionalLong.empty()
                         : OptionalLong.of((new Date()).getTime() - response.getCompletedTimestamp());
-                    return new TargetResponse(TargetResponseType.Success, callLatency, resultLatency);
+                    return new TargetResponse(callLatency, resultLatency);
                 }
-            )
-            .exceptionally(TargetResponse::Error);
+            );
     }
 }

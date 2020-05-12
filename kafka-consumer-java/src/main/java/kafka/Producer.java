@@ -1,4 +1,8 @@
+package kafka;
+
+import configuration.Config;
 import java.util.Iterator;
+import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -13,7 +17,7 @@ public class Producer {
         this.producer = producer;
     }
 
-    public void produce(String topicPrefix, String topic, ConsumerRecord<String, String> record) {
+    public void produce(String topic, ConsumerRecord<String, String> record) {
         Iterator<Header> headers = record.headers().headers(Config.ORIGINAL_TOPIC).iterator();
         Headers headersToSend;
         if (headers.hasNext()) {
@@ -22,11 +26,12 @@ public class Producer {
             headersToSend = new RecordHeaders();
             headersToSend.add(Config.ORIGINAL_TOPIC, record.topic().getBytes());
         }
+
         producer.send(
-            new ProducerRecord(topic, null, record.key(), record.value(), headersToSend),
+            new ProducerRecord<String, String>(topic, null, record.key(), record.value(), headersToSend),
             (metadata, err) -> {
                 if (err != null) {
-                    Monitor.produceError(topicPrefix, record, err);
+                    Monitor.produceError(topic, record, err);
                     return;
                 }
             }

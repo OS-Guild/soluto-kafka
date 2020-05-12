@@ -26,7 +26,7 @@ const connectToKafka = () => {
     admin = new Admin(client);
 };
 
-const checkReadiness = async (): Promise<boolean> => {
+const checkReadiness = async (expectedTopics: string[]): Promise<boolean> => {
     if (retries == MAX_RETRIES) {
         if (client) {
             client.close();
@@ -43,16 +43,16 @@ const checkReadiness = async (): Promise<boolean> => {
 
         const metadata = res?.[1]?.metadata;
 
-        if (!metadata) return checkReadiness();
+        if (!metadata) return checkReadiness(expectedTopics);
 
-        if (metadata['test']) {
+        if (expectedTopics.every(topic => Object.keys(metadata).includes(topic))) {
             client.close();
             return true;
         }
 
-        return checkReadiness();
+        return checkReadiness(expectedTopics);
     } catch (e) {
-        return checkReadiness();
+        return checkReadiness(expectedTopics);
     }
 };
 

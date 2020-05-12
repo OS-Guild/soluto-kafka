@@ -1,29 +1,32 @@
+package monitoring;
+
+import configuration.Config;
 import io.prometheus.client.Counter;
+import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
-import org.apache.kafka.clients.consumer.CommitFailedException;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 import org.json.JSONObject;
 
 public class Monitor {
     private static Counter processMessageStarted;
     private static Counter processMessageSuccess;
     private static Counter processMessageError;
-    private static Counter processBatchCompleted;
-    private static Counter consumed;
     private static Counter retryProduced;
     private static Counter deadLetterProduced;
     private static Counter produceError;
     private static Counter targetExecutionRetry;
     private static Histogram messageLatency;
     private static Histogram processMessageExecutionTime;
-    private static Histogram processExecutionTime;
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
+    private static Gauge assignedPartitions;
 
     private static double[] buckets = new double[0];
 
@@ -37,7 +40,7 @@ public class Monitor {
                     .toArray();
         }
 
-        consumed = Counter.build().name("consumed").labelNames("topic", "partition").help("consumed").register();
+        assignedPartitions = Gauge.build().name("assigned_partitions").help("assigned_partitions").register();
 
         messageLatency =
             Histogram
@@ -53,12 +56,6 @@ public class Monitor {
 
         resultTargetLatency =
             Histogram.build().buckets(buckets).name("result_target_latency").help("result_target_latency").register();
-
-        processBatchCompleted =
-            Counter.build().name("process_batch_completed").help("process_batch_completed").register();
-
-        processExecutionTime =
-            Histogram.build().buckets(buckets).name("process_execution_time").help("process_execution_time").register();
 
         processMessageSuccess =
             Counter.build().name("process_message_success").help("process_message_success").register();
@@ -91,26 +88,9 @@ public class Monitor {
                 .register();
     }
 
-    public static void consumed(ConsumerRecords<String, String> records) {
-        var recordsDetails = "";
-        var recordsIterator = records.iterator();
-        while (recordsIterator.hasNext()) {
-            var recored = recordsIterator.next();
-            recordsDetails += recored.topic() + ":" + recored.partition();
-            consumed.labels(recored.topic(), String.valueOf(recored.partition())).inc();
-        }
-
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", "consumed messages")
-            .put("extra", new JSONObject().put("count", records.count()).put("recordsDetails", recordsDetails));
-
-        write(log);
-    }
-
-    public static void messageLatency(ConsumerRecord<String, String> record) {
+    public static void receivedRecord(ConsumerRecord<String, String> record) {
         messageLatency.labels(record.topic()).observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
+        processMessageStarted.inc();
     }
 
     public static void callTargetLatency(long latency) {
@@ -119,24 +99,6 @@ public class Monitor {
 
     public static void resultTargetLatency(long latency) {
         resultTargetLatency.observe((double) latency / 1000);
-    }
-
-    public static void processBatchCompleted(long executionStart) {
-        processBatchCompleted.inc();
-        var executionTime = ((double) (new Date().getTime() - executionStart)) / 1000;
-        processExecutionTime.observe(executionTime);
-
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject()
-            .put("level", "debug")
-            .put("message", "processBatchCompleted")
-            .put("extra", new JSONObject().put("executionTime", executionTime));
-
-        write(log);
-    }
-
-    public static void processMessageStarted() {
-        processMessageStarted.inc();
     }
 
     public static void processMessageSuccess(long executionStart) {
@@ -174,16 +136,30 @@ public class Monitor {
         deadLetterProduced.inc();
     }
 
-    public static void unexpectedError(Exception exception) {
+    public static void consumerError(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "error")
-            .put("message", "unexpected error")
+            .put("message", "consumer stream was terminated due to unexpected error")
             .put(
                 "err",
-                new JSONObject()
-                    .put("errorMessages", getErrorMessages(exception))
-                    .put("class", exception.getClass())
-                    .put("stacktrace", exception.getStackTrace())
+                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
+            );
+
+        write(log);
+    }
+
+    public static void consumerCompleted() {
+        JSONObject log = new JSONObject().put("level", "error").put("message", "consumer stream was completed");
+        write(log);
+    }
+
+    public static void initializationError(Throwable exception) {
+        JSONObject log = new JSONObject()
+            .put("level", "error")
+            .put("message", "Unexpected error while initializing")
+            .put(
+                "err",
+                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
             );
 
         write(log);
@@ -197,59 +173,44 @@ public class Monitor {
         write(log);
     }
 
-    public static void assignedToPartition(int id) {
+    public static void assignedToPartition(Collection<TopicPartition> partitions) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "consumer " + id + " was assigned to partitions");
+            .put("message", "consumer was assigned to partitions")
+            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
+            .put("topicPartitionsCount", partitions.size());
 
         write(log);
+        assignedPartitions.inc(partitions.size());
     }
 
-    public static void waitingForAssignment(int id) {
+    public static void revokedFromPartition(Collection<TopicPartition> partitions) {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "consumer " + id + " is waiting for partitions assignment..");
+            .put("message", "consumer was revoked from partitions")
+            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
+            .put("topicPartitionsCount", partitions.size());
 
         write(log);
-    }
-
-    public static void serviceShutdown() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + "shutdown");
-
-        write(log);
+        assignedPartitions.dec(partitions.size());
     }
 
     public static void serviceTerminated() {
         JSONObject log = new JSONObject()
             .put("level", "info")
-            .put("message", "kafka-consumer-" + Config.GROUP_ID + " termindated");
+            .put("message", "kafka-consumer-" + Config.GROUP_ID + " terminated");
 
         write(log);
     }
 
-    public static void commitFailed(CommitFailedException exception) {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "commit failed")
-            .put("err", new JSONObject().put("errorMessages", getErrorMessages(exception)));
-
-        write(log);
-    }
-
-    public static void produceError(
-        String topicPrefix,
-        ConsumerRecord<String, String> consumerRecord,
-        Exception exception
-    ) {
+    public static void produceError(String topic, ConsumerRecord<String, String> consumerRecord, Throwable exception) {
         var extra = new JSONObject().put("message", new JSONObject().put("key", consumerRecord.key()));
         if (Config.LOG_RECORD) {
             extra.put("value", consumerRecord.value());
         }
         JSONObject log = new JSONObject()
             .put("level", "error")
-            .put("message", String.format("failed producing message to %s topic", topicPrefix))
+            .put("message", String.format("failed producing message to %s topic", topic))
             .put("extra", extra)
             .put("err", new JSONObject().put("message", exception.getMessage()));
 
@@ -289,14 +250,6 @@ public class Monitor {
         targetExecutionRetry.labels(String.valueOf(attempt)).inc();
     }
 
-    public static void targetConnectionUnavailable() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "target connection unavailable, terminating consumer");
-
-        write(log);
-    }
-
     public static void targetNotAlive(int targetIsAliveStatusCode) {
         JSONObject log = new JSONObject()
             .put("level", "info")
@@ -317,21 +270,6 @@ public class Monitor {
         }
     }
 
-    public static void consumerNotAssignedToAtLeastOnePartition() {
-        JSONObject log = new JSONObject()
-            .put("level", "info")
-            .put("message", "none of the consumer threads are assigned to a partition");
-
-        write(log);
-    }
-
-    public static void debug(String text) {
-        if (!Config.DEBUG) return;
-        JSONObject log = new JSONObject().put("level", "debug").put("message", text);
-
-        write(log);
-    }
-
     private static void write(JSONObject log) {
         System.out.println(log.toString());
     }
@@ -344,7 +282,7 @@ public class Monitor {
         return getErrorMessagesArray(exception.getCause(), messages);
     }
 
-    private static JSONObject getErrorMessages(Exception exception) {
+    private static JSONObject getErrorMessages(Throwable exception) {
         var messages = getErrorMessagesArray(exception, new ArrayList<String>());
         var errorMessages = new JSONObject();
         for (var i = 0; i < messages.size(); i++) {

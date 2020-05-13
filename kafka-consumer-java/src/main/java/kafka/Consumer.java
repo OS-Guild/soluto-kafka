@@ -4,6 +4,7 @@ import configuration.Config;
 import java.time.Duration;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.apache.kafka.clients.consumer.RetriableCommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -58,14 +59,17 @@ public class Consumer {
             .doOnNext(
                 __ -> {
                     System.out.println("polling again!!!");
-                    kafkaConsumer.poll(Long.valueOf(Config.MAX_POLL_RECORDS));
+                    kafkaConsumer.poll();
                 }
             )
             .doOnSubscribe(
                 __ -> {
-                    kafkaConsumer.poll(Long.valueOf(Config.MAX_POLL_RECORDS));
+                    kafkaConsumer.poll();
                 }
             )
-            .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
+            .onErrorContinue(
+                a -> a instanceof CommitFailedException || a instanceof RetriableCommitFailedException,
+                (a, v) -> {}
+            );
     }
 }

@@ -20,7 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
-import utils.OperatorUtils;
 
 public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> implements Disposable {
     final Collection<String> topics;
@@ -89,11 +88,8 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
         }
     }
 
-    void poll(Long toAdd) {
-        System.out.println("request " + toAdd);
-        if (OperatorUtils.safeAddAndGet(pollEvent.requestsPending, toAdd) > 0) {
-            pollEvent.scheduleIfRequired();
-        }
+    void poll() {
+        pollEvent.scheduleIfRequired();
     }
 
     void commit() {
@@ -171,8 +167,7 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                     var records = consumer.poll(pollTimeout);
                     System.out.println("poll " + records.count());
                     if (isActive.get()) {
-                        int count = records.count();
-                        if (requestsPending.addAndGet(0 - count) > 0) {
+                        if (records.count() == 0) {
                             scheduleIfRequired();
                         }
                     }

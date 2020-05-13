@@ -21,7 +21,7 @@ public class Consumer {
 
     public Flux<?> stream() {
         return kafkaConsumer
-            .doOnNext(records -> System.out.println("start batch"))
+            .doOnNext(records -> System.out.println(String.format("processing batch of %s records", records.count())))
             .concatMap(
                 records -> Flux
                     .fromIterable(records)
@@ -48,25 +48,14 @@ public class Consumer {
                     )
                     .collectList()
             )
-            .doOnNext(__ -> System.out.println("batch completed"))
             .map(
                 __ -> {
                     kafkaConsumer.commit();
-                    System.out.println("commit completed!!!");
                     return 0;
                 }
             )
-            .doOnNext(
-                __ -> {
-                    System.out.println("polling again!!!");
-                    kafkaConsumer.poll();
-                }
-            )
-            .doOnSubscribe(
-                __ -> {
-                    kafkaConsumer.poll();
-                }
-            )
+            .doOnNext(__ -> kafkaConsumer.poll())
+            .doOnSubscribe(__ -> kafkaConsumer.poll())
             .onErrorContinue(
                 a -> a instanceof CommitFailedException || a instanceof RetriableCommitFailedException,
                 (a, v) -> {}

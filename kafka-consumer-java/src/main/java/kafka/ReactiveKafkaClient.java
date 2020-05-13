@@ -13,7 +13,6 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
-import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -65,22 +64,6 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
 
         try {
             scheduler.schedule(new SubscribeEvent());
-
-            actual.onSubscribe(
-                new Subscription() {
-
-                    @Override
-                    public void request(long n) {
-                        if (pollEvent.requestsPending.get() > 0) {
-                            pollEvent.scheduleIfRequired();
-                        }
-                    }
-
-                    @Override
-                    public void cancel() {}
-                }
-            );
-
             scheduler.start();
         } catch (Exception e) {
             Operators.error(actual, e);
@@ -157,7 +140,6 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
     class PollEvent implements Runnable {
         private final AtomicInteger pendingCount = new AtomicInteger();
         private final Duration pollTimeout = Duration.ofMillis(Config.POLL_TIMEOUT);
-        final AtomicLong requestsPending = new AtomicLong();
 
         @Override
         public void run() {
@@ -166,14 +148,11 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                     pendingCount.decrementAndGet();
                     var records = consumer.poll(pollTimeout);
                     System.out.println("poll " + records.count());
-                    if (isActive.get()) {
-                        if (records.count() == 0) {
-                            scheduleIfRequired();
-                        }
+                    if (records.count() == 0) {
+                        scheduleIfRequired();
+                        return;
                     }
-                    if (records.count() > 0) {
-                        actual.onNext(records);
-                    }
+                    actual.onNext(records);
                 }
             } catch (Exception e) {
                 if (isActive.get()) {

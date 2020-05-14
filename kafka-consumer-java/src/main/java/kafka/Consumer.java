@@ -2,6 +2,7 @@ package kafka;
 
 import configuration.Config;
 import java.time.Duration;
+import java.util.Date;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.RetriableCommitFailedException;
@@ -21,33 +22,40 @@ public class Consumer {
 
     public Flux<?> stream() {
         return kafkaConsumer
-            .doOnNext(records -> System.out.println(String.format("processing batch of %s records", records.count())))
+            .doOnNext(records -> Monitor.batchProcessStarted(records.count()))
             .concatMap(
-                records -> Flux
-                    .fromIterable(records)
-                    .groupBy(x -> x.partition())
-                    .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
-                    .publishOn(Schedulers.parallel())
-                    .flatMap(
-                        partition -> partition
-                            .doOnNext(record -> Monitor.receivedRecord(record))
-                            .concatMap(
-                                record -> Mono
-                                    .fromFuture(target.call(record))
-                                    .doOnSuccess(
-                                        targetResponse -> {
-                                            if (targetResponse.callLatency.isPresent()) {
-                                                Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                records -> {
+                    var batchStartTimestamp = new Date().getTime();
+                    return Flux
+                        .fromIterable(records)
+                        .groupBy(x -> x.partition())
+                        .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
+                        .publishOn(Schedulers.parallel())
+                        .flatMap(
+                            partition -> partition
+                                .doOnNext(record -> Monitor.processRecord(record))
+                                .concatMap(
+                                    record -> Mono
+                                        .fromFuture(target.call(record))
+                                        .doOnSuccess(
+                                            targetResponse -> {
+                                                if (targetResponse.callLatency.isPresent()) {
+                                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                                                }
+                                                if (targetResponse.resultLatency.isPresent()) {
+                                                    Monitor.resultTargetLatency(
+                                                        targetResponse.resultLatency.getAsLong()
+                                                    );
+                                                }
                                             }
-                                            if (targetResponse.resultLatency.isPresent()) {
-                                                Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                                            }
-                                        }
-                                    )
-                            )
-                    )
-                    .collectList()
+                                        )
+                                )
+                        )
+                        .collectList()
+                        .map(__ -> batchStartTimestamp);
+                }
             )
+            .doOnNext(batchStartTimestamp -> Monitor.batchProcessCompleted(batchStartTimestamp))
             .map(
                 __ -> {
                     kafkaConsumer.commit();

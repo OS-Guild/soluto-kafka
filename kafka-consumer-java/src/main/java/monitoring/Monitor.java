@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.json.JSONObject;
@@ -23,6 +22,7 @@ public class Monitor {
     private static Counter produceError;
     private static Counter targetExecutionRetry;
     private static Histogram messageLatency;
+    private static Histogram processBatchExecutionTime;
     private static Histogram processMessageExecutionTime;
     private static Histogram callTargetLatency;
     private static Histogram resultTargetLatency;
@@ -62,6 +62,14 @@ public class Monitor {
 
         processMessageError = Counter.build().name("process_message_error").help("process_message_error").register();
 
+        processBatchExecutionTime =
+            Histogram
+                .build()
+                .buckets(buckets)
+                .name("process_batch_execution_time")
+                .help("process_batch_execution_time")
+                .register();
+
         processMessageExecutionTime =
             Histogram
                 .build()
@@ -88,7 +96,26 @@ public class Monitor {
                 .register();
     }
 
-    public static void receivedRecord(ConsumerRecord<String, String> record) {
+    public static void batchProcessStarted(int count) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "batch process started")
+            .put("extra", new JSONObject().put("count", count));
+
+        write(log);
+    }
+
+    public static void batchProcessCompleted(Long batchStartTimestamp) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "batch process completed")
+            .put("extra", new JSONObject().put("executionTime", batchStartTimestamp));
+
+        write(log);
+        processBatchExecutionTime.observe(((double) (new Date().getTime() - batchStartTimestamp)) / 1000);
+    }
+
+    public static void processRecord(ConsumerRecord<String, String> record) {
         messageLatency.labels(record.topic()).observe(((double) (new Date().getTime() - record.timestamp())) / 1000);
         processMessageStarted.inc();
     }
@@ -177,8 +204,7 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "consumer was assigned to partitions")
-            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
-            .put("topicPartitionsCount", partitions.size());
+            .put("extra", new JSONObject().put("count", partitions.size()));
 
         write(log);
         assignedPartitions.inc(partitions.size());
@@ -188,8 +214,7 @@ public class Monitor {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "consumer was revoked from partitions")
-            .put("topicPartitions", partitions.stream().map(x -> x.toString()).collect(Collectors.joining(",")))
-            .put("topicPartitionsCount", partitions.size());
+            .put("extra", new JSONObject().put("count", partitions.size()));
 
         write(log);
         assignedPartitions.dec(partitions.size());

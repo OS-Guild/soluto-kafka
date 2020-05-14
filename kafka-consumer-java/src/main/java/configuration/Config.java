@@ -22,7 +22,6 @@ public class Config {
     public static String TARGET;
 
     //Optional
-    public static int COMMIT_INTERVAL;
     public static int POLL_TIMEOUT;
     public static int MAX_POLL_RECORDS;
     public static int PROCESSING_DELAY;
@@ -63,9 +62,8 @@ public class Config {
         SENDING_PROTOCOL = getString(dotenv, "SENDING_PROTOCOL");
 
         TARGET = getString(dotenv, "TARGET");
-        COMMIT_INTERVAL = getOptionalInt(dotenv, "COMMIT_INTERVAL", 5000);
-        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 5000);
-        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 500);
+        POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
+        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 50);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
@@ -75,7 +73,7 @@ public class Config {
         PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH", "4[0-9][0-79]");
         RETRY_POLICY_EXPONENTIAL_BACKOFF =
-            getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(10, 250, 5));
+            getOptionalIntList(dotenv, "RETRY_POLICY_EXPONENTIAL_BACKOFF", 3, List.of(50, 5000, 10));
         RETRY_TOPIC = getOptionalString(dotenv, "RETRY_TOPIC", null);
 
         DEAD_LETTER_TOPIC = getOptionalString(dotenv, "DEAD_LETTER_TOPIC", null);

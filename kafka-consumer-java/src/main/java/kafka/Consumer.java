@@ -2,8 +2,10 @@ package kafka;
 
 import configuration.Config;
 import java.time.Duration;
+import java.util.Date;
 import monitoring.Monitor;
 import org.apache.kafka.clients.consumer.CommitFailedException;
+import org.apache.kafka.clients.consumer.RetriableCommitFailedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -20,37 +22,50 @@ public class Consumer {
 
     public Flux<?> stream() {
         return kafkaConsumer
-            .flatMapIterable(records -> records)
-            .doOnNext(record -> Monitor.receivedRecord(record))
-            .groupBy(x -> x.partition())
-            .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
-            .publishOn(Schedulers.parallel())
-            .flatMap(
-                partition -> partition.concatMap(
-                    record -> Mono
-                        .fromFuture(target.call(record))
-                        .doOnSuccess(
-                            targetResponse -> {
-                                if (targetResponse.callLatency.isPresent()) {
-                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
-                                }
-                                if (targetResponse.resultLatency.isPresent()) {
-                                    Monitor.resultTargetLatency(targetResponse.resultLatency.getAsLong());
-                                }
-                            }
-                        )
-                )
-            )
-            .onBackpressureBuffer()
-            .doOnRequest(kafkaConsumer::poll)
-            .limitRate(Config.MAX_POLL_RECORDS)
-            .sample(Duration.ofMillis(Config.COMMIT_INTERVAL))
+            .doOnNext(records -> Monitor.batchProcessStarted(records.count()))
             .concatMap(
-                __ -> {
-                    kafkaConsumer.commit();
-                    return Mono.empty();
+                records -> {
+                    var batchStartTimestamp = new Date().getTime();
+                    return Flux
+                        .fromIterable(records)
+                        .groupBy(x -> x.partition())
+                        .delayElements(Duration.ofMillis(Config.PROCESSING_DELAY))
+                        .publishOn(Schedulers.parallel())
+                        .flatMap(
+                            partition -> partition
+                                .doOnNext(record -> Monitor.processRecord(record))
+                                .concatMap(
+                                    record -> Mono
+                                        .fromFuture(target.call(record))
+                                        .doOnSuccess(
+                                            targetResponse -> {
+                                                if (targetResponse.callLatency.isPresent()) {
+                                                    Monitor.callTargetLatency(targetResponse.callLatency.getAsLong());
+                                                }
+                                                if (targetResponse.resultLatency.isPresent()) {
+                                                    Monitor.resultTargetLatency(
+                                                        targetResponse.resultLatency.getAsLong()
+                                                    );
+                                                }
+                                            }
+                                        )
+                                )
+                        )
+                        .collectList()
+                        .map(__ -> batchStartTimestamp);
                 }
             )
-            .onErrorContinue(a -> a instanceof CommitFailedException, (a, v) -> {});
+            .doOnNext(batchStartTimestamp -> Monitor.batchProcessCompleted(batchStartTimestamp))
+            .map(
+                __ -> {
+                    kafkaConsumer.commit();
+                    return 0;
+                }
+            )
+            .doOnNext(__ -> kafkaConsumer.poll())
+            .onErrorContinue(
+                a -> a instanceof CommitFailedException || a instanceof RetriableCommitFailedException,
+                (a, v) -> {}
+            );
     }
 }

@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.errors.WakeupException;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -64,6 +65,20 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
 
         try {
             scheduler.schedule(new SubscribeEvent());
+
+            actual.onSubscribe(
+                new Subscription() {
+
+                    @Override
+                    public void request(long n) {
+                        pollEvent.scheduleIfRequired();
+                    }
+
+                    @Override
+                    public void cancel() {}
+                }
+            );
+
             scheduler.start();
         } catch (Exception e) {
             Operators.error(actual, e);
@@ -147,7 +162,6 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                 if (isActive.get()) {
                     pendingCount.decrementAndGet();
                     var records = consumer.poll(pollTimeout);
-                    System.out.println("poll " + records.count());
                     if (records.count() == 0) {
                         scheduleIfRequired();
                         return;

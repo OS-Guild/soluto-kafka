@@ -106,13 +106,14 @@ public class Monitor {
     }
 
     public static void batchProcessCompleted(Long batchStartTimestamp) {
+        var executionTimeMs = new Date().getTime() - batchStartTimestamp;
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "batch process completed")
-            .put("extra", new JSONObject().put("executionTime", batchStartTimestamp));
+            .put("extra", new JSONObject().put("executionTime", executionTimeMs));
 
         write(log);
-        processBatchExecutionTime.observe(((double) (new Date().getTime() - batchStartTimestamp)) / 1000);
+        processBatchExecutionTime.observe((double) executionTimeMs / 1000);
     }
 
     public static void processRecord(ConsumerRecord<String, String> record) {

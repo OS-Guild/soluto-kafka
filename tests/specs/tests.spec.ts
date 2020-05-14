@@ -45,7 +45,7 @@ describe('tests', () => {
         expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
     });
 
-    it('should support backpressure', async () => {
+    it('should consume bursts of records', async () => {
         const callId = await mockHttpTarget('/consume', 200);
 
         const recordsCount = 1000;

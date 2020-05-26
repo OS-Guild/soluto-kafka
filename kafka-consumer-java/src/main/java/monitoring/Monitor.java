@@ -179,7 +179,7 @@ public class Monitor {
         write(log);
     }
 
-    public static void commitError(Throwable exception) {
+    public static void commitFailed(Throwable exception) {
         JSONObject log = new JSONObject()
             .put("level", "info")
             .put("message", "commit failed")

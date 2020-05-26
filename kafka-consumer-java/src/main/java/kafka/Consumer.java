@@ -66,7 +66,7 @@ public class Consumer {
             .onErrorContinue(
                 a -> a instanceof CommitFailedException || a instanceof RetriableCommitFailedException,
                 (a, v) -> {
-                    Monitor.commitError(a);
+                    Monitor.commitFailed(a);
                 }
             );
     }

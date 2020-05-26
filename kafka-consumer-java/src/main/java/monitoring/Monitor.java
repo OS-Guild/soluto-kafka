@@ -170,7 +170,25 @@ public class Monitor {
             .put("message", "consumer stream was terminated due to unexpected error")
             .put(
                 "err",
-                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
+                new JSONObject()
+                    .put("errorMessages", getErrorMessages(exception))
+                    .put("class", exception.getClass())
+                    .put("stacktrace", exception.getStackTrace())
+            );
+
+        write(log);
+    }
+
+    public static void commitFailed(Throwable exception) {
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "commit failed")
+            .put(
+                "err",
+                new JSONObject()
+                    .put("errorMessages", getErrorMessages(exception))
+                    .put("class", exception.getClass())
+                    .put("stacktrace", exception.getStackTrace())
             );
 
         write(log);

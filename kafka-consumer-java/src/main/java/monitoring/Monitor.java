@@ -185,7 +185,10 @@ public class Monitor {
             .put("message", "commit failed")
             .put(
                 "err",
-                new JSONObject().put("errorMessages", getErrorMessages(exception)).put("class", exception.getClass())
+                new JSONObject()
+                    .put("errorMessages", getErrorMessages(exception))
+                    .put("class", exception.getClass())
+                    .put("stacktrace", exception.getStackTrace())
             );
 
         write(log);

@@ -27,7 +27,7 @@ const _callTarget = run => async (call, callback) => {
             headers: {
                 recordOffset: parseInt(call.request.recordOffset) || -1,
                 recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
-                topic: call.request.topicName,
+                topic: call.request.topic,
             },
         });
         callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
@@ -61,9 +61,9 @@ export const createClient = url => {
         _client = new ProtobufMessage.CallTarget(url, credentials.createInsecure());
     }
     return {
-        callTarget: <T>(payload: T, recordOffset?: number, topicName?: string): Promise<TargetResponse> =>
+        callTarget: <T>(payload: T, recordOffset?: number, topic?: string): Promise<TargetResponse> =>
             new Promise(resolve =>
-                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset, topicName}, (_, responsePayload) =>
+                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset, topic}, (_, responsePayload) =>
                     resolve(responsePayload)
                 )
             ),

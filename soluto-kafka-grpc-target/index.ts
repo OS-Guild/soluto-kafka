@@ -27,7 +27,7 @@ const _callTarget = run => async (call, callback) => {
             headers: {
                 recordOffset: parseInt(call.request.recordOffset) || -1,
                 recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
-                topic: call.request.topic,
+                topic: call.request.topicName,
             },
         });
         callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});

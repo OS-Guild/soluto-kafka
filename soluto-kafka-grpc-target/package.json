@@ -1,6 +1,6 @@
 {
   "name": "@npmsoluto/soluto-kafka-grpc-target",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "main": "dist/index.js",
   "repository": "https://github.com/Soluto-Private/soluto-kafka/",
   "scripts": {

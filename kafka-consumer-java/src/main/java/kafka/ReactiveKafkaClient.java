@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.RetriableCommitFailedException;
 import org.apache.kafka.common.errors.WakeupException;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -197,7 +198,9 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                 consumer.commitAsync(
                     (__, error) -> {
                         if (error != null) {
-                            actual.onError(error);
+                            if (!(error instanceof RetriableCommitFailedException)) {
+                                actual.onError(error);
+                            }
                             return;
                         }
                     }

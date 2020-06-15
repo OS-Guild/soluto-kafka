@@ -64,7 +64,7 @@ public class Consumer {
             )
             .doOnNext(__ -> kafkaConsumer.poll())
             .onErrorContinue(
-                a -> a instanceof CommitFailedException || a instanceof RetriableCommitFailedException,
+                a -> a instanceof CommitFailedException,
                 (a, v) -> {
                     Monitor.commitFailed(a);
                 }

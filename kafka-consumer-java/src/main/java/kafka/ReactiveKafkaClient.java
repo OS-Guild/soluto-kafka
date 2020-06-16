@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import org.apache.kafka.clients.consumer.CommitFailedException;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -197,10 +198,12 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
                 inProgress.incrementAndGet();
                 consumer.commitAsync(
                     (__, error) -> {
-                        if (error != null) {
-                            if (!(error instanceof RetriableCommitFailedException)) {
-                                actual.onError(error);
-                            }
+                        if (
+                            error != null &&
+                            !(error instanceof RetriableCommitFailedException) &&
+                            !(error instanceof CommitFailedException)
+                        ) {
+                            actual.onError(error);
                             return;
                         }
                     }

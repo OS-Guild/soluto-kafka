@@ -18,7 +18,7 @@ const packageDefinition = loadSync(PROTO_PATH, {
 });
 const ProtobufMessage = loadPackageDefinition(packageDefinition) as ProtobufMessage;
 
-const _callTarget = run => async (call, callback) => {
+const _callTarget = (run: any) => async (call: any, callback: any) => {
     try {
         const receivedTimestamp = Date.now();
         const payload = JSON.parse(call.request.msgJson);
@@ -36,7 +36,7 @@ const _callTarget = run => async (call, callback) => {
     }
 };
 
-const getServer = execute => {
+const getServer = (execute: any) => {
     const server = new Server();
     server.addService(ProtobufMessage.CallTarget.service, {
         callTarget: _callTarget(execute),
@@ -44,7 +44,7 @@ const getServer = execute => {
     return server;
 };
 
-export const startServer = (port, execute) => {
+export const startServer = (port: string, execute: any) => {
     const routeServer = getServer(execute);
     routeServer.bind(`0.0.0.0:${port}`, ServerCredentials.createInsecure());
     routeServer.start();
@@ -55,16 +55,17 @@ type TargetResponse = {
     statusCode: number;
 };
 
-let _client;
-export const createClient = url => {
+let _client: any;
+export const createClient = (url: string) => {
     if (!_client) {
         _client = new ProtobufMessage.CallTarget(url, credentials.createInsecure());
     }
     return {
         callTarget: <T>(payload: T, recordOffset?: number, topic?: string): Promise<TargetResponse> =>
             new Promise(resolve =>
-                _client.callTarget({msgJson: JSON.stringify(payload), recordOffset, topic}, (_, responsePayload) =>
-                    resolve(responsePayload)
+                _client.callTarget(
+                    {msgJson: JSON.stringify(payload), recordOffset, topic},
+                    (_: any, responsePayload: TargetResponse) => resolve(responsePayload)
                 )
             ),
     };

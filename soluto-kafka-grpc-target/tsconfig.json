@@ -19,7 +19,7 @@
         "noUnusedParameters": true,
         "lib": ["dom", "es2017"],
         "skipLibCheck": true,
-        "noImplicitAny": false,
+        "noImplicitAny": true,
         "experimentalDecorators": true,
         "resolveJsonModule": true
     },

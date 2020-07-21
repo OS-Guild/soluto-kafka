@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.Iterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
+import org.json.JSONObject;
 
 public interface ITarget {
     CompletableFuture<TargetResponse> call(ConsumerRecord<String, String> record);
@@ -18,21 +19,14 @@ public interface ITarget {
     }
 
     default String getMessageHeaders(ConsumerRecord<String, String> record) {
-        StringBuilder stringBuilder = new StringBuilder("");
+        JSONObject headersJson = new JSONObject();
         if (record.headers() != null) {
             Iterator<Header> headers = record.headers().iterator();
-            boolean first = true;
             while (headers.hasNext()) {
-                if (!first) {
-                    stringBuilder.append(';');
-                    first = false;
-                }
                 Header header = headers.next();
-                stringBuilder.append(header.key());
-                stringBuilder.append(':');
-                stringBuilder.append(new String(header.value()));
+                headersJson.put(header.key(), new String(header.value()));
             }
         }
-        return stringBuilder.toString();
+        return headersJson.toString();
     }
 }

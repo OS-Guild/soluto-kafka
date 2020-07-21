@@ -53,16 +53,16 @@ public final class Message {
         com.google.protobuf.ByteString getMsgJsonBytes();
 
         /**
-         * <code>string headers = 5;</code>
-         * @return The headers.
+         * <code>string headersJson = 5;</code>
+         * @return The headersJson.
          */
-        java.lang.String getHeaders();
+        java.lang.String getHeadersJson();
 
         /**
-         * <code>string headers = 5;</code>
-         * @return The bytes for headers.
+         * <code>string headersJson = 5;</code>
+         * @return The bytes for headersJson.
          */
-        com.google.protobuf.ByteString getHeadersBytes();
+        com.google.protobuf.ByteString getHeadersJsonBytes();
     }
 
     /**
@@ -83,7 +83,7 @@ public final class Message {
         private CallTargetPayload() {
             topic_ = "";
             msgJson_ = "";
-            headers_ = "";
+            headersJson_ = "";
         }
 
         @java.lang.Override
@@ -143,7 +143,7 @@ public final class Message {
                             {
                                 java.lang.String s = input.readStringRequireUtf8();
 
-                                headers_ = s;
+                                headersJson_ = s;
                                 break;
                             }
                         default:
@@ -267,34 +267,34 @@ public final class Message {
             }
         }
 
-        public static final int HEADERS_FIELD_NUMBER = 5;
-        private volatile java.lang.Object headers_;
+        public static final int HEADERSJSON_FIELD_NUMBER = 5;
+        private volatile java.lang.Object headersJson_;
 
         /**
-         * <code>string headers = 5;</code>
-         * @return The headers.
+         * <code>string headersJson = 5;</code>
+         * @return The headersJson.
          */
-        public java.lang.String getHeaders() {
-            java.lang.Object ref = headers_;
+        public java.lang.String getHeadersJson() {
+            java.lang.Object ref = headersJson_;
             if (ref instanceof java.lang.String) {
                 return (java.lang.String) ref;
             } else {
                 com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
                 java.lang.String s = bs.toStringUtf8();
-                headers_ = s;
+                headersJson_ = s;
                 return s;
             }
         }
 
         /**
-         * <code>string headers = 5;</code>
-         * @return The bytes for headers.
+         * <code>string headersJson = 5;</code>
+         * @return The bytes for headersJson.
          */
-        public com.google.protobuf.ByteString getHeadersBytes() {
-            java.lang.Object ref = headers_;
+        public com.google.protobuf.ByteString getHeadersJsonBytes() {
+            java.lang.Object ref = headersJson_;
             if (ref instanceof java.lang.String) {
                 com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
-                headers_ = b;
+                headersJson_ = b;
                 return b;
             } else {
                 return (com.google.protobuf.ByteString) ref;
@@ -327,8 +327,8 @@ public final class Message {
             if (!getMsgJsonBytes().isEmpty()) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, msgJson_);
             }
-            if (!getHeadersBytes().isEmpty()) {
-                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, headers_);
+            if (!getHeadersJsonBytes().isEmpty()) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, headersJson_);
             }
             unknownFields.writeTo(output);
         }
@@ -351,8 +351,8 @@ public final class Message {
             if (!getMsgJsonBytes().isEmpty()) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, msgJson_);
             }
-            if (!getHeadersBytes().isEmpty()) {
-                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, headers_);
+            if (!getHeadersJsonBytes().isEmpty()) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, headersJson_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -373,7 +373,7 @@ public final class Message {
             if (getRecordTimestamp() != other.getRecordTimestamp()) return false;
             if (!getTopic().equals(other.getTopic())) return false;
             if (!getMsgJson().equals(other.getMsgJson())) return false;
-            if (!getHeaders().equals(other.getHeaders())) return false;
+            if (!getHeadersJson().equals(other.getHeadersJson())) return false;
             if (!unknownFields.equals(other.unknownFields)) return false;
             return true;
         }
@@ -393,8 +393,8 @@ public final class Message {
             hash = (53 * hash) + getTopic().hashCode();
             hash = (37 * hash) + MSGJSON_FIELD_NUMBER;
             hash = (53 * hash) + getMsgJson().hashCode();
-            hash = (37 * hash) + HEADERS_FIELD_NUMBER;
-            hash = (53 * hash) + getHeaders().hashCode();
+            hash = (37 * hash) + HEADERSJSON_FIELD_NUMBER;
+            hash = (53 * hash) + getHeadersJson().hashCode();
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
@@ -551,7 +551,7 @@ public final class Message {
 
                 msgJson_ = "";
 
-                headers_ = "";
+                headersJson_ = "";
 
                 return this;
             }
@@ -582,7 +582,7 @@ public final class Message {
                 result.recordTimestamp_ = recordTimestamp_;
                 result.topic_ = topic_;
                 result.msgJson_ = msgJson_;
-                result.headers_ = headers_;
+                result.headersJson_ = headersJson_;
                 onBuilt();
                 return result;
             }
@@ -650,8 +650,8 @@ public final class Message {
                     msgJson_ = other.msgJson_;
                     onChanged();
                 }
-                if (!other.getHeaders().isEmpty()) {
-                    headers_ = other.headers_;
+                if (!other.getHeadersJson().isEmpty()) {
+                    headersJson_ = other.headersJson_;
                     onChanged();
                 }
                 this.mergeUnknownFields(other.unknownFields);
@@ -898,18 +898,18 @@ public final class Message {
                 return this;
             }
 
-            private java.lang.Object headers_ = "";
+            private java.lang.Object headersJson_ = "";
 
             /**
-             * <code>string headers = 5;</code>
-             * @return The headers.
+             * <code>string headersJson = 5;</code>
+             * @return The headersJson.
              */
-            public java.lang.String getHeaders() {
-                java.lang.Object ref = headers_;
+            public java.lang.String getHeadersJson() {
+                java.lang.Object ref = headersJson_;
                 if (!(ref instanceof java.lang.String)) {
                     com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
                     java.lang.String s = bs.toStringUtf8();
-                    headers_ = s;
+                    headersJson_ = s;
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -917,16 +917,16 @@ public final class Message {
             }
 
             /**
-             * <code>string headers = 5;</code>
-             * @return The bytes for headers.
+             * <code>string headersJson = 5;</code>
+             * @return The bytes for headersJson.
              */
-            public com.google.protobuf.ByteString getHeadersBytes() {
-                java.lang.Object ref = headers_;
+            public com.google.protobuf.ByteString getHeadersJsonBytes() {
+                java.lang.Object ref = headersJson_;
                 if (ref instanceof String) {
                     com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8(
                         (java.lang.String) ref
                     );
-                    headers_ = b;
+                    headersJson_ = b;
                     return b;
                 } else {
                     return (com.google.protobuf.ByteString) ref;
@@ -934,42 +934,42 @@ public final class Message {
             }
 
             /**
-             * <code>string headers = 5;</code>
-             * @param value The headers to set.
+             * <code>string headersJson = 5;</code>
+             * @param value The headersJson to set.
              * @return This builder for chaining.
              */
-            public Builder setHeaders(java.lang.String value) {
+            public Builder setHeadersJson(java.lang.String value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
 
-                headers_ = value;
+                headersJson_ = value;
                 onChanged();
                 return this;
             }
 
             /**
-             * <code>string headers = 5;</code>
+             * <code>string headersJson = 5;</code>
              * @return This builder for chaining.
              */
-            public Builder clearHeaders() {
-                headers_ = getDefaultInstance().getHeaders();
+            public Builder clearHeadersJson() {
+                headersJson_ = getDefaultInstance().getHeadersJson();
                 onChanged();
                 return this;
             }
 
             /**
-             * <code>string headers = 5;</code>
-             * @param value The bytes for headers to set.
+             * <code>string headersJson = 5;</code>
+             * @param value The bytes for headersJson to set.
              * @return This builder for chaining.
              */
-            public Builder setHeadersBytes(com.google.protobuf.ByteString value) {
+            public Builder setHeadersJsonBytes(com.google.protobuf.ByteString value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
                 checkByteStringIsUtf8(value);
 
-                headers_ = value;
+                headersJson_ = value;
                 onChanged();
                 return this;
             }
@@ -1678,14 +1678,14 @@ public final class Message {
 
     static {
         java.lang.String[] descriptorData = {
-            "\n\rmessage.proto\"s\n\021CallTargetPayload\022\024\n\014" +
+            "\n\rmessage.proto\"w\n\021CallTargetPayload\022\024\n\014" +
                 "recordOffset\030\001 \001(\003\022\027\n\017recordTimestamp\030\002 " +
-                "\001(\003\022\r\n\005topic\030\003 \001(\t\022\017\n\007msgJson\030\004 \001(\t\022\017\n\007h" +
-                "eaders\030\005 \001(\t\"_\n\022CallTargetResponse\022\022\n\nst" +
-                "atusCode\030\001 \001(\005\022\031\n\021receivedTimestamp\030\002 \001(" +
-                "\003\022\032\n\022completedTimestamp\030\003 \001(\0032E\n\nCallTar" +
-                "get\0227\n\ncallTarget\022\022.CallTargetPayload\032\023." +
-                "CallTargetResponse\"\000b\006proto3"
+                "\001(\003\022\r\n\005topic\030\003 \001(\t\022\017\n\007msgJson\030\004 \001(\t\022\023\n\013h" +
+                "eadersJson\030\005 \001(\t\"_\n\022CallTargetResponse\022\022" +
+                "\n\nstatusCode\030\001 \001(\005\022\031\n\021receivedTimestamp\030" +
+                "\002 \001(\003\022\032\n\022completedTimestamp\030\003 \001(\0032E\n\nCal" +
+                "lTarget\0227\n\ncallTarget\022\022.CallTargetPayloa" +
+                "d\032\023.CallTargetResponse\"\000b\006proto3"
         };
         descriptor =
             com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
@@ -1696,7 +1696,7 @@ public final class Message {
         internal_static_CallTargetPayload_fieldAccessorTable =
             new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
                 internal_static_CallTargetPayload_descriptor,
-                new java.lang.String[] { "RecordOffset", "RecordTimestamp", "Topic", "MsgJson", "Headers", }
+                new java.lang.String[] { "RecordOffset", "RecordTimestamp", "Topic", "MsgJson", "HeadersJson", }
             );
         internal_static_CallTargetResponse_descriptor = getDescriptor().getMessageTypes().get(1);
         internal_static_CallTargetResponse_fieldAccessorTable =

@@ -33,16 +33,36 @@ describe('tests', () => {
     it('should produce and consume', async () => {
         const callId = await mockHttpTarget('/consume', 200);
 
-        await produce('http://localhost:6000/produce', [{topic: 'foo', key: 'thekey', value: {data: 'foo'}}]);
+        await produce('http://localhost:6000/produce', [
+            {
+                topic: 'foo',
+                key: 'thekey',
+                value: {data: 'foo'},
+                headers: {eventType: 'test1', source: 'test-service1'},
+            },
+        ]);
         await delay(1000);
-        await produce('http://localhost:6000/produce', [{topic: 'bar', key: 'thekey', value: {data: 'bar'}}]);
+        await produce('http://localhost:6000/produce', [
+            {
+                topic: 'bar',
+                key: 'thekey',
+                value: {data: 'bar'},
+                headers: {eventType: 'test2', source: 'test-service2'},
+            },
+        ]);
         await delay(1000);
 
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
+        const actualHeaders1 = JSON.parse(madeCalls[0].headers['x-record-headers']);
+        const actualHeaders2 = JSON.parse(madeCalls[1].headers['x-record-headers']);
         expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
+        expect(actualHeaders1!.eventType).toEqual('test1');
+        expect(actualHeaders1!.source).toEqual('test-service1');
         expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
+        expect(actualHeaders2!.eventType).toEqual('test2');
+        expect(actualHeaders2!.source).toEqual('test-service2');
     });
 
     it('should consume bursts of records', async () => {

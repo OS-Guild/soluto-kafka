@@ -9,6 +9,7 @@ message CallTargetPayload {
     int64 recordTimestamp = 2;
     string topic = 3;
     string msgJson = 4;
+    string headers = 5;
 }
 
 message CallTargetResponse {

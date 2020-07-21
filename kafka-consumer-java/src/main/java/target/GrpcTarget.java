@@ -29,6 +29,7 @@ public class GrpcTarget implements ITarget {
         callTargetPayloadBuilder.setRecordTimestamp(record.timestamp());
         callTargetPayloadBuilder.setTopic(this.getOriginalTopic(record));
         callTargetPayloadBuilder.setMsgJson(json);
+        callTargetPayloadBuilder.setHeaders(this.getMessageHeaders(record));
         final CallTargetGrpc.CallTargetFutureStub futureStub = CallTargetGrpc.newFutureStub(client);
 
         final long startTime = (new Date()).getTime();

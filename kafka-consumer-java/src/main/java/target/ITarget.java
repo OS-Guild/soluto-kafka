@@ -16,4 +16,23 @@ public interface ITarget {
         }
         return record.topic();
     }
+
+    default String getMessageHeaders(ConsumerRecord<String, String> record) {
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (record.headers() != null) {
+            Iterator<Header> headers = record.headers().iterator();
+            boolean first = true;
+            while (headers.hasNext()) {
+                if (!first) {
+                    stringBuilder.append(';');
+                    first = false;
+                }
+                Header header = headers.next();
+                stringBuilder.append(header.key());
+                stringBuilder.append(':');
+                stringBuilder.append(new String(header.value()));
+            }
+        }
+        return stringBuilder.toString();
+    }
 }

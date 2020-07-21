@@ -9,8 +9,14 @@ import io.prometheus.client.hotspot.DefaultExports;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -87,7 +93,8 @@ public class Server {
                                     return new ProducerRequest(
                                         tryGetValue(item, "topic", null),
                                         tryGetValue(item, "key", null),
-                                        tryGetValue(item, "message", "value")
+                                        tryGetValue(item, "message", "value"),
+                                        tryGetHeaders(item)
                                     );
                                 }
                             )
@@ -108,6 +115,22 @@ public class Server {
                 }
             }
         );
+    }
+
+    private Iterable<Header> tryGetHeaders(JSONObject item) {
+        if (item.has("messageHeaders")) {
+            JSONObject headersJson = item.getJSONObject("messageHeaders");
+            Iterator<String> keys = headersJson.keys();
+            if (keys.hasNext()) {
+                RecordHeaders headers = new RecordHeaders();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    headers.add(key, headersJson.getString(key).getBytes());
+                }
+                return headers;
+            }
+        }
+        return null;
     }
 
     private static String tryGetValue(JSONObject json, String option1, String option2) {

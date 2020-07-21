@@ -32,6 +32,7 @@ public class HttpTarget implements ITarget {
             .header("x-record-offset", String.valueOf(record.offset()))
             .header("x-record-timestamp", String.valueOf(record.timestamp()))
             .header("x-record-original-topic", this.getOriginalTopic(record))
+            .header("x-kafka-headers", this.getMessageHeaders(record))
             .POST(HttpRequest.BodyPublishers.ofString(record.value()))
             .build();
 

@@ -118,8 +118,8 @@ public class Server {
     }
 
     private Iterable<Header> tryGetHeaders(JSONObject item) {
-        if (item.has("headersJson")) {
-            JSONObject headersJson = item.getJSONObject("headersJson");
+        if (item.has("headers")) {
+            JSONObject headersJson = item.getJSONObject("headers");
             Iterator<String> keys = headersJson.keys();
             if (keys.hasNext()) {
                 RecordHeaders headers = new RecordHeaders();

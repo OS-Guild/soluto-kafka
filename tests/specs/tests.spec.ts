@@ -38,7 +38,7 @@ describe('tests', () => {
                 topic: 'foo',
                 key: 'thekey',
                 value: {data: 'foo'},
-                headersJson: {eventType: 'test1', source: 'test-service1'},
+                headers: {eventType: 'test1', source: 'test-service1'},
             },
         ]);
         await delay(1000);
@@ -47,7 +47,7 @@ describe('tests', () => {
                 topic: 'bar',
                 key: 'thekey',
                 value: {data: 'bar'},
-                headersJson: {eventType: 'test2', source: 'test-service2'},
+                headers: {eventType: 'test2', source: 'test-service2'},
             },
         ]);
         await delay(1000);
@@ -55,10 +55,14 @@ describe('tests', () => {
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
+        const actualHeaders1 = JSON.parse(madeCalls[0].headers['x-record-headers']);
+        const actualHeaders2 = JSON.parse(madeCalls[1].headers['x-record-headers']);
         expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
-        expect(madeCalls[0].headers['x-record-headers']).toMatchSnapshot();
+        expect(actualHeaders1!.eventType).toEqual('test1');
+        expect(actualHeaders1!.source).toEqual('test-service1');
         expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
-        expect(madeCalls[1].headers['x-record-headers']).toMatchSnapshot();
+        expect(actualHeaders2!.eventType).toEqual('test2');
+        expect(actualHeaders2!.source).toEqual('test-service2');
     });
 
     it('should consume bursts of records', async () => {

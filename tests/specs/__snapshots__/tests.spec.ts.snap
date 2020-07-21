@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`tests should produce and consume 1`] = `"{\\"eventType\\":\\"test1\\",\\"source\\":\\"test-service1\\"}"`;
-
-exports[`tests should produce and consume 2`] = `"{\\"eventType\\":\\"test2\\",\\"source\\":\\"test-service2\\"}"`;

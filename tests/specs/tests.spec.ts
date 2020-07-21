@@ -55,8 +55,10 @@ describe('tests', () => {
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
-        expect(madeCalls[0].headers).toMatchSnapshot();
-        expect(madeCalls[1].headers).toMatchSnapshot();
+        expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
+        expect(madeCalls[0].headers['x-record-headers']).toMatchSnapshot();
+        expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
+        expect(madeCalls[1].headers['x-record-headers']).toMatchSnapshot();
     });
 
     it('should consume bursts of records', async () => {

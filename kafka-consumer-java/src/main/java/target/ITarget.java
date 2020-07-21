@@ -18,7 +18,7 @@ public interface ITarget {
         return record.topic();
     }
 
-    default String getMessageHeaders(ConsumerRecord<String, String> record) {
+    default String getRecordHeaders(ConsumerRecord<String, String> record) {
         JSONObject headersJson = new JSONObject();
         if (record.headers() != null) {
             Iterator<Header> headers = record.headers().iterator();

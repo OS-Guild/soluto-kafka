@@ -33,16 +33,30 @@ describe('tests', () => {
     it('should produce and consume', async () => {
         const callId = await mockHttpTarget('/consume', 200);
 
-        await produce('http://localhost:6000/produce', [{topic: 'foo', key: 'thekey', value: {data: 'foo'}}]);
+        await produce('http://localhost:6000/produce', [
+            {
+                topic: 'foo',
+                key: 'thekey',
+                value: {data: 'foo'},
+                headersJson: {eventType: 'test1', source: 'test-service1'},
+            },
+        ]);
         await delay(1000);
-        await produce('http://localhost:6000/produce', [{topic: 'bar', key: 'thekey', value: {data: 'bar'}}]);
+        await produce('http://localhost:6000/produce', [
+            {
+                topic: 'bar',
+                key: 'thekey',
+                value: {data: 'bar'},
+                headersJson: {eventType: 'test2', source: 'test-service2'},
+            },
+        ]);
         await delay(1000);
 
         const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
         expect(hasBeenMade).toBeTruthy();
         expect(madeCalls.length).toBe(2);
-        expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
-        expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
+        expect(madeCalls[0].headers).toMatchSnapshot();
+        expect(madeCalls[1].headers).toMatchSnapshot();
     });
 
     it('should consume bursts of records', async () => {

@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`tests should produce and consume 1`] = `
+Object {
+  "connection": "Upgrade, HTTP2-Settings",
+  "content-length": "14",
+  "content-type": "application/json",
+  "host": "target:2000",
+  "http2-settings": "AAEAAEAAAAIAAAABAAMAAABkAAQBAAAAAAUAAEAA",
+  "upgrade": "h2c",
+  "user-agent": "Java-http-client/13-ea",
+  "x-record-headers": "{\\"eventType\\":\\"test1\\",\\"source\\":\\"test-service1\\"}",
+  "x-record-key": "thekey",
+  "x-record-offset": "2",
+  "x-record-original-topic": "foo",
+  "x-record-partition": "3",
+  "x-record-timestamp": "1595330560251",
+  "x-record-topic": "foo",
+}
+`;
+
+exports[`tests should produce and consume 2`] = `
+Object {
+  "connection": "Upgrade, HTTP2-Settings",
+  "content-length": "14",
+  "content-type": "application/json",
+  "host": "target:2000",
+  "http2-settings": "AAEAAEAAAAIAAAABAAMAAABkAAQBAAAAAAUAAEAA",
+  "upgrade": "h2c",
+  "user-agent": "Java-http-client/13-ea",
+  "x-record-headers": "{\\"eventType\\":\\"test2\\",\\"source\\":\\"test-service2\\"}",
+  "x-record-key": "thekey",
+  "x-record-offset": "2",
+  "x-record-original-topic": "bar",
+  "x-record-partition": "0",
+  "x-record-timestamp": "1595330561261",
+  "x-record-topic": "bar",
+}
+`;

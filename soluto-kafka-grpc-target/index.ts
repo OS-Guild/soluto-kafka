@@ -7,6 +7,7 @@ export type Headers = {
     recordOffset: number;
     recordTimestamp: number;
     topic: string;
+    recordHeaders: string;
 };
 
 const packageDefinition = loadSync(PROTO_PATH, {
@@ -28,6 +29,7 @@ const _callTarget = (run: any) => async (call: any, callback: any) => {
                 recordOffset: parseInt(call.request.recordOffset) || -1,
                 recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
                 topic: call.request.topic,
+                recordHeaders: call.request.headersJson ? JSON.parse(call.request.headersJson) : undefined,
             },
         });
         callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});

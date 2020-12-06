@@ -31,7 +31,6 @@ public class Config {
     public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
-    public static boolean DEBUG;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -81,7 +80,6 @@ public class Config {
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
 
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
-        DEBUG = getOptionalBool(dotenv, "DEBUG", true);
         BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
 
         if (BASE64_TRUSTSTORE_FILE_PATH != null) {

@@ -20,6 +20,7 @@ public class TargetIsAlive {
             try {
                 final var request = HttpRequest
                     .newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
                     .GET()
                     .uri(URI.create(Config.TARGET_IS_ALIVE_HTTP_ENDPOINT))
                     .build();

@@ -11,6 +11,10 @@ import monitoring.Monitor;
 public class TargetIsAlive {
     private static final HttpClient client = HttpClient.newHttpClient();
 
+    public String getEndpoint() {
+        return Config.TARGET_IS_ALIVE_HTTP_ENDPOINT;
+    }
+
     public boolean check() throws IOException {
         if (Config.TARGET_IS_ALIVE_HTTP_ENDPOINT != null) {
             try {
@@ -28,6 +32,7 @@ public class TargetIsAlive {
                 Monitor.targetAlive(targetIsAliveResponse.statusCode());
                 return true;
             } catch (Exception e) {
+                Monitor.initializationError(e);
                 return false;
             }
         }

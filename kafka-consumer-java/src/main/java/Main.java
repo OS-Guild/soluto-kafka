@@ -34,7 +34,7 @@ public class Main {
     private static TargetIsAlive waitForTargetToBeAlive() throws InterruptedException, IOException {
         var targetIsAlive = new TargetIsAlive();
         do {
-            System.out.println("waiting for target to be alive");
+            System.out.printf("waiting for target to be alive %s%n", targetIsAlive.getEndpoint());
             Thread.sleep(1000);
         } while (!targetIsAlive.check());
         System.out.println("target is alive");

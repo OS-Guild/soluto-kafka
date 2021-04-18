@@ -62,6 +62,7 @@ public class Producer {
             new ProducerRecord<>(Config.READINESS_TOPIC, "ready"),
             (metadata, err) -> {
                 if (err != null) {
+                    Monitor.produceError(err);
                     ready = false;
                     return;
                 }

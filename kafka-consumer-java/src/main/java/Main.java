@@ -69,6 +69,9 @@ public class Main {
             )
         )
             .stream()
+            .doOnError(e ->{
+                Monitor.consumerError(e);
+            })
             .subscribe(
                 __ -> {},
                 exception -> {
@@ -88,6 +91,7 @@ public class Main {
             .addShutdownHook(
                 new Thread(
                     () -> {
+                        Monitor.shuttingDown();
                         consumer.dispose();
                         monitoringServer.close();
                         latch.countDown();

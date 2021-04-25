@@ -198,6 +198,11 @@ public class Monitor {
         JSONObject log = new JSONObject().put("level", "error").put("message", "consumer stream was completed");
         write(log);
     }
+    
+    public static void shuttingDown() {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "shutting down");
+        write(log);
+    }
 
     public static void initializationError(Throwable exception) {
         JSONObject log = new JSONObject()

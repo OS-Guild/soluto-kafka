@@ -42,16 +42,16 @@ const handle = async (run, callback) => {
     callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
 }
 
-const getServer = (execute: any) => {
+const getServer = (execute: any, handlerWrapper?: any) => {
     const server = new Server();
     server.addService(ProtobufMessage.CallTarget.service, {
-        callTarget: _callTarget(execute),
+        callTarget: _callTarget(execute, handlerWrapper),
     });
     return server;
 };
 
-export const startServer = (port: string, execute: any) => {
-    const routeServer = getServer(execute);
+export const startServer = (port: string, execute: any, handlerWrapper?: any) => {
+    const routeServer = getServer(execute, handlerWrapper);
     routeServer.bind(`0.0.0.0:${port}`, ServerCredentials.createInsecure());
     routeServer.start();
     return routeServer;

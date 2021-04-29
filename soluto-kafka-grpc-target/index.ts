@@ -19,24 +19,28 @@ const packageDefinition = loadSync(PROTO_PATH, {
 });
 const ProtobufMessage = loadPackageDefinition(packageDefinition) as ProtobufMessage;
 
-const _callTarget = (run: any) => async (call: any, callback: any) => {
+const _callTarget = (run: any, handlerWrapper?: any) => async (call: any, callback: any) => {
     try {
-        const receivedTimestamp = Date.now();
-        const payload = JSON.parse(call.request.msgJson);
-        await run({
-            payload,
-            headers: {
-                recordOffset: parseInt(call.request.recordOffset) || -1,
-                recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
-                topic: call.request.topic,
-                recordHeaders: call.request.headersJson ? JSON.parse(call.request.headersJson) : undefined,
-            },
-        });
-        callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
+        handlerWrapper ? await handlerWrapper(() => handle(run,callback)) : await handle(run,callback);
     } catch (e) {
         callback(null, {statusCode: e.statusCode ?? e.status ?? 500});
     }
 };
+
+const handle = async (run, callback) => {
+    const receivedTimestamp = Date.now();
+    const payload = JSON.parse(call.request.msgJson);
+    await run({
+        payload,
+        headers: {
+            recordOffset: parseInt(call.request.recordOffset) || -1,
+            recordTimestamp: parseInt(call.request.recordTimestamp) || -1,
+            topic: call.request.topic,
+            recordHeaders: call.request.headersJson ? JSON.parse(call.request.headersJson) : undefined,
+        },
+    });
+    callback(null, {statusCode: 200, receivedTimestamp, completedTimestamp: Date.now()});
+}
 
 const getServer = (execute: any) => {
     const server = new Server();

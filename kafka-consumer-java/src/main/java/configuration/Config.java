@@ -25,13 +25,13 @@ public class Config {
     public static int POLL_TIMEOUT;
     public static int MAX_POLL_RECORDS;
     public static int PROCESSING_DELAY;
+    public static int SESSION_TIMEOUT;
     public static String RETRY_TOPIC;
     public static String DEAD_LETTER_TOPIC;
     public static String RETRY_PROCESS_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_RETRY_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static String PRODUCE_TO_DEAD_LETTER_TOPIC_WHEN_STATUS_CODE_MATCH;
     public static List<Integer> RETRY_POLICY_EXPONENTIAL_BACKOFF;
-    public static boolean DEBUG;
 
     //Authentication
     public static boolean AUTHENTICATED_KAFKA = false;
@@ -64,6 +64,7 @@ public class Config {
         TARGET = getString(dotenv, "TARGET");
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
         MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 50);
+        SESSION_TIMEOUT = getOptionalInt(dotenv, "SESSION_TIMEOUT", 10000);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =
             getOptionalString(dotenv, "RETRY_PROCESS_WHEN_STATUS_CODE_MATCH", "5[0-9][0-9]");
@@ -81,7 +82,6 @@ public class Config {
         MONITORING_SERVER_PORT = getOptionalInt(dotenv, "MONITORING_SERVER_PORT", 0);
 
         TARGET_IS_ALIVE_HTTP_ENDPOINT = getOptionalString(dotenv, "TARGET_IS_ALIVE_HTTP_ENDPOINT", null);
-        DEBUG = getOptionalBool(dotenv, "DEBUG", false);
         BASE64_TRUSTSTORE_FILE_PATH = getOptionalString(dotenv, "BASE64_TRUSTSTORE_FILE_PATH", null);
 
         if (BASE64_TRUSTSTORE_FILE_PATH != null) {

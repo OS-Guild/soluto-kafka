@@ -198,6 +198,11 @@ public class Monitor {
         JSONObject log = new JSONObject().put("level", "error").put("message", "consumer stream was completed");
         write(log);
     }
+    
+    public static void shuttingDown() {
+        JSONObject log = new JSONObject().put("level", "info").put("message", "shutting down");
+        write(log);
+    }
 
     public static void initializationError(Throwable exception) {
         JSONObject log = new JSONObject()
@@ -304,14 +309,12 @@ public class Monitor {
     }
 
     public static void targetAlive(int targetIsAliveStatusCode) {
-        if (Config.DEBUG) {
-            JSONObject log = new JSONObject()
-                .put("level", "info")
-                .put("message", "target alive")
-                .put("targetIsAliveStatusCode", targetIsAliveStatusCode);
+        JSONObject log = new JSONObject()
+            .put("level", "info")
+            .put("message", "target alive")
+            .put("targetIsAliveStatusCode", targetIsAliveStatusCode);
 
-            write(log);
-        }
+        write(log);
     }
 
     private static void write(JSONObject log) {

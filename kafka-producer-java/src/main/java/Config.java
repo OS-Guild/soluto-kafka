@@ -30,7 +30,6 @@ class Config {
     //Monitoring
     public static boolean USE_PROMETHEUS;
     public static String PROMETHEUS_BUCKETS;
-    public static boolean DEBUG;
 
     public static void init() throws Exception {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -74,7 +73,6 @@ class Config {
 
         USE_PROMETHEUS = getOptionalBool(dotenv, "USE_PROMETHEUS", false);
         PROMETHEUS_BUCKETS = getOptionalString(dotenv, PROMETHEUS_BUCKETS, "0.003,0.03,0.1,0.3,1.5,10");
-        DEBUG = getOptionalBool(dotenv, "DEBUG", false);
     }
 
     private static void writeToFile(String path, String value) throws IOException {

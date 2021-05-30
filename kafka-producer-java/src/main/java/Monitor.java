@@ -38,11 +38,23 @@ public class Monitor {
         produceSuccess.labels(producerRequest.topic).inc();
         produceLatency.labels(producerRequest.topic).observe(((double) (new Date().getTime() - executionStart)) / 1000);
 
-        if (!Config.DEBUG) return;
+        var headers = new JSONObject();
+        producerRequest.headers.forEach(
+            header -> {
+                headers.put(header.key(), new String(header.value()));
+            }
+        );
+
         JSONObject log = new JSONObject()
-            .put("level", "debug")
+            .put("level", "info")
             .put("message", "produce success")
-            .put("extra", new JSONObject().put("topic", producerRequest.topic).put("key", producerRequest.key));
+            .put(
+                "extra",
+                new JSONObject()
+                    .put("topic", producerRequest.topic)
+                    .put("key", producerRequest.key)
+                    .put("headers", headers)
+            );
 
         write(log);
     }

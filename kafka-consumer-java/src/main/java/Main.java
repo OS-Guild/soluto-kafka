@@ -69,9 +69,11 @@ public class Main {
             )
         )
             .stream()
-            .doOnError(e ->{
-                Monitor.consumerError(e);
-            })
+            .doOnError(
+                e -> {
+                    Monitor.consumerError(e);
+                }
+            )
             .subscribe(
                 __ -> {},
                 exception -> {

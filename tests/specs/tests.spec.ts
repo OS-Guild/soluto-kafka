@@ -38,7 +38,7 @@ describe('tests', () => {
                 topic: 'foo',
                 key: 'thekey',
                 value: {data: 'foo'},
-                headers: {eventType: 'test1', source: 'test-service1'},
+                headers: {eventType: 'test1', source: 'test-service1', nullHeader: null},
             },
         ]);
         await delay(1000);
@@ -47,7 +47,7 @@ describe('tests', () => {
                 topic: 'bar',
                 key: 'thekey',
                 value: {data: 'bar'},
-                headers: {eventType: 'test2', source: 'test-service2'},
+                headers: {eventType: 'test2', source: 'test-service2', nullHeader: null},
             },
         ]);
         await delay(1000);

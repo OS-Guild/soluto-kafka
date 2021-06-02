@@ -41,7 +41,7 @@ public class Monitor {
         var headers = new JSONObject();
         producerRequest.headers.forEach(
             header -> {
-                headers.put(header.key(), new String(header.value()));
+                headers.put(header.key(), header.value() == null ? JSONObject.NULL : new String(header.value()));
             }
         );
 

@@ -65,14 +65,8 @@ public class KafkaClientFactory {
             ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
             String.format("%s,%s", StickyAssignor.class.getName(), RangeAssignor.class.getName())
         );
-        props.put(
-                ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG,
-                Config.SESSION_TIMEOUT
-        );
-        props.put(
-                ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG,
-                Config.SESSION_TIMEOUT/3
-        );
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, Config.SESSION_TIMEOUT);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, Config.SESSION_TIMEOUT / 3);
         return new KafkaConsumer<>(props);
     }
 

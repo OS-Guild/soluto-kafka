@@ -9,15 +9,13 @@ import io.prometheus.client.hotspot.DefaultExports;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Server {
@@ -125,7 +123,13 @@ public class Server {
                 RecordHeaders headers = new RecordHeaders();
                 while (keys.hasNext()) {
                     String key = keys.next();
-                    headers.add(key, headersJson.getString(key).getBytes());
+                    if (headersJson.has(key)) {
+                        try {
+                            headers.add(key, headersJson.getString(key).getBytes());
+                        } catch (JSONException e) {
+                            headers.add(key, null);
+                        }
+                    }
                 }
                 return headers;
             }

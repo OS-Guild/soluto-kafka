@@ -47,7 +47,7 @@ describe('tests', () => {
                 topic: 'bar',
                 key: 'thekey',
                 value: {data: 'bar'},
-                headers: {eventType: 'test2', source: 'test-service2', nullHeader: null},
+                headers: {eventType: 'test2', source: 'test-service2'},
             },
         ]);
         await delay(1000);
@@ -60,6 +60,7 @@ describe('tests', () => {
         expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
         expect(actualHeaders1!.eventType).toEqual('test1');
         expect(actualHeaders1!.source).toEqual('test-service1');
+        expect(actualHeaders1!.nullHeader).toEqual(null);
         expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
         expect(actualHeaders2!.eventType).toEqual('test2');
         expect(actualHeaders2!.source).toEqual('test-service2');

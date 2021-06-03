@@ -64,6 +64,8 @@ describe('tests', () => {
         expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
         expect(actualHeaders2!.eventType).toEqual('test2');
         expect(actualHeaders2!.source).toEqual('test-service2');
+        expect(parseInt(madeCalls[0].headers['x-record-timestamp'])).not.toBe(NaN);
+        expect(parseInt(madeCalls[1].headers['x-record-timestamp'])).not.toBe(NaN);
     });
 
     it('should consume bursts of records', async () => {

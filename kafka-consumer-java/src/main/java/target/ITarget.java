@@ -13,7 +13,8 @@ public interface ITarget {
     default String getOriginalTopic(ConsumerRecord<String, String> record) {
         Iterator<Header> headers = record.headers().headers(Config.ORIGINAL_TOPIC).iterator();
         if (headers.hasNext()) {
-            return new String(headers.next().value());
+            var header = headers.next();
+            return header.value() == null ? null : new String(header.value());
         }
         return record.topic();
     }
@@ -24,7 +25,7 @@ public interface ITarget {
             Iterator<Header> headers = record.headers().iterator();
             while (headers.hasNext()) {
                 Header header = headers.next();
-                headersJson.put(header.key(), new String(header.value()));
+                headersJson.put(header.key(), header.value() == null ? JSONObject.NULL : new String(header.value()));
             }
         }
         return headersJson.toString();

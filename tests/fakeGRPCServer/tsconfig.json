@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "declaration": false,
+        "rootDir": "./",
+        "outDir": "dist",
+        "removeComments": true,
+        "allowSyntheticDefaultImports": true,
+        "allowJs": true,
+        "importHelpers": true,
+        "strict": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "sourceMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "lib": ["dom", "es2017"],
+        "skipLibCheck": true,
+        "noImplicitAny": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true
+    },
+    "include": ["index.ts"]
+}

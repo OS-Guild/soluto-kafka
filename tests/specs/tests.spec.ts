@@ -5,6 +5,7 @@ import {range} from 'lodash';
 
 import checkReadiness from '../checkReadiness';
 import * as uuid from 'uuid';
+import {PORTS} from '../fakeGRPCServer/constants';
 
 jest.setTimeout(180000);
 
@@ -148,6 +149,41 @@ describe('tests', () => {
         });
         expect(response.status).toBe(400);
         expect(await response.text()).toBe('value is missing');
+    });
+});
+
+describe('gRPC tests', () => {
+    const FAKE_GRPC_SERVER_URL = `http://localhost:${PORTS.express}`;
+
+    beforeEach(async () => {
+        await fetch(`${FAKE_GRPC_SERVER_URL}/clear`);
+    });
+
+    it('should pass all data and headers', async () => {
+        const topic = 'bar';
+        const payload = {data: 'bar'};
+
+        await produce('http://localhost:6000/produce', [
+            {
+                topic,
+                key: 'thekey',
+                value: payload,
+            },
+        ]);
+
+        await delay(1000);
+
+        const fakeGRPCResponse = await fetch(`${FAKE_GRPC_SERVER_URL}/getCallHistory`);
+        const {
+            calls: [call],
+        } = await fakeGRPCResponse.json();
+
+        expect(call?.headers?.recordOffset).toBeDefined();
+        expect(typeof call?.headers?.recordOffset).toBe('number');
+        expect(call?.headers?.recordTimestamp).toBeDefined();
+        expect(typeof call?.headers?.recordTimestamp).toBe('number');
+        expect(call?.headers?.topic).toBe(topic);
+        expect(call?.payload).toMatchObject(payload);
     });
 });
 

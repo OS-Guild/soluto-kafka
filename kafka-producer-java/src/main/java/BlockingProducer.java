@@ -1,9 +1,9 @@
-import java.util.Date;
 import java.util.concurrent.ExecutionException;
+import java.util.Date;
 
-public class NoneBlockingProducer extends Producer {
+public class BlockingProducer extends Producer {
 
-    NoneBlockingProducer(Config config, Monitor monitor) {
+    BlockingProducer(Config config, Monitor monitor) {
         super(config, monitor);
     }
 

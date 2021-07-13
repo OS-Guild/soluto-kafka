@@ -29,7 +29,7 @@ public class Producer {
     public boolean produce(ProducerRequest producerRequest) {
         var executionStart = (new Date()).getTime();
         kafkaProducer.send(
-                createRecord(producerRequest, executionStart),
+            createRecord(producerRequest, executionStart),
             (RecordMetadata metadata, Exception err) -> {
                 if (err != null) {
                     ready = false;
@@ -46,12 +46,12 @@ public class Producer {
     @NotNull
     protected ProducerRecord<String, String> createRecord(ProducerRequest producerRequest, long executionStart) {
         return new ProducerRecord<>(
-                producerRequest.topic,
-                null,
-                executionStart,
-                producerRequest.key,
-                producerRequest.value,
-                producerRequest.headers
+            producerRequest.topic,
+            null,
+            executionStart,
+            producerRequest.key,
+            producerRequest.value,
+            producerRequest.headers
         );
     }
 

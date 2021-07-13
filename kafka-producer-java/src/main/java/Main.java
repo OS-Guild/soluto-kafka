@@ -19,8 +19,8 @@ public class Main {
 
     private static Producer createProducer(Config config) {
         Producer producer;
-        if(Config.BLOCKING) {
-            producer = new NoneBlockingProducer(config, monitor);
+        if (Config.BLOCKING) {
+            producer = new BlockingProducer(config, monitor);
         } else {
             producer = new Producer(config, monitor);
         }

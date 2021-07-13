@@ -52,7 +52,6 @@ services:
         environment:
             - PORT=6000
             - KAFKA_BROKER=kafka:9092
-            - BLOCKING='true'
 
     target:
         image: soluto/simple-fake-server

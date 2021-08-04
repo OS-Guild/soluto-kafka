@@ -1,9 +1,9 @@
 import java.util.concurrent.ExecutionException;
 import java.util.Date;
 
-public class BlockingProducer extends Producer {
+public class SyncProducer extends AbstractProducer {
 
-    BlockingProducer(Config config, Monitor monitor) {
+    SyncProducer(Config config, Monitor monitor) {
         super(config, monitor);
     }
 
@@ -17,6 +17,7 @@ public class BlockingProducer extends Producer {
         } catch (InterruptedException | ExecutionException e) {
             ready = false;
             Monitor.produceError(e);
+            return false;
         }
         return true;
     }

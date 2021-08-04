@@ -1,24 +1,21 @@
-import java.util.Date;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.jetbrains.annotations.NotNull;
 
-public class Producer {
+public abstract class AbstractProducer {
     Config config;
     Monitor monitor;
     KafkaProducer<String, String> kafkaProducer;
     boolean ready = false;
 
-    Producer(Config config, Monitor monitor) {
+    AbstractProducer(Config config, Monitor monitor) {
         this.config = config;
         this.monitor = monitor;
     }
 
-    public Producer start() {
+    public void initializeProducer() {
         kafkaProducer = new KafkaCreator().createProducer();
         checkReadiness();
-        return this;
     }
 
     public boolean ready() {
@@ -26,22 +23,7 @@ public class Producer {
         return ready;
     }
 
-    public boolean produce(ProducerRequest producerRequest) {
-        var executionStart = (new Date()).getTime();
-        kafkaProducer.send(
-            createRecord(producerRequest, executionStart),
-            (RecordMetadata metadata, Exception err) -> {
-                if (err != null) {
-                    ready = false;
-                    Monitor.produceError(err);
-                    return;
-                }
-                ready = true;
-                Monitor.produceSuccess(producerRequest, executionStart);
-            }
-        );
-        return true;
-    }
+    public abstract boolean produce(ProducerRequest producerRequest);
 
     @NotNull
     protected ProducerRecord<String, String> createRecord(ProducerRequest producerRequest, long executionStart) {
@@ -66,7 +48,6 @@ public class Producer {
             return;
         }
 
-        //TODO: add blocking to here to?
         kafkaProducer.send(
             new ProducerRecord<>(Config.READINESS_TOPIC, "ready"),
             (metadata, err) -> {

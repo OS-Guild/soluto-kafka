@@ -22,9 +22,9 @@ public class Server {
     Config config;
     Monitor monitor;
     HttpServer server;
-    Producer producer;
+    AbstractProducer producer;
 
-    Server(Config config, Monitor monitor, Producer producer) {
+    Server(Config config, Monitor monitor, AbstractProducer producer) {
         this.config = config;
         this.monitor = monitor;
         this.producer = producer;

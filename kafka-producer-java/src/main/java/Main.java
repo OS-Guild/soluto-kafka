@@ -1,7 +1,7 @@
 public class Main {
     static Config config;
     static Monitor monitor;
-    static Producer producer;
+    static AbstractProducer producer;
     static Server server;
 
     public static void main(String[] args) throws Exception {
@@ -10,21 +10,20 @@ public class Main {
         Monitor.init();
         System.out.println("monitor init");
         producer = createProducer(config);
+        producer.initializeProducer();
         System.out.println("producer started");
         server = new Server(config, monitor, producer).start();
         System.out.println("server started");
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> close()));
+        Runtime.getRuntime().addShutdownHook(new Thread(Main::close));
         Monitor.started();
     }
 
-    private static Producer createProducer(Config config) {
-        Producer producer;
+    private static AbstractProducer createProducer(Config config) {
         if (Config.BLOCKING) {
-            producer = new BlockingProducer(config, monitor);
+            return new SyncProducer(config, monitor);
         } else {
-            producer = new Producer(config, monitor);
+            return new AsyncProducer(config, monitor);
         }
-        return producer.start();
     }
 
     private static void close() {

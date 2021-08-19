@@ -187,6 +187,50 @@ describe('gRPC tests', () => {
     });
 });
 
+describe.only('message order tests', () => {
+    const FAKE_GRPC_SERVER_URL = `http://localhost:${PORTS.express}`;
+
+    beforeEach(async () => {
+        await fetch(`${FAKE_GRPC_SERVER_URL}/clear`);
+    });
+
+    it('should receive calls in same order they were produced', async () => {
+        const topic = 'foo';
+        const payload = {data: 'bar'};
+        const numberOfMessages = 10;
+        const delayMillis = 3000;
+        let index = 0;
+
+        while (index < numberOfMessages) {
+            await produce('http://localhost:6000/produce', [
+                {
+                    topic,
+                    key: 'samePartitioningKey',
+                    headers: {
+                        executionDelay: index % 2 > 0 ? null : `${delayMillis}`,
+                    },
+                    value: {
+                        index,
+                        ...payload,
+                    },
+                },
+            ]);
+            index++;
+        }
+
+        await delay(numberOfMessages * delayMillis);
+
+        const fakeGRPCResponse = await fetch(`${FAKE_GRPC_SERVER_URL}/getCallHistory`);
+        const {calls} = await fakeGRPCResponse.json();
+        expect(calls.length).toBe(numberOfMessages);
+        index = 0;
+        while (index < numberOfMessages) {
+            expect(calls[index].payload.index).toBe(index);
+            index++;
+        }
+    });
+});
+
 const produce = (url: string, batch: any[]) =>
     fetch(url, {
         method: 'post',

@@ -101,6 +101,7 @@ public class Server {
 
                         exchange.sendResponseHeaders(204, -1);
                     } catch (Exception e) {
+                        e.printStackTrace();
                         var response = e.getMessage();
                         exchange.sendResponseHeaders(
                             e instanceof IllegalArgumentException ? 400 : 500,

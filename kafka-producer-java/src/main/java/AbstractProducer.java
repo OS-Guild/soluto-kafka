@@ -1,3 +1,4 @@
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ public abstract class AbstractProducer {
         return ready;
     }
 
-    public abstract boolean produce(ProducerRequest producerRequest);
+    public abstract void produce(ProducerRequest producerRequest) throws ExecutionException, InterruptedException;
 
     @NotNull
     protected ProducerRecord<String, String> createRecord(ProducerRequest producerRequest, long executionStart) {

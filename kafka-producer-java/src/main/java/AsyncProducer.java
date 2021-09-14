@@ -8,7 +8,7 @@ public class AsyncProducer extends AbstractProducer {
     }
 
     @Override
-    public boolean produce(ProducerRequest producerRequest) {
+    public void produce(ProducerRequest producerRequest) {
         var executionStart = (new Date()).getTime();
         kafkaProducer.send(
             createRecord(producerRequest, executionStart),
@@ -22,6 +22,5 @@ public class AsyncProducer extends AbstractProducer {
                 Monitor.produceSuccess(producerRequest, executionStart);
             }
         );
-        return true;
     }
 }

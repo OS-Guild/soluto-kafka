@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.kafka.common.header.Header;
@@ -79,11 +80,9 @@ public class Server {
                         exchange.sendResponseHeaders(404, -1);
                         return;
                     }
+                    var body = CharStreams.toString(new InputStreamReader(exchange.getRequestBody(), Charsets.UTF_8));
                     try {
-                        var body = CharStreams.toString(
-                            new InputStreamReader(exchange.getRequestBody(), Charsets.UTF_8)
-                        );
-                        StreamSupport
+                        List<ProducerRequest> requests = StreamSupport
                             .stream(new JSONArray(body).spliterator(), false)
                             .map(
                                 jsonItem -> {
@@ -96,9 +95,10 @@ public class Server {
                                     );
                                 }
                             )
-                            .map(producerRequest -> producer.produce(producerRequest))
                             .collect(Collectors.toList());
-
+                        for (ProducerRequest producerRequest : requests) {
+                            producer.produce(producerRequest);
+                        }
                         exchange.sendResponseHeaders(204, -1);
                     } catch (Exception e) {
                         var response = e.getMessage();

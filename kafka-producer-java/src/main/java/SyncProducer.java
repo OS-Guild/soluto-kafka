@@ -8,7 +8,7 @@ public class SyncProducer extends AbstractProducer {
     }
 
     @Override
-    public boolean produce(ProducerRequest producerRequest) {
+    public void produce(ProducerRequest producerRequest) throws ExecutionException, InterruptedException {
         var executionStart = (new Date()).getTime();
         try {
             kafkaProducer.send(createRecord(producerRequest, executionStart)).get();
@@ -17,8 +17,7 @@ public class SyncProducer extends AbstractProducer {
         } catch (InterruptedException | ExecutionException e) {
             ready = false;
             Monitor.produceError(e);
-            return false;
+            throw e;
         }
-        return true;
     }
 }

@@ -8,17 +8,13 @@ public class SyncProducer extends AbstractProducer {
     }
 
     @Override
-    public void produce(ProducerRequest producerRequest) throws Exception {
+    public void produce(ProducerRequest producerRequest) throws ExecutionException, InterruptedException {
         var executionStart = (new Date()).getTime();
         try {
-            System.out.println("sending!");
             kafkaProducer.send(createRecord(producerRequest, executionStart)).get();
-            System.out.println("success!");
             Monitor.produceSuccess(producerRequest, executionStart);
             ready = true;
-            throw new Exception("yoav fail");
-        } catch (Exception e) {
-            System.out.println("before monitor fail!");
+        } catch (InterruptedException | ExecutionException e) {
             Monitor.produceError(e);
 
             //            ready = false;

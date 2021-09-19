@@ -62,7 +62,6 @@ public class Monitor {
     }
 
     public static void produceError(Exception exception) {
-        System.out.println("fail!");
         JSONObject log = new JSONObject()
             .put("level", "error")
             .put("message", "produce failed")

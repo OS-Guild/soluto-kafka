@@ -12,7 +12,7 @@ class Config {
     public static String TOPIC;
 
     //Optional
-    public static boolean BLOCKING;
+    public static boolean ASYNC;
     public static String READINESS_TOPIC;
     public static int LINGER_TIME_MS;
     public static String COMPRESSION_TYPE;
@@ -48,7 +48,7 @@ class Config {
         READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);
         COMPRESSION_TYPE = getOptionalString(dotenv, "COMPRESSION_TYPE", "none");
-        BLOCKING = getOptionalBool(dotenv, "BLOCKING", false);
+        ASYNC = getOptionalBool(dotenv, "ASYNC", true);
 
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {

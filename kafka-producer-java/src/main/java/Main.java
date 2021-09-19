@@ -19,10 +19,10 @@ public class Main {
     }
 
     private static AbstractProducer createProducer(Config config) {
-        if (Config.BLOCKING) {
-            return new SyncProducer(config, monitor);
-        } else {
+        if (Config.ASYNC) {
             return new AsyncProducer(config, monitor);
+        } else {
+            return new SyncProducer(config, monitor);
         }
     }
 

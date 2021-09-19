@@ -118,6 +118,17 @@ describe('tests', () => {
         ]);
         expect(response.status).toBe(500);
     });
+    it('dd', async () => {
+        const response = await produce('http://localhost:6001/produce', [
+            {
+                topic: 'foo',
+                key: 'thekey',
+                value: {data: 'foo'},
+                headers: {eventType: 'test1', source: 'test-service1', nullHeader: null},
+            },
+        ]);
+        expect(response.status).toBe(204);
+    });
 
     it('should consume bursts of records', async () => {
         const callId = await mockHttpTarget('/consume', 200);

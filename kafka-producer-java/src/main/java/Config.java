@@ -48,7 +48,7 @@ class Config {
         READINESS_TOPIC = getOptionalString(dotenv, "READINESS_TOPIC", null);
         LINGER_TIME_MS = getOptionalInt(dotenv, "LINGER_TIME_MS", 0);
         COMPRESSION_TYPE = getOptionalString(dotenv, "COMPRESSION_TYPE", "none");
-        ASYNC = getOptionalBool(dotenv, "ASYNC", true);
+        ASYNC = getOptionalBool(dotenv, "ASYNC", false);
 
         String truststoreFilePath = getOptionalString(dotenv, "TRUSTSTORE_FILE_PATH", null);
         if (truststoreFilePath != null) {

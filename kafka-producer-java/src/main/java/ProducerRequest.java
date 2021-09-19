@@ -13,4 +13,23 @@ public class ProducerRequest {
         this.value = value;
         this.headers = headers;
     }
+
+    @Override
+    public String toString() {
+        return (
+            "ProducerRequest{" +
+            "topic='" +
+            topic +
+            '\'' +
+            ", key='" +
+            key +
+            '\'' +
+            ", value='" +
+            value +
+            '\'' +
+            ", headers=" +
+            headers +
+            '}'
+        );
+    }
 }

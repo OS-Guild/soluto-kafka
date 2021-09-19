@@ -24,7 +24,7 @@ public abstract class AbstractProducer {
         return ready;
     }
 
-    public abstract void produce(ProducerRequest producerRequest) throws ExecutionException, InterruptedException;
+    public abstract void produce(ProducerRequest producerRequest) throws Exception;
 
     @NotNull
     protected ProducerRecord<String, String> createRecord(ProducerRequest producerRequest, long executionStart) {

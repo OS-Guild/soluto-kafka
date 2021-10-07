@@ -16,8 +16,6 @@ public class SyncProducer extends AbstractProducer {
             ready = true;
         } catch (InterruptedException | ExecutionException e) {
             Monitor.produceError(e);
-
-            //            ready = false;
             throw e;
         }
     }

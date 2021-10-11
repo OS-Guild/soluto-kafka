@@ -14,6 +14,74 @@ const fakeHttpServer = new Server({
     port: 3000,
 });
 
+const producerRequestValidation = async (producerUrl: string) => {
+    const method = 'post';
+    const headers = {'Content-Type': 'application/json'};
+    let response;
+
+    response = await fetch(producerUrl, {
+        method,
+        body: JSON.stringify([{key: 'key', value: {data: 1}}]),
+        headers,
+    });
+    expect(response.status).toBe(400);
+    expect(await response.text()).toBe('topic is missing');
+
+    response = await fetch(producerUrl, {
+        method,
+        body: JSON.stringify([{topic: 'bar', value: {data: 1}}]),
+        headers,
+    });
+    expect(response.status).toBe(400);
+    expect(await response.text()).toBe('key is missing');
+
+    response = await fetch(producerUrl, {
+        method,
+        body: JSON.stringify([{topic: 'bar', key: 'key'}]),
+        headers,
+    });
+    expect(response.status).toBe(400);
+    expect(await response.text()).toBe('value is missing');
+};
+
+const produceAndConsume = async (producerUrl: string) => {
+    const callId = await mockHttpTarget('/consume', 200);
+
+    await produce(producerUrl, [
+        {
+            topic: 'foo',
+            key: 'thekey',
+            value: {data: 'foo'},
+            headers: {eventType: 'test1', source: 'test-service1', nullHeader: null},
+        },
+    ]);
+    await delay(1000);
+    await produce(producerUrl, [
+        {
+            topic: 'bar',
+            key: 'thekey',
+            value: {data: 'bar'},
+            headers: {eventType: 'test2', source: 'test-service2'},
+        },
+    ]);
+    await delay(1000);
+
+    const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
+    expect(hasBeenMade).toBeTruthy();
+    expect(madeCalls.length).toBe(2);
+    const actualHeaders1 = JSON.parse(madeCalls[0].headers['x-record-headers']);
+    const actualHeaders2 = JSON.parse(madeCalls[1].headers['x-record-headers']);
+    expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
+    expect(actualHeaders1!.eventType).toEqual('test1');
+    expect(actualHeaders1!.source).toEqual('test-service1');
+    expect(actualHeaders1!.nullHeader).toEqual(null);
+    expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
+    expect(actualHeaders2!.eventType).toEqual('test2');
+    expect(actualHeaders2!.source).toEqual('test-service2');
+    expect(parseInt(madeCalls[0].headers['x-record-timestamp'])).not.toBe(NaN);
+    expect(parseInt(madeCalls[1].headers['x-record-timestamp'])).not.toBe(NaN);
+};
+
 describe('tests', () => {
     beforeAll(async () => {
         await expect(checkReadiness(['foo', 'bar', 'retry', 'dead-letter', 'unexpected'])).resolves.toBeTruthy();
@@ -32,9 +100,15 @@ describe('tests', () => {
     });
 
     it('should produce and consume', async () => {
-        const callId = await mockHttpTarget('/consume', 200);
+        await produceAndConsume('http://localhost:6000/produce');
+    });
 
-        await produce('http://localhost:6000/produce', [
+    it('should produce and consume from sync producer', async () => {
+        await produceAndConsume('http://localhost:6001/produce');
+    });
+
+    it('sync producer wouthout a broker should send a 500 response when producing', async () => {
+        const response = await produce('http://localhost:6002/produce', [
             {
                 topic: 'foo',
                 key: 'thekey',
@@ -42,31 +116,7 @@ describe('tests', () => {
                 headers: {eventType: 'test1', source: 'test-service1', nullHeader: null},
             },
         ]);
-        await delay(1000);
-        await produce('http://localhost:6000/produce', [
-            {
-                topic: 'bar',
-                key: 'thekey',
-                value: {data: 'bar'},
-                headers: {eventType: 'test2', source: 'test-service2'},
-            },
-        ]);
-        await delay(1000);
-
-        const {hasBeenMade, madeCalls} = await fakeHttpServer.getCall(callId);
-        expect(hasBeenMade).toBeTruthy();
-        expect(madeCalls.length).toBe(2);
-        const actualHeaders1 = JSON.parse(madeCalls[0].headers['x-record-headers']);
-        const actualHeaders2 = JSON.parse(madeCalls[1].headers['x-record-headers']);
-        expect(madeCalls[0].headers['x-record-topic']).toBe('foo');
-        expect(actualHeaders1!.eventType).toEqual('test1');
-        expect(actualHeaders1!.source).toEqual('test-service1');
-        expect(actualHeaders1!.nullHeader).toEqual(null);
-        expect(madeCalls[1].headers['x-record-topic']).toBe('bar');
-        expect(actualHeaders2!.eventType).toEqual('test2');
-        expect(actualHeaders2!.source).toEqual('test-service2');
-        expect(parseInt(madeCalls[0].headers['x-record-timestamp'])).not.toBe(NaN);
-        expect(parseInt(madeCalls[1].headers['x-record-timestamp'])).not.toBe(NaN);
+        expect(response.status).toBe(500);
     });
 
     it('should consume bursts of records', async () => {
@@ -121,34 +171,8 @@ describe('tests', () => {
     });
 
     it('producer request validation', async () => {
-        const method = 'post';
-        const producerUrl = 'http://localhost:6000/produce';
-        const headers = {'Content-Type': 'application/json'};
-        let response;
-
-        response = await fetch(producerUrl, {
-            method,
-            body: JSON.stringify([{key: 'key', value: {data: 1}}]),
-            headers,
-        });
-        expect(response.status).toBe(400);
-        expect(await response.text()).toBe('topic is missing');
-
-        response = await fetch(producerUrl, {
-            method,
-            body: JSON.stringify([{topic: 'bar', value: {data: 1}}]),
-            headers,
-        });
-        expect(response.status).toBe(400);
-        expect(await response.text()).toBe('key is missing');
-
-        response = await fetch(producerUrl, {
-            method,
-            body: JSON.stringify([{topic: 'bar', key: 'key'}]),
-            headers,
-        });
-        expect(response.status).toBe(400);
-        expect(await response.text()).toBe('value is missing');
+        await producerRequestValidation('http://localhost:6000/produce');
+        await producerRequestValidation('http://localhost:6001/produce');
     });
 });
 

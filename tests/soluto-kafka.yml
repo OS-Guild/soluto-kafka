@@ -52,7 +52,26 @@ services:
         environment:
             - PORT=6000
             - KAFKA_BROKER=kafka:9092
+            - ASYNC=true
 
+
+    sync_producer:
+        build: ../kafka-producer-java/
+        ports:
+            - 6001:6001
+        environment:
+            - PORT=6001
+            - KAFKA_BROKER=kafka:9092
+            - ASYNC=false
+
+    fail_producer:
+        build: ../kafka-producer-java/
+        ports:
+            - 6002:6002
+        environment:
+            - PORT=6002
+            - KAFKA_BROKER=kafka:1000
+            - ASYNC=false
     target:
         image: soluto/simple-fake-server
         ports:

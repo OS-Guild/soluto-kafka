@@ -1,7 +1,7 @@
 public class Main {
     static Config config;
     static Monitor monitor;
-    static Producer producer;
+    static AbstractProducer producer;
     static Server server;
 
     public static void main(String[] args) throws Exception {
@@ -9,12 +9,21 @@ public class Main {
         System.out.println("config init");
         Monitor.init();
         System.out.println("monitor init");
-        producer = new Producer(config, monitor).start();
+        producer = createProducer(config);
+        producer.initializeProducer();
         System.out.println("producer started");
         server = new Server(config, monitor, producer).start();
         System.out.println("server started");
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> close()));
+        Runtime.getRuntime().addShutdownHook(new Thread(Main::close));
         Monitor.started();
+    }
+
+    private static AbstractProducer createProducer(Config config) {
+        if (Config.ASYNC) {
+            return new AsyncProducer(config, monitor);
+        } else {
+            return new SyncProducer(config, monitor);
+        }
     }
 
     private static void close() {

@@ -1,22 +1,22 @@
-import java.util.Date;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.jetbrains.annotations.NotNull;
 
-public class Producer {
+public abstract class AbstractProducer {
     Config config;
     Monitor monitor;
     KafkaProducer<String, String> kafkaProducer;
     boolean ready = false;
 
-    Producer(Config config, Monitor monitor) {
+    AbstractProducer(Config config, Monitor monitor) {
         this.config = config;
         this.monitor = monitor;
     }
 
-    public Producer start() {
+    public void initializeProducer() {
         kafkaProducer = new KafkaCreator().createProducer();
         checkReadiness();
-        return this;
     }
 
     public boolean ready() {
@@ -24,28 +24,18 @@ public class Producer {
         return ready;
     }
 
-    public boolean produce(ProducerRequest producerRequest) {
-        var executionStart = (new Date()).getTime();
-        kafkaProducer.send(
-            new ProducerRecord<>(
-                producerRequest.topic,
-                null,
-                executionStart,
-                producerRequest.key,
-                producerRequest.value,
-                producerRequest.headers
-            ),
-            (metadata, err) -> {
-                if (err != null) {
-                    ready = false;
-                    Monitor.produceError(err);
-                    return;
-                }
-                ready = true;
-                Monitor.produceSuccess(producerRequest, executionStart);
-            }
+    public abstract void produce(ProducerRequest producerRequest) throws ExecutionException, InterruptedException;
+
+    @NotNull
+    protected ProducerRecord<String, String> createRecord(ProducerRequest producerRequest, long executionStart) {
+        return new ProducerRecord<>(
+            producerRequest.topic,
+            null,
+            executionStart,
+            producerRequest.key,
+            producerRequest.value,
+            producerRequest.headers
         );
-        return true;
     }
 
     public void close() {
@@ -58,6 +48,7 @@ public class Producer {
             ready = true;
             return;
         }
+
         kafkaProducer.send(
             new ProducerRecord<>(Config.READINESS_TOPIC, "ready"),
             (metadata, err) -> {

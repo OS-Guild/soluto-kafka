@@ -39,11 +39,13 @@ public class Monitor {
         produceLatency.labels(producerRequest.topic).observe(((double) (new Date().getTime() - executionStart)) / 1000);
 
         var headers = new JSONObject();
-        producerRequest.headers.forEach(
-            header -> {
-                headers.put(header.key(), header.value() == null ? JSONObject.NULL : new String(header.value()));
-            }
-        );
+        if (producerRequest.headers != null) {
+            producerRequest.headers.forEach(
+                header -> {
+                    headers.put(header.key(), header.value() == null ? JSONObject.NULL : new String(header.value()));
+                }
+            );
+        }
 
         JSONObject log = new JSONObject()
             .put("level", "info")

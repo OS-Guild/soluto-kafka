@@ -287,7 +287,7 @@ public class ReactiveKafkaClient<K, V> extends Flux<ConsumerRecords<K, V>> imple
 class KafkaSchedulers {
 
     static void defaultUncaughtException(Thread t, Throwable e) {
-        System.out.println("error " + e);
+        System.out.println("uncaught error: " + e);
     }
 
     static Scheduler newEvent(String groupId) {

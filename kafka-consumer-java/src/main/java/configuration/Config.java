@@ -63,7 +63,7 @@ public class Config {
 
         TARGET = getString(dotenv, "TARGET");
         POLL_TIMEOUT = getOptionalInt(dotenv, "POLL_TIMEOUT", 1000);
-        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 50);
+        MAX_POLL_RECORDS = getOptionalInt(dotenv, "MAX_POLL_RECORDS", 2);
         SESSION_TIMEOUT = getOptionalInt(dotenv, "SESSION_TIMEOUT", 10000);
 
         RETRY_PROCESS_WHEN_STATUS_CODE_MATCH =

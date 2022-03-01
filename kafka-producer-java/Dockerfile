@@ -1,4 +1,4 @@
-FROM openjdk:13-alpine AS base
+FROM openjdk:17-alpine AS base
 WORKDIR /service
 
 FROM base AS build

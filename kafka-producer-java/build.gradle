@@ -19,11 +19,11 @@ targetCompatibility = 11
 
 
 dependencies {
-    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '2.4.0'
-    implementation group: 'io.github.cdimascio', name: 'java-dotenv', version: '3.1.7'
-    implementation group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
-    implementation group: 'org.json', name: 'json', version: '20180130'
-    implementation group: 'io.prometheus', name: 'simpleclient', version: '0.8.0'
-    implementation group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
-    implementation group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
+    compile group: 'org.apache.kafka', name: 'kafka-clients', version: '2.4.0'
+    compile group: 'io.github.cdimascio', name: 'java-dotenv', version: '3.1.7'
+    compile group: 'com.google.guava', name: 'guava', version: '27.0.1-jre'
+    compile group: 'org.json', name: 'json', version: '20180130'
+    compile group: 'io.prometheus', name: 'simpleclient', version: '0.8.0'
+    compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.8.0'
+    compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.8.0'
 }

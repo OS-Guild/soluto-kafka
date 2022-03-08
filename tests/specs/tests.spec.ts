@@ -119,7 +119,7 @@ describe('tests', () => {
         expect(response.status).toBe(500);
     });
 
-    it('should consume bursts of records', async () => {
+    it.skip('should consume bursts of records', async () => {
         const callId = await mockHttpTarget('/consume', 200);
 
         const recordsCount = 1000;
@@ -183,7 +183,7 @@ describe('gRPC tests', () => {
         await fetch(`${FAKE_GRPC_SERVER_URL}/clear`);
     });
 
-    it('should pass all data and headers', async () => {
+    it.skip('should pass all data and headers', async () => {
         const topic = 'bar';
         const payload = {data: 'bar'};
 

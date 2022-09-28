@@ -1,24 +1,29 @@
 package monitoring;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import configuration.Config;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.hotspot.DefaultExports;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.consumer.Consumer;
+import target.TargetIsAlive;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import target.TargetIsAlive;
 
 public class MonitoringServer {
     private final TargetIsAlive targetIsAlive;
+    private AdminClient client;
+    private Consumer<?, ?> consumer;
     private boolean consumerAssigned;
     private boolean consumerDisposed;
     private HttpServer server;
 
-    public MonitoringServer(TargetIsAlive targetIsAlive) {
+    public MonitoringServer(TargetIsAlive targetIsAlive, AdminClient client) {
         this.targetIsAlive = targetIsAlive;
+        this.client = client;
     }
 
     public MonitoringServer start() throws IOException {
@@ -57,10 +62,7 @@ public class MonitoringServer {
         final var httpContext = server.createContext("/isAlive");
 
         httpContext.setHandler(
-            new HttpHandler() {
-
-                @Override
-                public void handle(final HttpExchange exchange) throws IOException {
+                exchange -> {
                     if (!exchange.getRequestMethod().equals("GET")) {
                         exchange.sendResponseHeaders(404, -1);
                         return;
@@ -75,6 +77,13 @@ public class MonitoringServer {
                         writeResponse(500, exchange);
                         return;
                     }
+                    var re = client.listPartitionReassignments().reassignments().get();
+
+                    if (Monitor.getAssignedPartitions() == 0) {
+                        writeResponse(500, exchange);
+                        return;
+                    }
+
 
                     if (!targetAlive(exchange)) {
                         writeResponse(500, exchange);
@@ -83,7 +92,6 @@ public class MonitoringServer {
 
                     writeResponse(200, exchange);
                 }
-            }
         );
     }
 

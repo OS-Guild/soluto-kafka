@@ -49,7 +49,7 @@ public class TargetRetryPolicy {
                         Monitor.processMessageError();
                         if (deadLetterTopic != null) {
                             producer.produce(deadLetterTopic, record);
-                            Monitor.deadLetterProcdued(record);
+                            Monitor.deadLetterProduced(record);
                         }
                         return;
                     }

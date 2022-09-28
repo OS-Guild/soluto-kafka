@@ -1,13 +1,20 @@
-import configuration.*;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.concurrent.CountDownLatch;
-import kafka.*;
-import monitoring.*;
+import configuration.Config;
+import kafka.Consumer;
+import kafka.KafkaClientFactory;
+import kafka.Producer;
+import kafka.ReactiveKafkaClient;
+import monitoring.Monitor;
+import monitoring.MonitoringServer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.common.TopicPartition;
 import reactor.core.Disposable;
-import target.*;
+import target.TargetFactory;
+import target.TargetIsAlive;
+import target.TargetRetryPolicy;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
 public class Main {
     static Disposable consumer;
@@ -19,7 +26,7 @@ public class Main {
             Config.init();
             Monitor.init();
 
-            monitoringServer = new MonitoringServer(waitForTargetToBeAlive()).start();
+            monitoringServer = new MonitoringServer(waitForTargetToBeAlive(), ).start();
             consumer = createConsumer(monitoringServer);
             onShutdown(consumer, monitoringServer);
 
@@ -43,62 +50,67 @@ public class Main {
 
     private static Disposable createConsumer(MonitoringServer monitoringServer) {
         return new Consumer(
-            new ReactiveKafkaClient<String, String>(
-                new KafkaClientFactory().createConsumer(),
-                Config.TOPICS,
-                new ConsumerRebalanceListener() {
+                new ReactiveKafkaClient<>(
+                        new KafkaClientFactory().createConsumer(),
+                        Config.TOPICS,
+                        new ConsumerRebalanceListener() {
+                            @Override
+                            public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                                Monitor.assignedToPartition(partitions);
+                                monitoringServer.consumerAssigned();
+                            }
 
-                    @Override
-                    public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                        Monitor.assignedToPartition(partitions);
-                        monitoringServer.consumerAssigned();
-                    }
+                            @Override
+                            public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                                Monitor.revokedFromPartition(partitions);
+                            }
 
-                    @Override
-                    public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                        Monitor.revokedFromPartition(partitions);
-                    }
-                }
-            ),
-            TargetFactory.create(
-                new TargetRetryPolicy(
-                    new Producer(new KafkaClientFactory().createProducer()),
-                    Config.RETRY_TOPIC,
-                    Config.DEAD_LETTER_TOPIC
+                            @Override
+                            public void onPartitionsLost(Collection<TopicPartition> partitions) {
+                                Monitor.revokedFromPartition(partitions);
+                            }
+                        }
+                ),
+                TargetFactory.create(
+                        new TargetRetryPolicy(
+                                new Producer(new KafkaClientFactory().createProducer()),
+                                Config.RETRY_TOPIC,
+                                Config.DEAD_LETTER_TOPIC
+                        )
                 )
-            )
         )
-            .stream()
-            .doOnError(
-                e -> {
-                    Monitor.consumerError(e);
-                }
-            )
-            .subscribe(
-                __ -> {},
-                exception -> {
-                    monitoringServer.consumerDisposed();
-                    Monitor.consumerError(exception);
-                },
-                () -> {
-                    monitoringServer.consumerDisposed();
-                    Monitor.consumerCompleted();
-                }
-            );
+                .stream()
+                .doOnError(
+                        e -> {
+                            Monitor.consumerError(e);
+                        }
+                )
+                .subscribe(
+                        __ -> {
+                        },
+                        exception -> {
+                            monitoringServer.consumerDisposed();
+                            Monitor.consumerError(exception);
+                        },
+                        () -> {
+                            monitoringServer.consumerDisposed();
+                            Monitor.consumerCompleted();
+                        }
+                );
     }
 
     private static void onShutdown(Disposable consumer, MonitoringServer monitoringServer) {
         Runtime
-            .getRuntime()
-            .addShutdownHook(
-                new Thread(
-                    () -> {
-                        Monitor.shuttingDown();
-                        consumer.dispose();
-                        monitoringServer.close();
-                        latch.countDown();
-                    }
-                )
-            );
+                .getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    Monitor.shuttingDown();
+                                    consumer.dispose();
+                                    monitoringServer.close();
+                                    latch.countDown();
+                                }
+                        )
+                );
     }
 }

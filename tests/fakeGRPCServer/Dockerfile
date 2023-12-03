@@ -4,7 +4,6 @@ WORKDIR /app
 
 COPY soluto-kafka-grpc-target ./soluto-kafka-grpc-target
 COPY tests/fakeGRPCServer/package.json .
-COPY tests/fakeGRPCServer/yarn.lock .
 
 WORKDIR /app/soluto-kafka-grpc-target
 
